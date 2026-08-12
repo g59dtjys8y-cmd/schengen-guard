@@ -29,6 +29,55 @@ function newId(){
   return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
 }
 
+// --- i18n: lightweight per-locale JSON + t()/tn() lookup, English fallback ---
+// Framework ships now; zh.json/ja.json are placeholders (deliberate per the brief —
+// real translated copy lands in a later pass, and missing keys fall back to English
+// rather than showing a blank string or a raw key).
+
+const LANG_KEY = 'schengenGuardLang';
+const VALID_LANGS = ['en', 'zh', 'ja'];
+const INTL_LOCALE = { en: 'en-GB', zh: 'zh-CN', ja: 'ja-JP' };
+let currentLang = 'en';
+let i18nEn = {};
+let i18nActive = {};
+
+async function loadLocale(lang){
+  if(Object.keys(i18nEn).length === 0){
+    i18nEn = await fetch('i18n/en.json').then(r => r.json()).catch(() => ({}));
+  }
+  i18nActive = (lang === 'en') ? i18nEn : await fetch(`i18n/${lang}.json`).then(r => r.json()).catch(() => ({}));
+  currentLang = lang;
+}
+
+function rawT(key){
+  const fromActive = i18nActive[key];
+  return fromActive !== undefined ? fromActive : i18nEn[key];
+}
+
+function interpolate(str, vars){
+  if(!vars) return str;
+  return str.replace(/\{\{(\w+)\}\}/g, (m, k) => (vars[k] !== undefined ? vars[k] : m));
+}
+
+function t(key, vars){
+  const raw = rawT(key);
+  return raw === undefined ? key : interpolate(raw, vars);
+}
+
+// Pluralized keys are stored as `${key}.one` / `${key}.other`. English is the only one
+// of the three shipped locales with a grammatical singular/plural distinction (zh/ja
+// don't inflect for number), so "one" only ever applies when n===1 in English.
+function tn(key, n, vars){
+  const suffix = (currentLang === 'en' && n === 1) ? 'one' : 'other';
+  return t(`${key}.${suffix}`, Object.assign({ n }, vars));
+}
+
+function applyStaticI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+}
+
 function todayISO(){
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
@@ -36,8 +85,8 @@ function todayISO(){
 function toDate(iso){ const [y,m,d]=iso.split('-').map(Number); return new Date(y,m-1,d); }
 function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
 function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function fmt(iso){ const d=toDate(iso); return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
-function fmtShort(iso){ const d=toDate(iso); const day=d.toLocaleDateString('en-GB',{day:'2-digit'}); const mon=d.toLocaleDateString('en-GB',{month:'short'}); return `${day} ${mon}`; }
+function fmt(iso){ const d=toDate(iso); return new Intl.DateTimeFormat(INTL_LOCALE[currentLang] || 'en-GB', {day:'2-digit',month:'short',year:'numeric'}).format(d); }
+function fmtShort(iso){ const d=toDate(iso); return new Intl.DateTimeFormat(INTL_LOCALE[currentLang] || 'en-GB', {day:'2-digit',month:'short'}).format(d); }
 
 function isExcludedDay(trip, iso){
   for(const r of (trip.excludedRanges || [])){
@@ -188,7 +237,7 @@ function computeTripSuggestion(listIncluding, listExcluding, start, end, capDays
     if(altEnd >= start){
       const altDays = Math.round((toDate(altEnd) - toDate(start)) / 86400000) + 1;
       suggestions.push({
-        label: `Leave by <strong>${fmt(altEnd)}</strong> instead (${altDays} day${altDays===1?'':'s'}) to stay compliant.`,
+        label: t('trips.suggestion.trim', { date: fmt(altEnd), n: tn('trips.marginDays', altDays) }),
         start, end: altEnd
       });
     }
@@ -196,7 +245,7 @@ function computeTripSuggestion(listIncluding, listExcluding, start, end, capDays
     if(altStart && altStart !== start){
       const altEndForStart = isoOf(addDays(toDate(altStart), duration-1));
       suggestions.push({
-        label: `Shift the whole trip to start <strong>${fmt(altStart)}</strong> instead (still ${duration} day${duration===1?'':'s'}).`,
+        label: t('trips.suggestion.laterStart', { date: fmt(altStart), n: tn('trips.marginDays', duration) }),
         start: altStart, end: altEndForStart
       });
     }
@@ -401,20 +450,20 @@ function render(){
 
   if(used > 90){
     const overBy = used - 90;
-    kickerEl.textContent = 'Days over limit';
+    kickerEl.textContent = t('home.daysOverLimit');
     titleEl.textContent = `+${overBy}`;
-    bodyEl.textContent = `${overBy} day${overBy===1?'':'s'} over the limit as of ${fmt(refISO)}.`;
+    bodyEl.textContent = tn('home.overLimitBody', overBy, { date: fmt(refISO) });
     const free = nextFreeDate(trips, 90);
-    if(free) bodyEl.textContent += ` Compliant again from ${fmt(free)}.`;
+    if(free) bodyEl.textContent += t('home.compliantAgainFrom', { date: fmt(free) });
   } else if(exitISO === null){
-    kickerEl.textContent = 'Status';
-    titleEl.textContent = 'N/A';
-    bodyEl.textContent = `Already over the limit on ${fmt(entryForCalc)} — no compliant stay possible from that entry date.`;
+    kickerEl.textContent = t('home.status');
+    titleEl.textContent = t('home.na');
+    bodyEl.textContent = t('home.noCompliantStay', { date: fmt(entryForCalc) });
   } else {
-    kickerEl.textContent = 'Last day to leave';
+    kickerEl.textContent = t('home.lastDayToLeave');
     titleEl.textContent = fmt(exitISO);
-    const whose = coveringTrip ? 'This stay' : `A stay entering ${fmt(refISO)}`;
-    bodyEl.textContent = `${used} of 90 days used in the 180 days ending ${fmt(refISO)}. ${whose} must end by ${fmt(exitISO)} at the latest.`;
+    const whose = coveringTrip ? t('home.thisStay') : t('home.stayEntering', { date: fmt(refISO) });
+    bodyEl.textContent = t('home.usedOfWindow', { used, date: fmt(refISO), whose, exit: fmt(exitISO) });
   }
 
   renderTripRows();
@@ -449,22 +498,22 @@ function renderNextTrip(){
   panel.style.display = 'flex';
 
   const days = Math.round((toDate(trip.end) - toDate(trip.start)) / 86400000) + 1;
-  document.getElementById('nextTripCountry').textContent = trip.label || '—';
-  document.getElementById('nextTripDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)} · ${days} day${days===1?'':'s'}`;
+  document.getElementById('nextTripCountry').textContent = trip.label || t('calendar.dash');
+  document.getElementById('nextTripDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)} · ${tn('trips.marginDays', days)}`;
 
   const tagEl = document.getElementById('nextTripTag');
   const suggestionEl = document.getElementById('nextTripSuggestion');
   const otherTrips = trips.filter(t => t.id !== trip.id);
   const suggestion = computeTripSuggestion(trips, otherTrips, trip.start, trip.end, 90);
   if(suggestion.overstay){
-    tagEl.textContent = 'Overstay risk';
+    tagEl.textContent = t('home.overstayRisk');
     tagEl.className = 'tag tag-accent-2';
     suggestionEl.innerHTML = suggestion.suggestions[0] ? suggestion.suggestions[0].label : '';
   } else {
-    tagEl.textContent = 'Within limits';
+    tagEl.textContent = t('home.withinLimits');
     tagEl.className = 'tag tag-accent';
     suggestionEl.innerHTML = suggestion.extendable
-      ? `You could extend this stay by <strong>${suggestion.extra} more day${suggestion.extra===1?'':'s'}</strong> — until ${fmt(suggestion.lastExit)} — and stay compliant.`
+      ? tn('home.extendSuggestion', suggestion.extra, { date: fmt(suggestion.lastExit) })
       : '';
   }
 
@@ -483,13 +532,13 @@ function visitedCountries(){
 
 function renderCountriesCard(){
   const visited = visitedCountries();
-  document.getElementById('countriesCount').textContent = `${visited.size} of ${ALL_COUNTRIES.length}`;
+  document.getElementById('countriesCount').textContent = t('home.countriesOf', { count: visited.size, total: ALL_COUNTRIES.length });
 }
 
 function renderCountries(){
   const visited = visitedCountries();
   document.getElementById('countriesSubtitle').textContent =
-    `${visited.size} of ${ALL_COUNTRIES.length} Schengen countries stamped`;
+    t('countries.subtitle', { count: visited.size, total: ALL_COUNTRIES.length });
   const grid = document.getElementById('countriesGrid');
   grid.innerHTML = '';
   for(const name of ALL_COUNTRIES){
@@ -511,44 +560,44 @@ function renderTripRows(){
   const rowsEl = document.getElementById('tripRows');
   rowsEl.innerHTML = '';
   if(trips.length === 0){
-    rowsEl.innerHTML = '<div class="empty-note">No stays logged yet.</div>';
+    rowsEl.innerHTML = `<div class="empty-note">${t('trips.noStaysLogged')}</div>`;
     return;
   }
   trips.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
-  for(const t of trips){
-    const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
-    const status = classifyTrip(t);
-    const overstay = tripOverstayInfo(trips, t, 90);
+  for(const trip of trips){
+    const days = Math.round((toDate(trip.end) - toDate(trip.start))/86400000) + 1;
+    const status = classifyTrip(trip);
+    const overstay = tripOverstayInfo(trips, trip, 90);
     const warnIcon = overstay
-      ? `<span class="warn-icon" title="This stay tips you over the 90-day limit on ${fmt(overstay.date)} (${overstay.used} of 90 used)">&#9888;</span>`
+      ? `<span class="warn-icon" title="${t('trips.overstayWarnTitle', { date: fmt(overstay.date), used: overstay.used })}">&#9888;</span>`
       : '';
 
     let statusHtml;
     if(status === 'past'){
-      statusHtml = `<div class="done-stamp"><div class="t">DONE</div><svg viewBox="0 0 24 24" fill="var(--color-text)"><path d="M12 0l2.9 8.1 8.6.1-6.9 5.3 2.6 8.2L12 16.9 5.8 21.7l2.6-8.2L1.5 8.2l8.6-.1z"></path></svg></div>`;
+      statusHtml = `<div class="done-stamp"><div class="t">${t('trips.done')}</div><svg viewBox="0 0 24 24" fill="var(--color-text)"><path d="M12 0l2.9 8.1 8.6.1-6.9 5.3 2.6 8.2L12 16.9 5.8 21.7l2.6-8.2L1.5 8.2l8.6-.1z"></path></svg></div>`;
     } else if(status === 'active'){
-      statusHtml = `<span class="tag tag-accent">Active</span>`;
+      statusHtml = `<span class="tag tag-accent">${t('trips.active')}</span>`;
     } else {
-      statusHtml = `<span class="tag tag-outline">Planned</span>`;
+      statusHtml = `<span class="tag tag-outline">${t('trips.planned')}</span>`;
     }
 
     let exclDays = 0;
-    for(const r of (t.excludedRanges || [])) exclDays += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
+    for(const r of (trip.excludedRanges || [])) exclDays += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
     const exclNote = exclDays > 0
-      ? `<div class="card-meta">${exclDays} day${exclDays===1?'':'s'} outside Schengen excluded</div>`
+      ? `<div class="card-meta">${tn('trips.excludedDays', exclDays)}</div>`
       : '';
 
     const row = document.createElement('div');
     row.className = 'card elev-sm trip-row';
     row.innerHTML = `
-      <div class="trip-days"><div class="n">${days}</div><div class="lbl">days</div></div>
+      <div class="trip-days"><div class="n">${days}</div><div class="lbl">${t('trips.days')}</div></div>
       <div class="trip-info">
-        <div class="country">${t.label || '—'}${warnIcon}</div>
-        <div class="dates">${fmt(t.start)} – ${fmt(t.end)}</div>
+        <div class="country">${trip.label || t('calendar.dash')}${warnIcon}</div>
+        <div class="dates">${fmt(trip.start)} – ${fmt(trip.end)}</div>
         ${exclNote}
         <div class="row-actions">
-          <button type="button" class="link-btn" data-action="edit" data-id="${t.id}">Edit</button>
-          <button type="button" class="link-btn danger-link" data-action="remove" data-id="${t.id}">Remove</button>
+          <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">${t('trips.edit')}</button>
+          <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">${t('trips.remove')}</button>
         </div>
       </div>
       <div class="trip-status">${statusHtml}</div>
@@ -582,13 +631,13 @@ function updateChecker(){
   suggestionsEl.innerHTML = '';
 
   if(!start || !end){
-    msgEl.textContent = 'Pick an entry and exit date to check compliance before you save it.';
+    msgEl.textContent = t('trips.checkerPrompt');
     saveBtn.disabled = true;
     return;
   }
   if(end < start){
     msgEl.textContent = '';
-    errEl.textContent = 'Exit date must be on or after the entry date.';
+    errEl.textContent = t('trips.checkerExitBeforeEntry');
     errEl.style.display = 'block';
     saveBtn.disabled = true;
     return;
@@ -599,7 +648,7 @@ function updateChecker(){
   const overstay = tripOverstayInfo(hypothetical, { start, end }, 90);
   breakdownBtn.style.display = 'inline-flex';
   if(overstay){
-    msgEl.innerHTML = `${days}-day stay — <strong style="color:var(--color-accent-2-700)">would breach your limit</strong> on ${fmt(overstay.date)} (${overstay.used} of 90 used).`;
+    msgEl.innerHTML = t('trips.checkerResult.breach', { n: days, date: fmt(overstay.date), used: overstay.used });
     const suggestion = computeTripSuggestion(hypothetical, trips, start, end, 90);
     if(suggestion.suggestions.length){
       suggestionsEl.style.display = 'grid';
@@ -618,7 +667,7 @@ function updateChecker(){
     }
   } else {
     const margin = 90 - usedDaysInWindow(hypothetical, end);
-    msgEl.innerHTML = `${days}-day stay — <strong style="color:var(--color-accent-700)">safe, within limits</strong>. ${margin} day${margin===1?'':'s'} of margin left on ${fmt(end)}.`;
+    msgEl.innerHTML = t('trips.checkerResult.safe', { n: days, margin: tn('trips.marginDays', margin), date: fmt(end) });
   }
   saveBtn.disabled = false;
 }
@@ -634,15 +683,15 @@ document.getElementById('checkerSaveBtn').addEventListener('click', async ()=>{
   errEl.style.display = 'none';
   if(!start || !end || end < start) return;
 
-  const overlapping = trips.find(t => start <= t.end && end >= t.start);
+  const overlapping = trips.find(ot => start <= ot.end && end >= ot.start);
   if(overlapping){
-    const proceed = confirm(`This overlaps with your logged stay in ${overlapping.label} (${fmt(overlapping.start)} – ${fmt(overlapping.end)}). Save it anyway?`);
+    const proceed = confirm(t('trips.overlapWarning', { label: overlapping.label, start: fmt(overlapping.start), end: fmt(overlapping.end) }));
     if(!proceed) return;
   }
   try{
     await insertTrip(start, end, label);
   }catch(e){
-    errEl.textContent = 'Could not save that stay — please try again.';
+    errEl.textContent = t('trips.saveError');
     errEl.style.display = 'block';
     return;
   }
@@ -711,12 +760,12 @@ function startEditTrip(id){
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
-  document.getElementById('pickStartLbl').textContent = 'Entry: ' + fmt(trip.start);
-  document.getElementById('pickEndLbl').textContent = 'Exit: ' + fmt(trip.end);
+  document.getElementById('pickStartLbl').textContent = t('calendar.entryTag', { date: fmt(trip.start) });
+  document.getElementById('pickEndLbl').textContent = t('calendar.exitTag', { date: fmt(trip.end) });
   document.getElementById('formError').style.display = 'none';
-  document.getElementById('addTripBtn').textContent = 'Update stay';
+  document.getElementById('addTripBtn').textContent = t('calendar.updateStay');
   document.getElementById('cancelEditBtn').style.display = 'block';
-  document.getElementById('calendarHeading').textContent = 'Edit stay';
+  document.getElementById('calendarHeading').textContent = t('calendar.editHeading');
 
   calCursor = new Date(toDate(trip.start)); calCursor.setDate(1);
   switchTab('calendar');
@@ -731,12 +780,12 @@ function stopEditTrip(){
   document.getElementById('tripLabel').value = '';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
-  document.getElementById('pickStartLbl').textContent = 'Entry: —';
-  document.getElementById('pickEndLbl').textContent = 'Exit: —';
+  document.getElementById('pickStartLbl').textContent = t('calendar.entryTag', { date: t('calendar.dash') });
+  document.getElementById('pickEndLbl').textContent = t('calendar.exitTag', { date: t('calendar.dash') });
   document.getElementById('formError').style.display = 'none';
-  document.getElementById('addTripBtn').textContent = 'Log stay';
+  document.getElementById('addTripBtn').textContent = t('calendar.logStay');
   document.getElementById('cancelEditBtn').style.display = 'none';
-  document.getElementById('calendarHeading').textContent = 'Log a stay';
+  document.getElementById('calendarHeading').textContent = t('calendar.logHeading');
   renderCalendar();
   renderExclusionSection();
 }
@@ -764,11 +813,11 @@ function renderExclusionList(){
     const days = Math.round((toDate(r.end) - toDate(r.start)) / 86400000) + 1;
     const item = document.createElement('div');
     item.className = 'exclusion-item';
-    item.innerHTML = `<span>${fmt(r.start)} – ${fmt(r.end)} (${days} day${days===1?'':'s'})</span>`;
+    item.innerHTML = `<span>${fmt(r.start)} – ${fmt(r.end)} (${tn('calendar.exclusionDays', days)})</span>`;
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'link-btn danger-link';
-    removeBtn.textContent = 'Remove';
+    removeBtn.textContent = t('calendar.exclusionRemove');
     removeBtn.addEventListener('click', ()=>{
       pendingExcludedRanges.splice(idx, 1);
       renderExclusionList();
@@ -784,23 +833,23 @@ document.getElementById('addExclusionBtn').addEventListener('click', ()=>{
   const exStart = document.getElementById('exclStart').value;
   const exEnd = document.getElementById('exclEnd').value;
   if(!exStart || !exEnd){
-    errEl.textContent = 'Pick both a start and end date for the excluded range.';
+    errEl.textContent = t('calendar.exclusionMissingDates');
     errEl.style.display = 'block';
     return;
   }
   if(exEnd < exStart){
-    errEl.textContent = 'End date must be on or after the start date.';
+    errEl.textContent = t('calendar.exclusionEndBeforeStart');
     errEl.style.display = 'block';
     return;
   }
   if(exStart < pickStart || exEnd > pickEnd){
-    errEl.textContent = 'The excluded range must fall within the stay\'s entry and exit dates.';
+    errEl.textContent = t('calendar.exclusionOutOfRange');
     errEl.style.display = 'block';
     return;
   }
   const overlaps = pendingExcludedRanges.some(r => exStart <= r.end && exEnd >= r.start);
   if(overlaps){
-    errEl.textContent = 'That range overlaps an exclusion you already added.';
+    errEl.textContent = t('calendar.exclusionOverlap');
     errEl.style.display = 'block';
     return;
   }
@@ -835,8 +884,8 @@ function handlePick(iso){
   }
   document.getElementById('tripStart').value = pickStart || '';
   document.getElementById('tripEnd').value = pickEnd || '';
-  document.getElementById('pickStartLbl').textContent = 'Entry: ' + (pickStart ? fmt(pickStart) : '—');
-  document.getElementById('pickEndLbl').textContent = 'Exit: ' + (pickEnd ? fmt(pickEnd) : '—');
+  document.getElementById('pickStartLbl').textContent = t('calendar.entryTag', { date: pickStart ? fmt(pickStart) : t('calendar.dash') });
+  document.getElementById('pickEndLbl').textContent = t('calendar.exitTag', { date: pickEnd ? fmt(pickEnd) : t('calendar.dash') });
   renderCalendar();
   renderExclusionSection();
 }
@@ -848,19 +897,19 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   const errEl = document.getElementById('formError');
   errEl.style.display = 'none';
   if(!start || !end){
-    errEl.textContent = 'Tap an entry date, then an exit date, on the calendar.';
+    errEl.textContent = t('calendar.missingDates');
     errEl.style.display = 'block';
     return;
   }
   if(end < start){
-    errEl.textContent = 'Exit date must be on or after the entry date.';
+    errEl.textContent = t('calendar.exitBeforeEntry');
     errEl.style.display = 'block';
     return;
   }
-  const overlapping = trips.find(t => t.id !== editingTripId && start <= t.end && end >= t.start);
+  const overlapping = trips.find(ot => ot.id !== editingTripId && start <= ot.end && end >= ot.start);
   if(overlapping){
-    const verb = editingTripId ? 'Update it anyway?' : 'Log it anyway?';
-    const proceed = confirm(`This overlaps with your logged stay in ${overlapping.label} (${fmt(overlapping.start)} – ${fmt(overlapping.end)}). ${verb}`);
+    const key = editingTripId ? 'trips.overlapUpdateWarning' : 'trips.overlapLogWarning';
+    const proceed = confirm(t(key, { label: overlapping.label, start: fmt(overlapping.start), end: fmt(overlapping.end) }));
     if(!proceed) return;
   }
   const wasEditing = editingTripId !== null;
@@ -871,7 +920,7 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
       await insertTrip(start, end, label, pendingExcludedRanges);
     }
   }catch(e){
-    errEl.textContent = 'Could not save that stay — please try again.';
+    errEl.textContent = t('trips.saveError');
     errEl.style.display = 'block';
     return;
   }
@@ -883,7 +932,7 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
 document.getElementById('refDate').addEventListener('change', render);
 
 document.getElementById('resetBtn').addEventListener('click', async ()=>{
-  if(!confirm('Clear all logged stays? This cannot be undone.')) return;
+  if(!confirm(t('calendar.clearStays'))) return;
   await deleteAllTrips();
   render();
 });
@@ -987,8 +1036,8 @@ function checkNotifications(){
   for(const threshold of thresholds){
     if(realRemaining <= threshold && threshold < lastFired){
       try{
-        new Notification('Schengen Guard', {
-          body: `${realRemaining} day${realRemaining===1?'':'s'} left of your 90-day allowance.`
+        new Notification(t('notification.title'), {
+          body: tn('notification.body', realRemaining)
         });
       }catch(e){}
       localStorage.setItem(NOTIF_LAST_FIRED_KEY, String(threshold));
@@ -1015,7 +1064,7 @@ function openBreakdown(list, windowEndISO){
     const iso = isoOf(cur);
     const counts = covered.has(iso);
     if(counts) running++;
-    const label = counts ? 'In Schengen' : (excluded.has(iso) ? 'Outside Schengen (excluded)' : '—');
+    const label = counts ? t('breakdown.inSchengen') : (excluded.has(iso) ? t('breakdown.excluded') : t('breakdown.notCounted'));
     const tr = document.createElement('tr');
     if(counts) tr.classList.add('counts');
     if(iso === todayIso) tr.classList.add('today-row');
@@ -1027,8 +1076,8 @@ function openBreakdown(list, windowEndISO){
   let agedOut = 0;
   for(const iso of covered){ if(iso < windowStartISO) agedOut++; }
   const summaryEl = document.getElementById('breakdownSummary');
-  summaryEl.textContent = `Showing the 180 days ending ${fmt(windowEndISO)}. ${running} of those days count toward your 90-day limit.`
-    + (agedOut > 0 ? ` ${agedOut} earlier day${agedOut===1?'':'s'} you spent in Schengen have aged out of this window and no longer count.` : '');
+  summaryEl.textContent = t('breakdown.summary', { date: fmt(windowEndISO), n: running })
+    + (agedOut > 0 ? tn('breakdown.agedOut', agedOut) : '');
 
   document.getElementById('breakdownModal').style.display = 'flex';
 }
@@ -1056,6 +1105,11 @@ function markTripsChanged(){
   // Any edit re-opens the nudge on the next render unless a fresh-enough backup already covers it.
 }
 
+function renderBackupNudgeText(){
+  const linkHtml = `<a href="#" id="backupNudgeLink">${t('backupNudge.link')}</a>`;
+  document.getElementById('backupNudgeText').innerHTML = t('backupNudge.text', { link: linkHtml });
+}
+
 function renderBackupNudge(){
   const banner = document.getElementById('backupNudge');
   if(trips.length === 0){ banner.style.display = 'none'; return; }
@@ -1073,9 +1127,12 @@ document.getElementById('backupNudgeDismiss').addEventListener('click', ()=>{
   localStorage.setItem(BACKUP_NUDGE_DISMISSED_KEY, String(Date.now()));
   document.getElementById('backupNudge').style.display = 'none';
 });
-document.getElementById('backupNudgeLink').addEventListener('click', (e)=>{
-  e.preventDefault();
-  switchTab('settings');
+// Delegated so the link keeps working after renderBackupNudgeText() replaces it via innerHTML
+document.getElementById('backupNudgeText').addEventListener('click', (e)=>{
+  if(e.target && e.target.id === 'backupNudgeLink'){
+    e.preventDefault();
+    switchTab('settings');
+  }
 });
 
 function updateLastBackupNote(){
@@ -1083,7 +1140,7 @@ function updateLastBackupNote(){
   const lastBackup = Number(localStorage.getItem(LAST_BACKUP_KEY) || 0);
   if(!lastBackup){ note.style.display = 'none'; return; }
   note.style.display = 'block';
-  note.textContent = 'Last backup: ' + fmt(isoOf(new Date(lastBackup)));
+  note.textContent = t('settings.lastBackup', { date: fmt(isoOf(new Date(lastBackup))) });
 }
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
@@ -1119,33 +1176,33 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
     const text = await file.text();
     parsed = JSON.parse(text);
   }catch(err){
-    errEl.textContent = 'That file could not be read — make sure it\'s a Schengen Guard backup JSON file.';
+    errEl.textContent = t('settings.importError.parse');
     errEl.style.display = 'block';
     return;
   }
 
   if(!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.trips) || typeof parsed.schemaVersion !== 'number'){
-    errEl.textContent = 'That file doesn\'t look like a Schengen Guard backup.';
+    errEl.textContent = t('settings.importError.shape');
     errEl.style.display = 'block';
     return;
   }
   if(parsed.schemaVersion > SCHEMA_VERSION){
-    errEl.textContent = 'This backup was made with a newer version of Schengen Guard and can\'t be read here — update the app first.';
+    errEl.textContent = t('settings.importError.newer');
     errEl.style.display = 'block';
     return;
   }
-  const validTrips = parsed.trips.every(t => t && typeof t.start === 'string' && typeof t.end === 'string');
+  const validTrips = parsed.trips.every(it => it && typeof it.start === 'string' && typeof it.end === 'string');
   if(!validTrips){
-    errEl.textContent = 'That backup file is malformed — no changes were made.';
+    errEl.textContent = t('settings.importError.malformed');
     errEl.style.display = 'block';
     return;
   }
 
   // schemaVersion 1 is the only shape so far, so no migration step is needed yet.
-  pendingImportTrips = parsed.trips.map(t => ({
-    id: typeof t.id === 'string' ? t.id : newId(),
-    start: t.start, end: t.end, label: t.label || '',
-    excludedRanges: Array.isArray(t.excludedRanges) ? t.excludedRanges : []
+  pendingImportTrips = parsed.trips.map(it => ({
+    id: typeof it.id === 'string' ? it.id : newId(),
+    start: it.start, end: it.end, label: it.label || '',
+    excludedRanges: Array.isArray(it.excludedRanges) ? it.excludedRanges : []
   }));
 
   if(trips.length === 0){
@@ -1153,7 +1210,7 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
     return;
   }
   document.getElementById('importModalMsg').textContent =
-    `You have ${trips.length} trip${trips.length===1?'':'s'} saved and this backup has ${pendingImportTrips.length}. Merge them, or replace what's on this device?`;
+    t('settings.importPrompt', { existing: tn('settings.tripCount', trips.length), incoming: pendingImportTrips.length });
   document.getElementById('importModal').style.display = 'flex';
 });
 
@@ -1208,6 +1265,35 @@ darkMediaQuery.addEventListener('change', ()=>{
   }
 });
 
+// Fixed to when this copy was last actually reviewed — not "today", which would
+// falsely imply a fresh review happens on every page load.
+const ETIAS_LAST_CHECKED_ISO = '2026-08-12';
+function renderEtiasLastChecked(){
+  const el = document.getElementById('etiasLastChecked');
+  if(!el) return;
+  const linkHtml = '<a href="https://etias.europa.eu" target="_blank" rel="noopener">etias.europa.eu</a>';
+  el.innerHTML = t('faq.etias.lastChecked', { date: fmt(ETIAS_LAST_CHECKED_ISO), link: linkHtml });
+}
+
+// --- Language switcher (Settings) ---
+
+async function applyLang(lang){
+  if(VALID_LANGS.indexOf(lang) === -1) lang = 'en';
+  await loadLocale(lang);
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('data-lang', lang);
+  localStorage.setItem(LANG_KEY, lang);
+  document.querySelectorAll('[data-lang-choice]').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-lang-choice') === lang);
+  });
+  applyStaticI18n();
+  renderEtiasLastChecked();
+  render();
+}
+document.getElementById('langEnBtn').addEventListener('click', ()=> applyLang('en'));
+document.getElementById('langZhBtn').addEventListener('click', ()=> applyLang('zh'));
+document.getElementById('langJaBtn').addEventListener('click', ()=> applyLang('ja'));
+
 // Keeps "today" (and therefore the badge, stamp gauge, etc.) current if the app is
 // left open across midnight — checked on an hourly timer and whenever the tab/app
 // regains focus, since there's no way to update the badge while fully closed.
@@ -1229,6 +1315,15 @@ setInterval(checkDayRollover, 60 * 60 * 1000);
 
 (async function init(){
   applyTheme(localStorage.getItem(THEME_KEY) || 'system');
+
+  const initialLang = document.documentElement.getAttribute('data-lang') || 'en';
+  await loadLocale(initialLang);
+  document.querySelectorAll('[data-lang-choice]').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-lang-choice') === initialLang);
+  });
+  applyStaticI18n();
+  renderEtiasLastChecked();
+
   document.getElementById('todayTag').textContent = fmt(todayISO());
   document.getElementById('refDate').value = todayISO();
 

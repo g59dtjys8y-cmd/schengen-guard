@@ -11,8 +11,18 @@
 (function(){
   var t = localStorage.getItem('schengenGuardTheme');
   if(t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  var params = new URLSearchParams(location.search);
+  var urlLang = params.get('lang');
+  var validLangs = ['en','zh','ja'];
+  var lang = validLangs.indexOf(urlLang) !== -1 ? urlLang : (localStorage.getItem('schengenGuardLang') || 'en');
+  document.documentElement.setAttribute('lang', lang);
+  document.documentElement.setAttribute('data-lang', lang);
 })();
 </script>
+<link rel="alternate" hreflang="en" href="https://g59dtjys8y-cmd.github.io/schengen-guard/?lang=en">
+<link rel="alternate" hreflang="zh" href="https://g59dtjys8y-cmd.github.io/schengen-guard/?lang=zh">
+<link rel="alternate" hreflang="ja" href="https://g59dtjys8y-cmd.github.io/schengen-guard/?lang=ja">
+<link rel="alternate" hreflang="x-default" href="https://g59dtjys8y-cmd.github.io/schengen-guard/">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
@@ -30,8 +40,8 @@
     <!-- HOME -->
     <div class="screen" id="tab-home">
       <div class="card backup-nudge" id="backupNudge" style="display:none;">
-        <p class="card-body" style="margin:0;">Your trips live only on this device. <a href="#" id="backupNudgeLink">Back them up</a> so you don't lose them.</p>
-        <button type="button" class="link-btn" id="backupNudgeDismiss" aria-label="Dismiss">Dismiss</button>
+        <p class="card-body" style="margin:0;" id="backupNudgeText">Your trips live only on this device. <a href="#" id="backupNudgeLink">Back them up</a> so you don't lose them.</p>
+        <button type="button" class="link-btn" id="backupNudgeDismiss" aria-label="Dismiss" data-i18n="backupNudge.dismiss">Dismiss</button>
       </div>
 
       <div class="ring-wrap">
@@ -45,7 +55,7 @@
         </div>
         <div class="ring-center">
           <div class="ring-n" id="ringN">—</div>
-          <div class="ring-sub" id="ringSub">days left of 90</div>
+          <div class="ring-sub" id="ringSub" data-i18n="home.daysLeftOf90">days left of 90</div>
         </div>
       </div>
 
@@ -53,9 +63,9 @@
         <div class="card-kicker" id="lastDayKicker">Last day to leave</div>
         <div class="card-title" style="font-size:26px;" id="lastDayTitle">—</div>
         <p class="card-body" id="lastDayBody"></p>
-        <button type="button" class="link-btn" id="homeBreakdownBtn" style="font-size:12.5px;">How is this calculated?</button>
+        <button type="button" class="link-btn" id="homeBreakdownBtn" style="font-size:12.5px;" data-i18n="home.howCalculated">How is this calculated?</button>
         <div class="check-as-of">
-          <label for="refDate">Check as of</label>
+          <label for="refDate" data-i18n="home.checkAsOf">Check as of</label>
           <input class="input" type="date" id="refDate">
         </div>
       </div>
@@ -63,7 +73,7 @@
       <div class="card elev-sm" id="nextTripPanel" style="display:none; cursor:pointer;">
         <div class="card-row" style="gap:14px;">
           <div>
-            <div class="card-kicker">Next trip</div>
+            <div class="card-kicker" data-i18n="home.nextTrip">Next trip</div>
             <div class="card-title" style="font-size:21px;" id="nextTripCountry"></div>
             <div class="card-meta" id="nextTripDates"></div>
           </div>
@@ -72,46 +82,46 @@
         <p class="card-body" id="nextTripSuggestion" style="margin-top:4px;"></p>
       </div>
       <div class="card elev-sm" id="nextTripEmpty" style="display:none;">
-        <p class="card-body" style="margin:0;">No upcoming trips logged yet.</p>
+        <p class="card-body" style="margin:0;" data-i18n="home.noUpcomingTrips">No upcoming trips logged yet.</p>
       </div>
 
       <div class="card elev-sm card-row" id="countriesCard" style="cursor:pointer;">
         <div>
-          <div class="card-kicker">Countries visited</div>
+          <div class="card-kicker" data-i18n="home.countriesVisited">Countries visited</div>
           <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
         </div>
-        <span class="tag tag-neutral">View →</span>
+        <span class="tag tag-neutral" data-i18n="home.view">View →</span>
       </div>
     </div>
 
     <!-- TRIPS -->
     <div class="screen" id="tab-trips" style="display:none;">
       <div class="masthead" style="padding-top:4px;">
-        <h1 style="font-size:22px;">Your trips</h1>
+        <h1 style="font-size:22px;" data-i18n="trips.heading">Your trips</h1>
         <button type="button" class="btn btn-primary btn-icon" id="addTripShortcutBtn" aria-label="Add a trip">+</button>
       </div>
 
       <div class="card safe-trip-checker" id="checkerCard">
-        <div class="card-kicker">Safe Trip Checker</div>
+        <div class="card-kicker" data-i18n="trips.checkerTitle">Safe Trip Checker</div>
         <div class="field" style="margin-top:2px;">
-          <label for="checkerCountry">Country</label>
+          <label for="checkerCountry" data-i18n="trips.country">Country</label>
           <select class="input" id="checkerCountry"></select>
         </div>
         <div class="form-row" style="margin-top:8px;">
           <div class="field">
-            <label for="checkerEntry">Entry</label>
+            <label for="checkerEntry" data-i18n="trips.entry">Entry</label>
             <input class="input" type="date" id="checkerEntry">
           </div>
           <div class="field">
-            <label for="checkerExit">Exit</label>
+            <label for="checkerExit" data-i18n="trips.exit">Exit</label>
             <input class="input" type="date" id="checkerExit">
           </div>
         </div>
-        <p class="card-body" id="checkerMsg" style="margin-top:6px;">Pick an entry and exit date to check compliance before you save it.</p>
-        <button type="button" class="link-btn" id="checkerBreakdownBtn" style="display:none; font-size:12.5px;">How is this calculated?</button>
+        <p class="card-body" id="checkerMsg" style="margin-top:6px;" data-i18n="trips.checkerPrompt">Pick an entry and exit date to check compliance before you save it.</p>
+        <button type="button" class="link-btn" id="checkerBreakdownBtn" style="display:none; font-size:12.5px;" data-i18n="trips.howCalculated">How is this calculated?</button>
         <div id="checkerSuggestions" class="stack" style="display:none;"></div>
         <div class="form-error" id="checkerError" style="display:none;"></div>
-        <button type="button" class="btn btn-primary btn-block" id="checkerSaveBtn" disabled>Save trip</button>
+        <button type="button" class="btn btn-primary btn-block" id="checkerSaveBtn" disabled data-i18n="trips.saveTrip">Save trip</button>
       </div>
 
       <div id="tripRows" style="margin-top:14px; display:flex; flex-direction:column; gap:12px;"></div>
@@ -119,19 +129,19 @@
 
     <!-- COUNTRIES (secondary screen, reached from Home) -->
     <div class="screen" id="tab-countries" style="display:none;">
-      <button type="button" class="countries-back" id="countriesBackBtn">← Home</button>
-      <h1 style="font-size:22px; margin-top:10px;">Countries visited</h1>
+      <button type="button" class="countries-back" id="countriesBackBtn" data-i18n="countries.back">← Home</button>
+      <h1 style="font-size:22px; margin-top:10px;" data-i18n="countries.heading">Countries visited</h1>
       <div class="card-meta" id="countriesSubtitle" style="margin-top:2px;"></div>
       <div class="countries-grid" id="countriesGrid"></div>
     </div>
 
     <!-- CALENDAR -->
     <div class="screen" id="tab-calendar" style="display:none;">
-      <h1 style="font-size:22px; padding-top:4px;" id="calendarHeading">Log a stay</h1>
-      <p class="card-body" style="margin:6px 0 16px;">Tap the entry date, then the exit date, right on the calendar. Each date also shows your days remaining as of that day.</p>
+      <h1 style="font-size:22px; padding-top:4px;" id="calendarHeading" data-i18n="calendar.logHeading">Log a stay</h1>
+      <p class="card-body" style="margin:6px 0 16px;" data-i18n="calendar.intro">Tap the entry date, then the exit date, right on the calendar. Each date also shows your days remaining as of that day.</p>
 
       <div class="field">
-        <label for="tripLabel">Country</label>
+        <label for="tripLabel" data-i18n="calendar.country">Country</label>
         <select class="input" id="tripLabel">
           <option>Austria</option>
           <option>Belgium</option>
@@ -172,178 +182,187 @@
       <input type="hidden" id="tripEnd">
 
       <div id="exclusionSection" style="display:none; margin-top:14px;">
-        <div class="card-kicker">Side trip outside Schengen (optional)</div>
-        <p class="note">Mark days within this stay spent outside Schengen (e.g. a UK leg) — they won't count toward your 90-day limit.</p>
+        <div class="card-kicker" data-i18n="calendar.exclusionTitle">Side trip outside Schengen (optional)</div>
+        <p class="note" data-i18n="calendar.exclusionNote">Mark days within this stay spent outside Schengen (e.g. a UK leg) — they won't count toward your 90-day limit.</p>
         <div class="form-row">
           <div class="field">
-            <label for="exclStart">From</label>
+            <label for="exclStart" data-i18n="calendar.exclusionFrom">From</label>
             <input class="input" type="date" id="exclStart">
           </div>
           <div class="field">
-            <label for="exclEnd">To</label>
+            <label for="exclEnd" data-i18n="calendar.exclusionTo">To</label>
             <input class="input" type="date" id="exclEnd">
           </div>
         </div>
-        <button type="button" class="btn btn-secondary btn-block" id="addExclusionBtn">Add exclusion</button>
+        <button type="button" class="btn btn-secondary btn-block" id="addExclusionBtn" data-i18n="calendar.addExclusion">Add exclusion</button>
         <div class="form-error" id="exclusionError" style="display:none;"></div>
         <div id="exclusionList" class="stack" style="margin-top:6px;"></div>
       </div>
 
-      <button type="button" class="btn btn-primary btn-block" id="addTripBtn">Log stay</button>
-      <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:8px;">Cancel edit</button>
+      <button type="button" class="btn btn-primary btn-block" id="addTripBtn" data-i18n="calendar.logStay">Log stay</button>
+      <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:8px;" data-i18n="calendar.cancelEdit">Cancel edit</button>
       <div class="form-error" id="formError" style="display:none;"></div>
 
       <div class="cal-head">
-        <button type="button" id="prevMonth">← Prev</button>
+        <button type="button" id="prevMonth" data-i18n="calendar.prevMonth">← Prev</button>
         <div class="cal-month" id="calMonthLabel"></div>
-        <button type="button" id="nextMonth">Next →</button>
+        <button type="button" id="nextMonth" data-i18n="calendar.nextMonth">Next →</button>
       </div>
       <div class="cal-grid" id="calGrid"></div>
       <div class="legend">
-        <span><i style="background:var(--color-accent);"></i>past / active stay</span>
-        <span><i style="background:var(--color-accent-2);"></i>planned stay</span>
-        <span><i style="background:var(--color-accent-2-700);"></i>overstay</span>
-        <span><i style="background:var(--color-neutral-300); border:1px dashed var(--color-neutral-600);"></i>outside Schengen (excluded)</span>
-        <span><i style="background:transparent;border:2px dashed var(--color-text);"></i>selecting</span>
+        <span><i style="background:var(--color-accent);"></i><span data-i18n="calendar.legend.pastActive">past / active stay</span></span>
+        <span><i style="background:var(--color-accent-2);"></i><span data-i18n="calendar.legend.planned">planned stay</span></span>
+        <span><i style="background:var(--color-accent-2-700);"></i><span data-i18n="calendar.legend.overstay">overstay</span></span>
+        <span><i style="background:var(--color-neutral-300); border:1px dashed var(--color-neutral-600);"></i><span data-i18n="calendar.legend.excluded">outside Schengen (excluded)</span></span>
+        <span><i style="background:transparent;border:2px dashed var(--color-text);"></i><span data-i18n="calendar.legend.selecting">selecting</span></span>
       </div>
-      <p class="note" style="margin-top:10px;">Small figure under each date is days remaining of your 90 as of that day.</p>
+      <p class="note" style="margin-top:10px;" data-i18n="calendar.remainingNote">Small figure under each date is days remaining of your 90 as of that day.</p>
     </div>
 
     <!-- SETTINGS -->
     <div class="screen" id="tab-settings" style="display:none;">
-      <h1 style="font-size:22px; padding-top:4px; margin-bottom:16px;">Settings</h1>
+      <h1 style="font-size:22px; padding-top:4px; margin-bottom:16px;" data-i18n="settings.heading">Settings</h1>
 
       <div class="card" id="backupCard">
-        <div class="card-kicker">Backup &amp; restore</div>
-        <p class="card-body">Trip data lives only on this device — there's no account and no server copy. Back up regularly, and before you switch phones or clear browser data.</p>
-        <button type="button" class="btn btn-primary btn-block" id="exportBtn">Back up my trips</button>
-        <button type="button" class="btn btn-secondary btn-block" id="importBtn">Restore from backup</button>
+        <div class="card-kicker" data-i18n="settings.backupTitle">Backup &amp; restore</div>
+        <p class="card-body" data-i18n="settings.backupBody">Trip data lives only on this device — there's no account and no server copy. Back up regularly, and before you switch phones or clear browser data.</p>
+        <button type="button" class="btn btn-primary btn-block" id="exportBtn" data-i18n="settings.backupBtn">Back up my trips</button>
+        <button type="button" class="btn btn-secondary btn-block" id="importBtn" data-i18n="settings.restoreBtn">Restore from backup</button>
         <input type="file" id="importFile" accept="application/json" style="display:none;">
         <div class="form-error" id="backupError" style="display:none;"></div>
         <p class="note" id="lastBackupNote" style="display:none;"></p>
       </div>
 
       <div class="card" id="exportCard">
-        <div class="card-kicker">Export trip history</div>
-        <p class="card-body">For handing to a border official or visa office — a human-readable copy, not for re-importing (use Backup for that).</p>
-        <button type="button" class="btn btn-secondary btn-block" id="exportCsvBtn">Export as CSV</button>
-        <button type="button" class="btn btn-secondary btn-block" id="printTripsBtn">Print / save as PDF</button>
+        <div class="card-kicker" data-i18n="settings.exportTitle">Export trip history</div>
+        <p class="card-body" data-i18n="settings.exportBody">For handing to a border official or visa office — a human-readable copy, not for re-importing (use Backup for that).</p>
+        <button type="button" class="btn btn-secondary btn-block" id="exportCsvBtn" data-i18n="settings.exportCsv">Export as CSV</button>
+        <button type="button" class="btn btn-secondary btn-block" id="printTripsBtn" data-i18n="settings.printBtn">Print / save as PDF</button>
       </div>
 
       <div class="card">
-        <div class="card-kicker">Appearance</div>
+        <div class="card-kicker" data-i18n="settings.appearanceTitle">Appearance</div>
         <div class="theme-toggle">
           <button type="button" class="theme-btn" id="themeLightBtn" data-theme-choice="light">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12H5M19 12h2.5M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>
-            Light
+            <span data-i18n="settings.themeLight">Light</span>
           </button>
           <button type="button" class="theme-btn" id="themeDarkBtn" data-theme-choice="dark">
             <svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>
-            Dark
+            <span data-i18n="settings.themeDark">Dark</span>
           </button>
           <button type="button" class="theme-btn" id="themeSystemBtn" data-theme-choice="system">
             <svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16.5V20"/></svg>
-            Auto
+            <span data-i18n="settings.themeAuto">Auto</span>
           </button>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-kicker">Notifications — alert when days remaining reaches</div>
-        <div class="stack" style="margin-top:4px;">
-          <label class="radio"><input type="checkbox" id="notif14"><span class="dot"></span>14 days left</label>
-          <label class="radio"><input type="checkbox" id="notif7"><span class="dot"></span>7 days left</label>
-          <label class="radio"><input type="checkbox" id="notif3"><span class="dot"></span>3 days left</label>
+        <div class="card-kicker" data-i18n="settings.languageTitle">Language</div>
+        <div class="theme-toggle">
+          <button type="button" class="theme-btn" id="langEnBtn" data-lang-choice="en">English</button>
+          <button type="button" class="theme-btn" id="langZhBtn" data-lang-choice="zh">中文</button>
+          <button type="button" class="theme-btn" id="langJaBtn" data-lang-choice="ja">日本語</button>
         </div>
-        <p class="note">Fires once per threshold per rolling window, based on your logged and planned trips. Requires notification permission and the app open in a tab.</p>
       </div>
 
       <div class="card">
-        <div class="card-kicker">Data</div>
-        <p class="card-body">Rolling 180-day window, max 90 days in Schengen — the standard short-stay rule for non-EU visitors. Not immigration advice.</p>
-        <p class="card-body">This app works fully offline and never sends your trip data anywhere. If you lose this device, uninstall the app, or clear browser data without a backup, your trips can't be recovered.</p>
-        <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn">Clear all logged stays</button>
+        <div class="card-kicker" data-i18n="settings.notificationsTitle">Notifications — alert when days remaining reaches</div>
+        <div class="stack" style="margin-top:4px;">
+          <label class="radio"><input type="checkbox" id="notif14"><span class="dot"></span><span data-i18n="settings.notif14">14 days left</span></label>
+          <label class="radio"><input type="checkbox" id="notif7"><span class="dot"></span><span data-i18n="settings.notif7">7 days left</span></label>
+          <label class="radio"><input type="checkbox" id="notif3"><span class="dot"></span><span data-i18n="settings.notif3">3 days left</span></label>
+        </div>
+        <p class="note" data-i18n="settings.notifNote">Fires once per threshold per rolling window, based on your logged and planned trips. Requires notification permission and the app open in a tab.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-kicker" data-i18n="settings.dataTitle">Data</div>
+        <p class="card-body" data-i18n="settings.dataRule">Rolling 180-day window, max 90 days in Schengen — the standard short-stay rule for non-EU visitors. Not immigration advice.</p>
+        <p class="card-body" data-i18n="settings.dataOffline">This app works fully offline and never sends your trip data anywhere. If you lose this device, uninstall the app, or clear browser data without a backup, your trips can't be recovered.</p>
+        <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn" data-i18n="settings.clearStays">Clear all logged stays</button>
       </div>
 
       <div class="card elev-sm card-row" id="faqCard" style="cursor:pointer;">
         <div>
-          <div class="card-kicker">Help</div>
-          <div class="card-title" style="font-size:18px;">FAQ &amp; terms</div>
+          <div class="card-kicker" data-i18n="settings.helpTitle">Help</div>
+          <div class="card-title" style="font-size:18px;" data-i18n="settings.faqTitle">FAQ &amp; terms</div>
         </div>
-        <span class="tag tag-neutral">View →</span>
+        <span class="tag tag-neutral" data-i18n="settings.viewArrow">View →</span>
       </div>
     </div>
 
     <!-- FAQ + TERMS (secondary screen, reached from Settings) -->
     <div class="screen" id="tab-faq" style="display:none;">
-      <button type="button" class="countries-back" id="faqBackBtn">← Settings</button>
-      <h1 style="font-size:22px; margin-top:10px;">FAQ &amp; terms</h1>
+      <button type="button" class="countries-back" id="faqBackBtn" data-i18n="faq.back">← Settings</button>
+      <h1 style="font-size:22px; margin-top:10px;" data-i18n="faq.heading">FAQ &amp; terms</h1>
 
       <div class="card">
-        <div class="card-kicker">Data &amp; privacy</div>
+        <div class="card-kicker" data-i18n="faq.dataPrivacy.title">Data &amp; privacy</div>
         <details class="faq-item">
-          <summary>Where is my data stored?</summary>
-          <p class="card-body">On this device only, in your browser's local storage. There's no account and no server — nothing about your trips is ever sent anywhere.</p>
+          <summary data-i18n="faq.dataStored.q">Where is my data stored?</summary>
+          <p class="card-body" data-i18n="faq.dataStored.a">On this device only, in your browser's local storage. There's no account and no server — nothing about your trips is ever sent anywhere.</p>
         </details>
         <details class="faq-item">
-          <summary>Do I need an internet connection?</summary>
-          <p class="card-body">No. Once the app is open, it works fully offline — logging stays, checking dates, and calculating your 90/180 status all happen entirely on your device.</p>
+          <summary data-i18n="faq.internet.q">Do I need an internet connection?</summary>
+          <p class="card-body" data-i18n="faq.internet.a">No. Once the app is open, it works fully offline — logging stays, checking dates, and calculating your 90/180 status all happen entirely on your device.</p>
         </details>
       </div>
 
       <div class="card">
-        <div class="card-kicker">Backup</div>
+        <div class="card-kicker" data-i18n="faq.backup.title">Backup</div>
         <details class="faq-item">
-          <summary>What happens if I lose my phone or clear my browser data?</summary>
-          <p class="card-body">Your trip data is gone unless you exported a backup first. There's no server copy to restore from — that's the trade-off for keeping your data private, but it means backing up is entirely on you.</p>
+          <summary data-i18n="faq.lostPhone.q">What happens if I lose my phone or clear my browser data?</summary>
+          <p class="card-body" data-i18n="faq.lostPhone.a">Your trip data is gone unless you exported a backup first. There's no server copy to restore from — that's the trade-off for keeping your data private, but it means backing up is entirely on you.</p>
         </details>
         <details class="faq-item">
-          <summary>How do I back up or move my data to a new device?</summary>
-          <p class="card-body">Go to Settings → Backup &amp; restore → "Back up my trips" to download a JSON file. On your new device (or after reinstalling), use "Restore from backup" to load it back in.</p>
-        </details>
-      </div>
-
-      <div class="card">
-        <div class="card-kicker">The rule itself</div>
-        <details class="faq-item">
-          <summary>What counts as a day in the Schengen Area?</summary>
-          <p class="card-body">Any calendar day you're physically present in the Schengen Area counts as a full day — including your entry and exit days, even if you only cross the border for an hour.</p>
-        </details>
-        <details class="faq-item">
-          <summary>How is the 90/180 rule actually calculated?</summary>
-          <p class="card-body">The app looks at a rolling 180-day window ending on any given date and counts how many of those days you spent in Schengen. If that count goes over 90, you're over the limit. Tap "How is this calculated?" on Home or the Safe Trip Checker to see the day-by-day math behind any number.</p>
-        </details>
-        <details class="faq-item">
-          <summary>Do side trips outside Schengen (UK, etc.) count?</summary>
-          <p class="card-body">No. If part of a longer trip takes you outside the Schengen Area — a UK leg, for example — mark those days as excluded when logging the stay in Calendar, and they won't count toward your 90-day total.</p>
+          <summary data-i18n="faq.backupHow.q">How do I back up or move my data to a new device?</summary>
+          <p class="card-body" data-i18n="faq.backupHow.a">Go to Settings → Backup &amp; restore → "Back up my trips" to download a JSON file. On your new device (or after reinstalling), use "Restore from backup" to load it back in.</p>
         </details>
       </div>
 
       <div class="card">
-        <div class="card-kicker">App mechanics</div>
+        <div class="card-kicker" data-i18n="faq.ruleTitle">The rule itself</div>
         <details class="faq-item">
-          <summary>How do I export my trip history for a visa application?</summary>
-          <p class="card-body">Go to Settings → Export trip history. "Export as CSV" gives you a spreadsheet-friendly file; "Print / save as PDF" gives you a formatted summary to hand to a border official or include with a visa application. Neither is the same as the JSON backup — use Backup &amp; restore for that.</p>
+          <summary data-i18n="faq.dayCounts.q">What counts as a day in the Schengen Area?</summary>
+          <p class="card-body" data-i18n="faq.dayCounts.a">Any calendar day you're physically present in the Schengen Area counts as a full day — including your entry and exit days, even if you only cross the border for an hour.</p>
+        </details>
+        <details class="faq-item">
+          <summary data-i18n="faq.howCalculated.q">How is the 90/180 rule actually calculated?</summary>
+          <p class="card-body" data-i18n="faq.howCalculated.a">The app looks at a rolling 180-day window ending on any given date and counts how many of those days you spent in Schengen. If that count goes over 90, you're over the limit. Tap "How is this calculated?" on Home or the Safe Trip Checker to see the day-by-day math behind any number.</p>
+        </details>
+        <details class="faq-item">
+          <summary data-i18n="faq.sideTrips.q">Do side trips outside Schengen (UK, etc.) count?</summary>
+          <p class="card-body" data-i18n="faq.sideTrips.a">No. If part of a longer trip takes you outside the Schengen Area — a UK leg, for example — mark those days as excluded when logging the stay in Calendar, and they won't count toward your 90-day total.</p>
         </details>
       </div>
 
       <div class="card">
-        <div class="card-kicker">ETIAS</div>
+        <div class="card-kicker" data-i18n="faq.appMechanicsTitle">App mechanics</div>
         <details class="faq-item">
-          <summary>What is ETIAS, and does it affect my 90/180-day count?</summary>
-          <p class="card-body">ETIAS (European Travel Information and Authorisation System) is a separate travel authorization, not a visa. Starting late 2026, most visitors from visa-exempt countries — including the US, UK, and Canada — will need to apply for one online before traveling to the Schengen Area.</p>
-          <p class="card-body">Here's the part that matters for this app: ETIAS doesn't change the 90/180 rule. It's a pre-travel authorization step layered on top of the existing rule, not a replacement for it. Once you're approved, your stay is still governed by the same 90-days-in-any-180-day-window limit this app tracks. Getting ETIAS approved doesn't extend your allowed days, and it doesn't reset your count.</p>
-          <p class="card-body">ETIAS applications aren't handled through this app — apply directly at the official EU site. This page is here to explain how it fits with your day count, not to process your application.</p>
+          <summary data-i18n="faq.exportVisa.q">How do I export my trip history for a visa application?</summary>
+          <p class="card-body" data-i18n="faq.exportVisa.a">Go to Settings → Export trip history. "Export as CSV" gives you a spreadsheet-friendly file; "Print / save as PDF" gives you a formatted summary to hand to a border official or include with a visa application. Neither is the same as the JSON backup — use Backup &amp; restore for that.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="card-kicker" data-i18n="faq.etiasTitle">ETIAS</div>
+        <details class="faq-item">
+          <summary data-i18n="faq.etias.q">What is ETIAS, and does it affect my 90/180-day count?</summary>
+          <p class="card-body" data-i18n="faq.etias.a1">ETIAS (European Travel Information and Authorisation System) is a separate travel authorization, not a visa. Starting late 2026, most visitors from visa-exempt countries — including the US, UK, and Canada — will need to apply for one online before traveling to the Schengen Area.</p>
+          <p class="card-body" data-i18n="faq.etias.a2">Here's the part that matters for this app: ETIAS doesn't change the 90/180 rule. It's a pre-travel authorization step layered on top of the existing rule, not a replacement for it. Once you're approved, your stay is still governed by the same 90-days-in-any-180-day-window limit this app tracks. Getting ETIAS approved doesn't extend your allowed days, and it doesn't reset your count.</p>
+          <p class="card-body" data-i18n="faq.etias.a3">ETIAS applications aren't handled through this app — apply directly at the official EU site. This page is here to explain how it fits with your day count, not to process your application.</p>
           <p class="card-body" id="etiasLastChecked">Last checked: 12 Aug 2026. ETIAS's launch date has shifted before, so treat the timing above as current-best-information rather than fixed — check <a href="https://etias.europa.eu" target="_blank" rel="noopener">etias.europa.eu</a> for the authoritative date.</p>
         </details>
       </div>
 
       <div class="card" id="disclaimerCard">
-        <div class="card-kicker">Terms &amp; disclaimer</div>
-        <p class="card-body">Schengen Guard is a personal tracking tool, not immigration or legal advice.</p>
-        <p class="card-body">You're responsible for independently verifying your own compliance before you travel — the app's calculations are a best-effort aid, not a guarantee.</p>
-        <p class="card-body">We accept no liability for overstay consequences based on the app's output.</p>
-        <p class="card-body">Trip data lives only on this device. It is not recoverable by the app or its developer if the device is lost, the app is uninstalled, or browser data is cleared — exporting a backup is your own responsibility.</p>
+        <div class="card-kicker" data-i18n="faq.disclaimerTitle">Terms &amp; disclaimer</div>
+        <p class="card-body" data-i18n="faq.disclaimer.notAdvice">Schengen Guard is a personal tracking tool, not immigration or legal advice.</p>
+        <p class="card-body" data-i18n="faq.disclaimer.verify">You're responsible for independently verifying your own compliance before you travel — the app's calculations are a best-effort aid, not a guarantee.</p>
+        <p class="card-body" data-i18n="faq.disclaimer.liability">We accept no liability for overstay consequences based on the app's output.</p>
+        <p class="card-body" data-i18n="faq.disclaimer.dataLoss">Trip data lives only on this device. It is not recoverable by the app or its developer if the device is lost, the app is uninstalled, or browser data is cleared — exporting a backup is your own responsibility.</p>
       </div>
     </div>
 
@@ -352,19 +371,19 @@
   <nav class="tabbar" id="tabbar" style="display:flex;">
     <button class="tab-btn active" data-tab="home">
       <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
-      Home
+      <span data-i18n="nav.home">Home</span>
     </button>
     <button class="tab-btn" data-tab="trips">
       <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="12" rx="1.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
-      Trips
+      <span data-i18n="nav.trips">Trips</span>
     </button>
     <button class="tab-btn" data-tab="calendar">
       <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="1.5"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>
-      Calendar
+      <span data-i18n="nav.calendar">Calendar</span>
     </button>
     <button class="tab-btn" data-tab="settings">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.3 2.4a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1L11 21h4l.3-2.4a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5z"/></svg>
-      Settings
+      <span data-i18n="nav.settings">Settings</span>
     </button>
   </nav>
 
@@ -372,25 +391,25 @@
 
   <div class="modal-backdrop" id="importModal" style="display:none;">
     <div class="card modal-card">
-      <div class="card-kicker">Restore from backup</div>
+      <div class="card-kicker" data-i18n="import.title">Restore from backup</div>
       <p class="card-body" id="importModalMsg"></p>
-      <button type="button" class="btn btn-primary btn-block" id="importMergeBtn">Merge with current trips</button>
-      <button type="button" class="btn btn-secondary btn-block" id="importReplaceBtn">Replace current trips</button>
-      <button type="button" class="link-btn" id="importCancelBtn">Cancel</button>
+      <button type="button" class="btn btn-primary btn-block" id="importMergeBtn" data-i18n="import.merge">Merge with current trips</button>
+      <button type="button" class="btn btn-secondary btn-block" id="importReplaceBtn" data-i18n="import.replace">Replace current trips</button>
+      <button type="button" class="link-btn" id="importCancelBtn" data-i18n="import.cancel">Cancel</button>
     </div>
   </div>
 
   <div class="modal-backdrop" id="breakdownModal" style="display:none;">
     <div class="card modal-card breakdown-card">
-      <div class="card-kicker">How is this calculated?</div>
+      <div class="card-kicker" data-i18n="breakdown.title">How is this calculated?</div>
       <p class="card-body" id="breakdownSummary" style="margin:0;"></p>
       <div class="breakdown-table-wrap">
         <table class="breakdown-table" id="breakdownTable">
-          <thead><tr><th>Date</th><th>Counts?</th><th>Running total</th></tr></thead>
+          <thead><tr><th data-i18n="breakdown.date">Date</th><th data-i18n="breakdown.counts">Counts?</th><th data-i18n="breakdown.runningTotal">Running total</th></tr></thead>
           <tbody id="breakdownRows"></tbody>
         </table>
       </div>
-      <button type="button" class="btn btn-secondary btn-block" id="breakdownCloseBtn">Close</button>
+      <button type="button" class="btn btn-secondary btn-block" id="breakdownCloseBtn" data-i18n="breakdown.close">Close</button>
     </div>
   </div>
 </div>
