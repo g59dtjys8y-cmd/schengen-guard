@@ -227,12 +227,19 @@ a:hover{text-decoration:underline;}
 .radio input:focus-visible + .dot{outline:2px solid var(--color-accent);outline-offset:2px;}
 .note{font-size:12.5px;color:var(--color-neutral-600);margin:0;}
 
-/* — auth — */
-#authPanel .card{gap:14px;}
-#authPanel h2{font-family:var(--font-heading);font-size:20px;font-weight:600;margin:0;}
-#authPanel .desc{font-size:13.5px;color:var(--color-neutral-700);margin:0 0 4px;}
-#authPanel .field + .field{margin-top:2px;}
-#authPanel .btn + .btn{margin-top:0;}
+/* — backup nudge banner — */
+.backup-nudge{
+  flex-direction:row;align-items:center;justify-content:space-between;gap:10px;
+  border:1px solid var(--color-accent);background:var(--color-accent-100);margin-bottom:14px;
+}
+.backup-nudge a{color:var(--color-accent-800);font-weight:600;}
+
+/* — import merge/replace modal — */
+.modal-backdrop{
+  position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.modal-card{width:100%;max-width:400px;gap:10px;}
 
 /* — arc ring (home) — */
 .ring-wrap{position:relative;width:230px;height:230px;margin:8px auto 0;}

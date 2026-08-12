@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schengen-calc-v1';
+const CACHE_NAME = 'schengen-guard-v1';
 const CORE_FILES = ['./', 'index.html', 'style.css', 'script.js', 'manifest.json', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (event) => {
@@ -17,8 +17,9 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Network-first: always try to get the freshest version (important since this app
-// talks to a live database), falling back to the cached copy only if offline.
+// Network-first: always try to get the freshest version of the app itself,
+// falling back to the cached copy only if offline. Trip data never goes over
+// the network — it lives entirely in this device's IndexedDB.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   event.respondWith(
