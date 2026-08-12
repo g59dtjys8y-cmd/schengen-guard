@@ -347,6 +347,8 @@ document.getElementById('countriesBackBtn').addEventListener('click', ()=> switc
 document.getElementById('addTripShortcutBtn').addEventListener('click', ()=>{
   document.getElementById('checkerEntry').focus();
 });
+document.getElementById('faqCard').addEventListener('click', ()=> switchTab('faq'));
+document.getElementById('faqBackBtn').addEventListener('click', ()=> switchTab('settings'));
 
 // --- Home: arc ring + last-day card + next trip + countries ---
 

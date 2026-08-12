@@ -264,6 +264,84 @@
         <p class="card-body">This app works fully offline and never sends your trip data anywhere. If you lose this device, uninstall the app, or clear browser data without a backup, your trips can't be recovered.</p>
         <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn">Clear all logged stays</button>
       </div>
+
+      <div class="card elev-sm card-row" id="faqCard" style="cursor:pointer;">
+        <div>
+          <div class="card-kicker">Help</div>
+          <div class="card-title" style="font-size:18px;">FAQ &amp; terms</div>
+        </div>
+        <span class="tag tag-neutral">View →</span>
+      </div>
+    </div>
+
+    <!-- FAQ + TERMS (secondary screen, reached from Settings) -->
+    <div class="screen" id="tab-faq" style="display:none;">
+      <button type="button" class="countries-back" id="faqBackBtn">← Settings</button>
+      <h1 style="font-size:22px; margin-top:10px;">FAQ &amp; terms</h1>
+
+      <div class="card">
+        <div class="card-kicker">Data &amp; privacy</div>
+        <details class="faq-item">
+          <summary>Where is my data stored?</summary>
+          <p class="card-body">On this device only, in your browser's local storage. There's no account and no server — nothing about your trips is ever sent anywhere.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do I need an internet connection?</summary>
+          <p class="card-body">No. Once the app is open, it works fully offline — logging stays, checking dates, and calculating your 90/180 status all happen entirely on your device.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="card-kicker">Backup</div>
+        <details class="faq-item">
+          <summary>What happens if I lose my phone or clear my browser data?</summary>
+          <p class="card-body">Your trip data is gone unless you exported a backup first. There's no server copy to restore from — that's the trade-off for keeping your data private, but it means backing up is entirely on you.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How do I back up or move my data to a new device?</summary>
+          <p class="card-body">Go to Settings → Backup &amp; restore → "Back up my trips" to download a JSON file. On your new device (or after reinstalling), use "Restore from backup" to load it back in.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="card-kicker">The rule itself</div>
+        <details class="faq-item">
+          <summary>What counts as a day in the Schengen Area?</summary>
+          <p class="card-body">Any calendar day you're physically present in the Schengen Area counts as a full day — including your entry and exit days, even if you only cross the border for an hour.</p>
+        </details>
+        <details class="faq-item">
+          <summary>How is the 90/180 rule actually calculated?</summary>
+          <p class="card-body">The app looks at a rolling 180-day window ending on any given date and counts how many of those days you spent in Schengen. If that count goes over 90, you're over the limit. Tap "How is this calculated?" on Home or the Safe Trip Checker to see the day-by-day math behind any number.</p>
+        </details>
+        <details class="faq-item">
+          <summary>Do side trips outside Schengen (UK, etc.) count?</summary>
+          <p class="card-body">No. If part of a longer trip takes you outside the Schengen Area — a UK leg, for example — mark those days as excluded when logging the stay in Calendar, and they won't count toward your 90-day total.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="card-kicker">App mechanics</div>
+        <details class="faq-item">
+          <summary>How do I export my trip history for a visa application?</summary>
+          <p class="card-body">Go to Settings → Export trip history. "Export as CSV" gives you a spreadsheet-friendly file; "Print / save as PDF" gives you a formatted summary to hand to a border official or include with a visa application. Neither is the same as the JSON backup — use Backup &amp; restore for that.</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="card-kicker">ETIAS</div>
+        <details class="faq-item">
+          <summary>What is ETIAS, and does it affect my 90/180-day count?</summary>
+          <p class="card-body" id="etiasAnswer">ETIAS is a pre-travel authorization that most visa-exempt visitors will need to apply for before entering the Schengen Area — it's not a visa, and it doesn't change the 90/180-day rule itself. Once required, you'll still need to track your days the same way; ETIAS just adds a separate authorization step before you travel.</p>
+        </details>
+      </div>
+
+      <div class="card" id="disclaimerCard">
+        <div class="card-kicker">Terms &amp; disclaimer</div>
+        <p class="card-body">Schengen Guard is a personal tracking tool, not immigration or legal advice.</p>
+        <p class="card-body">You're responsible for independently verifying your own compliance before you travel — the app's calculations are a best-effort aid, not a guarantee.</p>
+        <p class="card-body">We accept no liability for overstay consequences based on the app's output.</p>
+        <p class="card-body">Trip data lives only on this device. It is not recoverable by the app or its developer if the device is lost, the app is uninstalled, or browser data is cleared — exporting a backup is your own responsibility.</p>
+      </div>
     </div>
 
   </div>
