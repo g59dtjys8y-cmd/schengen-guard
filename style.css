@@ -241,6 +241,24 @@ a:hover{text-decoration:underline;}
 }
 .modal-card{width:100%;max-width:400px;gap:10px;}
 
+/* — calculation breakdown modal — */
+.breakdown-card{max-width:420px;max-height:85vh;}
+.breakdown-table-wrap{max-height:50vh;overflow-y:auto;border:1px solid var(--color-divider);border-radius:var(--radius-sm);}
+.breakdown-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.breakdown-table th{position:sticky;top:0;background:var(--color-surface);text-align:left;padding:6px 8px;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--color-neutral-700);border-bottom:1px solid var(--color-divider);}
+.breakdown-table td{padding:5px 8px;border-bottom:1px solid var(--color-divider);}
+.breakdown-table tr.counts td{background:var(--color-accent-100);}
+.breakdown-table tr.today-row td{font-weight:700;}
+
+/* — trip planner suggestions — */
+.suggestion-btn{
+  width:100%;text-align:left;padding:9px 11px;font-size:13px;font-family:var(--font-body);
+  border:1px solid var(--color-divider);border-radius:var(--radius-md);background:var(--color-field-bg);
+  cursor:pointer;color:var(--color-text);
+}
+.suggestion-btn:hover{border-color:var(--color-accent);}
+.suggestion-btn strong{color:var(--color-accent-700);}
+
 /* — arc ring (home) — */
 .ring-wrap{position:relative;width:230px;height:230px;margin:8px auto 0;}
 .ring-wrap svg{transform:rotate(-90deg);}

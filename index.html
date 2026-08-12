@@ -53,19 +53,23 @@
         <div class="card-kicker" id="lastDayKicker">Last day to leave</div>
         <div class="card-title" style="font-size:26px;" id="lastDayTitle">—</div>
         <p class="card-body" id="lastDayBody"></p>
+        <button type="button" class="link-btn" id="homeBreakdownBtn" style="font-size:12.5px;">How is this calculated?</button>
         <div class="check-as-of">
           <label for="refDate">Check as of</label>
           <input class="input" type="date" id="refDate">
         </div>
       </div>
 
-      <div class="card elev-sm card-row" id="nextTripPanel" style="display:none; cursor:pointer;">
-        <div>
-          <div class="card-kicker">Next trip</div>
-          <div class="card-title" style="font-size:21px;" id="nextTripCountry"></div>
-          <div class="card-meta" id="nextTripDates"></div>
+      <div class="card elev-sm" id="nextTripPanel" style="display:none; cursor:pointer;">
+        <div class="card-row" style="gap:14px;">
+          <div>
+            <div class="card-kicker">Next trip</div>
+            <div class="card-title" style="font-size:21px;" id="nextTripCountry"></div>
+            <div class="card-meta" id="nextTripDates"></div>
+          </div>
+          <span class="tag" id="nextTripTag"></span>
         </div>
-        <span class="tag" id="nextTripTag"></span>
+        <p class="card-body" id="nextTripSuggestion" style="margin-top:4px;"></p>
       </div>
       <div class="card elev-sm" id="nextTripEmpty" style="display:none;">
         <p class="card-body" style="margin:0;">No upcoming trips logged yet.</p>
@@ -104,6 +108,8 @@
           </div>
         </div>
         <p class="card-body" id="checkerMsg" style="margin-top:6px;">Pick an entry and exit date to check compliance before you save it.</p>
+        <button type="button" class="link-btn" id="checkerBreakdownBtn" style="display:none; font-size:12.5px;">How is this calculated?</button>
+        <div id="checkerSuggestions" class="stack" style="display:none;"></div>
         <div class="form-error" id="checkerError" style="display:none;"></div>
         <button type="button" class="btn btn-primary btn-block" id="checkerSaveBtn" disabled>Save trip</button>
       </div>
@@ -261,6 +267,20 @@
       <button type="button" class="btn btn-primary btn-block" id="importMergeBtn">Merge with current trips</button>
       <button type="button" class="btn btn-secondary btn-block" id="importReplaceBtn">Replace current trips</button>
       <button type="button" class="link-btn" id="importCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="breakdownModal" style="display:none;">
+    <div class="card modal-card breakdown-card">
+      <div class="card-kicker">How is this calculated?</div>
+      <p class="card-body" id="breakdownSummary" style="margin:0;"></p>
+      <div class="breakdown-table-wrap">
+        <table class="breakdown-table" id="breakdownTable">
+          <thead><tr><th>Date</th><th>Counts?</th><th>Running total</th></tr></thead>
+          <tbody id="breakdownRows"></tbody>
+        </table>
+      </div>
+      <button type="button" class="btn btn-secondary btn-block" id="breakdownCloseBtn">Close</button>
     </div>
   </div>
 </div>

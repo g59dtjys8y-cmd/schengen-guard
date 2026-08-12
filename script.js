@@ -134,6 +134,58 @@ function relativeStart(startISO){
   return `in ${Math.round(diffDays / 30)} months`;
 }
 
+// Earliest future start date (from tomorrow) at which a stay of `duration` days would
+// not breach the cap, given `list` (which should NOT include the trip being planned).
+function earliestCompliantStart(list, duration, capDays){
+  let d = addDays(new Date(),1);
+  for(let i=0;i<400;i++){
+    const startISO = isoOf(d);
+    const endISO = isoOf(addDays(d, duration-1));
+    const candidate = { start: startISO, end: endISO };
+    const overstay = tripOverstayInfo(list.concat([candidate]), candidate, capDays);
+    if(!overstay) return startISO;
+    d = addDays(d,1);
+  }
+  return null;
+}
+
+// One or two concrete alternatives for a trip that would overstay, or how much slack
+// remains if it wouldn't — not an open-ended optimizer, just the obvious next questions:
+// "how much shorter" / "how much later" / "how much more could I stay."
+// `listIncluding` must already contain the trip/candidate's own days; `listExcluding` must not.
+function computeTripSuggestion(listIncluding, listExcluding, start, end, capDays){
+  const duration = Math.round((toDate(end) - toDate(start)) / 86400000) + 1;
+  const overstay = tripOverstayInfo(listIncluding, { start, end }, capDays);
+
+  if(overstay){
+    const suggestions = [];
+    const altEnd = isoOf(addDays(toDate(overstay.date), -1));
+    if(altEnd >= start){
+      const altDays = Math.round((toDate(altEnd) - toDate(start)) / 86400000) + 1;
+      suggestions.push({
+        label: `Leave by <strong>${fmt(altEnd)}</strong> instead (${altDays} day${altDays===1?'':'s'}) to stay compliant.`,
+        start, end: altEnd
+      });
+    }
+    const altStart = earliestCompliantStart(listExcluding, duration, capDays);
+    if(altStart && altStart !== start){
+      const altEndForStart = isoOf(addDays(toDate(altStart), duration-1));
+      suggestions.push({
+        label: `Shift the whole trip to start <strong>${fmt(altStart)}</strong> instead (still ${duration} day${duration===1?'':'s'}).`,
+        start: altStart, end: altEndForStart
+      });
+    }
+    return { overstay: true, suggestions };
+  }
+
+  const maxDays = maxConsecutiveFrom(listIncluding, start, capDays);
+  const extra = maxDays - duration;
+  if(extra > 0){
+    return { overstay: false, extendable: true, extra, lastExit: isoOf(addDays(toDate(start), maxDays - 1)) };
+  }
+  return { overstay: false, extendable: false };
+}
+
 function classifyTrip(t){
   const today = todayISO();
   if(t.end < today) return 'past';
@@ -374,13 +426,19 @@ function renderNextTrip(){
   document.getElementById('nextTripDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)} · ${days} day${days===1?'':'s'}`;
 
   const tagEl = document.getElementById('nextTripTag');
-  const overstay = tripOverstayInfo(trips, trip, 90);
-  if(overstay){
+  const suggestionEl = document.getElementById('nextTripSuggestion');
+  const otherTrips = trips.filter(t => t.id !== trip.id);
+  const suggestion = computeTripSuggestion(trips, otherTrips, trip.start, trip.end, 90);
+  if(suggestion.overstay){
     tagEl.textContent = 'Overstay risk';
     tagEl.className = 'tag tag-accent-2';
+    suggestionEl.innerHTML = suggestion.suggestions[0] ? suggestion.suggestions[0].label : '';
   } else {
     tagEl.textContent = 'Within limits';
     tagEl.className = 'tag tag-accent';
+    suggestionEl.innerHTML = suggestion.extendable
+      ? `You could extend this stay by <strong>${suggestion.extra} more day${suggestion.extra===1?'':'s'}</strong> — until ${fmt(suggestion.lastExit)} — and stay compliant.`
+      : '';
   }
 
   panel.onclick = () => switchTab('trips');
@@ -480,9 +538,14 @@ function updateChecker(){
   const msgEl = document.getElementById('checkerMsg');
   const errEl = document.getElementById('checkerError');
   const saveBtn = document.getElementById('checkerSaveBtn');
+  const breakdownBtn = document.getElementById('checkerBreakdownBtn');
+  const suggestionsEl = document.getElementById('checkerSuggestions');
   const start = document.getElementById('checkerEntry').value;
   const end = document.getElementById('checkerExit').value;
   errEl.style.display = 'none';
+  breakdownBtn.style.display = 'none';
+  suggestionsEl.style.display = 'none';
+  suggestionsEl.innerHTML = '';
 
   if(!start || !end){
     msgEl.textContent = 'Pick an entry and exit date to check compliance before you save it.';
@@ -500,8 +563,25 @@ function updateChecker(){
   const days = Math.round((toDate(end) - toDate(start)) / 86400000) + 1;
   const hypothetical = trips.concat([{ start, end, label: '__checker__' }]);
   const overstay = tripOverstayInfo(hypothetical, { start, end }, 90);
+  breakdownBtn.style.display = 'inline-flex';
   if(overstay){
     msgEl.innerHTML = `${days}-day stay — <strong style="color:var(--color-accent-2-700)">would breach your limit</strong> on ${fmt(overstay.date)} (${overstay.used} of 90 used).`;
+    const suggestion = computeTripSuggestion(hypothetical, trips, start, end, 90);
+    if(suggestion.suggestions.length){
+      suggestionsEl.style.display = 'grid';
+      for(const s of suggestion.suggestions){
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'suggestion-btn';
+        btn.innerHTML = s.label;
+        btn.addEventListener('click', ()=>{
+          document.getElementById('checkerEntry').value = s.start;
+          document.getElementById('checkerExit').value = s.end;
+          updateChecker();
+        });
+        suggestionsEl.appendChild(btn);
+      }
+    }
   } else {
     const margin = 90 - usedDaysInWindow(hypothetical, end);
     msgEl.innerHTML = `${days}-day stay — <strong style="color:var(--color-accent-700)">safe, within limits</strong>. ${margin} day${margin===1?'':'s'} of margin left on ${fmt(end)}.`;
@@ -755,6 +835,57 @@ function checkNotifications(){
     }
   }
 }
+
+// --- "How is this calculated?" day-by-day breakdown (Home + Safe Trip Checker) ---
+
+function openBreakdown(list, windowEndISO){
+  const windowEnd = toDate(windowEndISO);
+  const windowStart = addDays(windowEnd, -179);
+  const windowStartISO = isoOf(windowStart);
+  const covered = coveredDates(list);
+  const todayIso = todayISO();
+
+  const rowsEl = document.getElementById('breakdownRows');
+  rowsEl.innerHTML = '';
+  let running = 0;
+  let cur = windowStart;
+  while(cur <= windowEnd){
+    const iso = isoOf(cur);
+    const counts = covered.has(iso);
+    if(counts) running++;
+    const tr = document.createElement('tr');
+    if(counts) tr.classList.add('counts');
+    if(iso === todayIso) tr.classList.add('today-row');
+    tr.innerHTML = `<td>${fmtShort(iso)}</td><td>${counts ? 'In Schengen' : '—'}</td><td>${running} / 90</td>`;
+    rowsEl.appendChild(tr);
+    cur = addDays(cur,1);
+  }
+
+  let agedOut = 0;
+  for(const iso of covered){ if(iso < windowStartISO) agedOut++; }
+  const summaryEl = document.getElementById('breakdownSummary');
+  summaryEl.textContent = `Showing the 180 days ending ${fmt(windowEndISO)}. ${running} of those days count toward your 90-day limit.`
+    + (agedOut > 0 ? ` ${agedOut} earlier day${agedOut===1?'':'s'} you spent in Schengen have aged out of this window and no longer count.` : '');
+
+  document.getElementById('breakdownModal').style.display = 'flex';
+}
+
+document.getElementById('homeBreakdownBtn').addEventListener('click', ()=>{
+  const refISO = document.getElementById('refDate').value || todayISO();
+  openBreakdown(trips, refISO);
+});
+document.getElementById('checkerBreakdownBtn').addEventListener('click', ()=>{
+  const start = document.getElementById('checkerEntry').value;
+  const end = document.getElementById('checkerExit').value;
+  if(!start || !end || end < start) return;
+  openBreakdown(trips.concat([{ start, end, label: '__checker__' }]), end);
+});
+document.getElementById('breakdownCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('breakdownModal').style.display = 'none';
+});
+document.getElementById('breakdownModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'breakdownModal') document.getElementById('breakdownModal').style.display = 'none';
+});
 
 // --- Backup / restore (the only mechanism for keeping trip data — there is no account) ---
 
