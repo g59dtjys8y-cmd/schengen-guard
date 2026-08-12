@@ -1,6 +1,6 @@
 {
-  "name": "Schengen Buddy",
-  "short_name": "Schengen Buddy",
+  "name": "Schengen Guard",
+  "short_name": "Schengen Guard",
   "description": "Track Schengen 90/180-day rolling window compliance",
   "start_url": "./",
   "scope": "./",

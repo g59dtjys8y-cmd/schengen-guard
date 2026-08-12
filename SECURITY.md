@@ -1,6 +1,6 @@
 # Security Policy
 
-Schengen Buddy is a personal project (a static HTML/CSS/JS PWA backed by Supabase for auth and trip storage). This policy is scaled to that: there's no formal release/support matrix, just a single live deployment.
+Schengen Guard is a personal project (a static HTML/CSS/JS PWA backed by Supabase for auth and trip storage). This policy is scaled to that: there's no formal release/support matrix, just a single live deployment.
 
 ## Supported versions
 

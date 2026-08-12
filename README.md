@@ -1,8 +1,8 @@
-# Schengen Buddy
+# Schengen Guard
 
 A web app for tracking Schengen Area visits and staying compliant with the 90/180-day short-stay rule. Live, installable as an app, and backed by a real database so your trips are saved to your account.
 
-**Live app:** https://g59dtjys8y-cmd.github.io/Schengen-calculator-Repo/
+**Live app:** not yet deployed from this repo — GitHub Pages hasn't been enabled here yet.
 
 ## Features
 

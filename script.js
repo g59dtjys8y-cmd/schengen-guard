@@ -2,9 +2,9 @@ const SUPABASE_URL = 'https://dwjftvqlynlefwruvwfs.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_JPZoPe7suyMtyV-EEEqD8Q_ksgb0Q9o';
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const INACTIVITY_LIMIT_MS = 24 * 60 * 60 * 1000; // auto sign-out after 1 day of not opening the app
-const LAST_ACTIVE_KEY = 'schengenBuddyLastActive';
-const NOTIF_PREFS_KEY = 'schengenBuddyNotifThresholds';
-const NOTIF_LAST_FIRED_KEY = 'schengenBuddyNotifLastFired';
+const LAST_ACTIVE_KEY = 'schengenGuardLastActive';
+const NOTIF_PREFS_KEY = 'schengenGuardNotifThresholds';
+const NOTIF_LAST_FIRED_KEY = 'schengenGuardNotifLastFired';
 const RING_RADIUS = 99;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -711,7 +711,7 @@ function checkNotifications(){
   for(const threshold of thresholds){
     if(realRemaining <= threshold && threshold < lastFired){
       try{
-        new Notification('Schengen Buddy', {
+        new Notification('Schengen Guard', {
           body: `${realRemaining} day${realRemaining===1?'':'s'} left of your 90-day allowance.`
         });
       }catch(e){}
@@ -775,7 +775,7 @@ document.getElementById('signOutBtn').addEventListener('click', async ()=>{
 });
 
 // --- Theme ---
-const THEME_KEY = 'schengenBuddyTheme';
+const THEME_KEY = 'schengenGuardTheme';
 const THEME_COLORS = { light:'#f3f2f2', dark:'#1b1918' };
 const darkMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
