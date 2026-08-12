@@ -170,6 +170,25 @@
       </div>
       <input type="hidden" id="tripStart">
       <input type="hidden" id="tripEnd">
+
+      <div id="exclusionSection" style="display:none; margin-top:14px;">
+        <div class="card-kicker">Side trip outside Schengen (optional)</div>
+        <p class="note">Mark days within this stay spent outside Schengen (e.g. a UK leg) — they won't count toward your 90-day limit.</p>
+        <div class="form-row">
+          <div class="field">
+            <label for="exclStart">From</label>
+            <input class="input" type="date" id="exclStart">
+          </div>
+          <div class="field">
+            <label for="exclEnd">To</label>
+            <input class="input" type="date" id="exclEnd">
+          </div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-block" id="addExclusionBtn">Add exclusion</button>
+        <div class="form-error" id="exclusionError" style="display:none;"></div>
+        <div id="exclusionList" class="stack" style="margin-top:6px;"></div>
+      </div>
+
       <button type="button" class="btn btn-primary btn-block" id="addTripBtn">Log stay</button>
       <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:8px;">Cancel edit</button>
       <div class="form-error" id="formError" style="display:none;"></div>
@@ -184,6 +203,7 @@
         <span><i style="background:var(--color-accent);"></i>past / active stay</span>
         <span><i style="background:var(--color-accent-2);"></i>planned stay</span>
         <span><i style="background:var(--color-accent-2-700);"></i>overstay</span>
+        <span><i style="background:var(--color-neutral-300); border:1px dashed var(--color-neutral-600);"></i>outside Schengen (excluded)</span>
         <span><i style="background:transparent;border:2px dashed var(--color-text);"></i>selecting</span>
       </div>
       <p class="note" style="margin-top:10px;">Small figure under each date is days remaining of your 90 as of that day.</p>
@@ -201,6 +221,13 @@
         <input type="file" id="importFile" accept="application/json" style="display:none;">
         <div class="form-error" id="backupError" style="display:none;"></div>
         <p class="note" id="lastBackupNote" style="display:none;"></p>
+      </div>
+
+      <div class="card" id="exportCard">
+        <div class="card-kicker">Export trip history</div>
+        <p class="card-body">For handing to a border official or visa office — a human-readable copy, not for re-importing (use Backup for that).</p>
+        <button type="button" class="btn btn-secondary btn-block" id="exportCsvBtn">Export as CSV</button>
+        <button type="button" class="btn btn-secondary btn-block" id="printTripsBtn">Print / save as PDF</button>
       </div>
 
       <div class="card">
@@ -259,6 +286,8 @@
       Settings
     </button>
   </nav>
+
+  <div id="printArea" class="print-only"></div>
 
   <div class="modal-backdrop" id="importModal" style="display:none;">
     <div class="card modal-card">

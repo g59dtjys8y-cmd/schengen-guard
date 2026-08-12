@@ -22,6 +22,7 @@ let calCursor = new Date(); calCursor.setDate(1);
 let pickStart = null, pickEnd = null;
 let editingTripId = null;
 let pendingImportTrips = null;
+let pendingExcludedRanges = [];
 
 function newId(){
   if('randomUUID' in crypto) return crypto.randomUUID();
@@ -38,15 +39,39 @@ function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,
 function fmt(iso){ const d=toDate(iso); return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
 function fmtShort(iso){ const d=toDate(iso); const day=d.toLocaleDateString('en-GB',{day:'2-digit'}); const mon=d.toLocaleDateString('en-GB',{month:'short'}); return `${day} ${mon}`; }
 
-// Build set of ISO date strings covered by trips (inclusive), split into past/active vs planned
+function isExcludedDay(trip, iso){
+  for(const r of (trip.excludedRanges || [])){
+    if(iso >= r.start && iso <= r.end) return true;
+  }
+  return false;
+}
+
+// Build set of ISO date strings covered by trips (inclusive) that count toward the
+// 90-day limit — days inside a trip's own excludedRanges (a side trip outside Schengen,
+// e.g. a UK leg) are skipped, since they were never actually spent in Schengen.
 function coveredDates(list){
   const set = new Set();
   for(const t of list){
     let cur = toDate(t.start);
     const end = toDate(t.end);
     while(cur <= end){
-      set.add(isoOf(cur));
+      const iso = isoOf(cur);
+      if(!isExcludedDay(t, iso)) set.add(iso);
       cur = addDays(cur,1);
+    }
+  }
+  return set;
+}
+
+// Days that fall within a trip's date range but are marked as spent outside Schengen —
+// used only for calendar display, since coveredDates() already excludes them from counting.
+function excludedDatesSet(list){
+  const set = new Set();
+  for(const t of list){
+    for(const r of (t.excludedRanges || [])){
+      let cur = toDate(r.start);
+      const end = toDate(r.end);
+      while(cur <= end){ set.add(isoOf(cur)); cur = addDays(cur,1); }
     }
   }
   return set;
@@ -233,7 +258,7 @@ function dbGetAll(){
 
 function dbPut(trip){ return withStore('readwrite', store => store.put(trip)); }
 function dbDelete(id){ return withStore('readwrite', store => store.delete(id)); }
-function dbClear(){ return withStore('readwrite', store => store.clear()); }
+function dbClearAll(){ return withStore('readwrite', store => store.clear()); }
 function dbPutAll(list){
   return openDB().then(idb => new Promise((resolve, reject)=>{
     const tx = idb.transaction(STORE_NAME, 'readwrite');
@@ -250,16 +275,16 @@ async function loadTrips(){
   trips = rows.map(t => ({ ...t, excludedRanges: t.excludedRanges || [] }));
 }
 
-async function insertTrip(start, end, label){
-  const trip = { id: newId(), start, end, label, excludedRanges: [] };
+async function insertTrip(start, end, label, excludedRanges){
+  const trip = { id: newId(), start, end, label, excludedRanges: excludedRanges || [] };
   await dbPut(trip);
   await loadTrips();
   markTripsChanged();
 }
 
-async function updateTrip(id, start, end, label){
+async function updateTrip(id, start, end, label, excludedRanges){
   const existing = trips.find(t => t.id === id);
-  const trip = { id, start, end, label, excludedRanges: (existing && existing.excludedRanges) || [] };
+  const trip = { id, start, end, label, excludedRanges: excludedRanges || (existing && existing.excludedRanges) || [] };
   await dbPut(trip);
   await loadTrips();
   markTripsChanged();
@@ -272,7 +297,7 @@ async function deleteTrip(id){
 }
 
 async function deleteAllTrips(){
-  await dbClear();
+  await dbClearAll();
   trips = [];
   markTripsChanged();
 }
@@ -505,6 +530,12 @@ function renderTripRows(){
       statusHtml = `<span class="tag tag-outline">Planned</span>`;
     }
 
+    let exclDays = 0;
+    for(const r of (t.excludedRanges || [])) exclDays += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
+    const exclNote = exclDays > 0
+      ? `<div class="card-meta">${exclDays} day${exclDays===1?'':'s'} outside Schengen excluded</div>`
+      : '';
+
     const row = document.createElement('div');
     row.className = 'card elev-sm trip-row';
     row.innerHTML = `
@@ -512,6 +543,7 @@ function renderTripRows(){
       <div class="trip-info">
         <div class="country">${t.label || '—'}${warnIcon}</div>
         <div class="dates">${fmt(t.start)} – ${fmt(t.end)}</div>
+        ${exclNote}
         <div class="row-actions">
           <button type="button" class="link-btn" data-action="edit" data-id="${t.id}">Edit</button>
           <button type="button" class="link-btn danger-link" data-action="remove" data-id="${t.id}">Remove</button>
@@ -635,6 +667,7 @@ function renderCalendar(){
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const covered = coveredDates(trips);
   const plannedSet = coveredDates(trips.filter(t=>classifyTrip(t)==='planned'));
+  const excluded = excludedDatesSet(trips);
   const today = todayISO();
 
   for(let i=0;i<startOffset;i++){
@@ -648,6 +681,8 @@ function renderCalendar(){
     if(covered.has(iso)){
       el.classList.add('in-trip');
       if(plannedSet.has(iso)) el.classList.add('planned');
+    } else if(excluded.has(iso)){
+      el.classList.add('excluded');
     }
     if(iso === today) el.classList.add('today');
     const used = usedDaysInWindow(trips, iso);
@@ -670,6 +705,7 @@ function startEditTrip(id){
   editingTripId = trip.id;
   pickStart = trip.start;
   pickEnd = trip.end;
+  pendingExcludedRanges = (trip.excludedRanges || []).map(r => ({ ...r }));
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
@@ -683,11 +719,13 @@ function startEditTrip(id){
   calCursor = new Date(toDate(trip.start)); calCursor.setDate(1);
   switchTab('calendar');
   renderCalendar();
+  renderExclusionSection();
 }
 
 function stopEditTrip(){
   editingTripId = null;
   pickStart = null; pickEnd = null;
+  pendingExcludedRanges = [];
   document.getElementById('tripLabel').value = '';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
@@ -698,7 +736,78 @@ function stopEditTrip(){
   document.getElementById('cancelEditBtn').style.display = 'none';
   document.getElementById('calendarHeading').textContent = 'Log a stay';
   renderCalendar();
+  renderExclusionSection();
 }
+
+// --- Side-trip exclusion (mark days within a logged stay as spent outside Schengen) ---
+
+function renderExclusionSection(){
+  const section = document.getElementById('exclusionSection');
+  if(!pickStart || !pickEnd){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = 'block';
+  document.getElementById('exclStart').min = pickStart;
+  document.getElementById('exclStart').max = pickEnd;
+  document.getElementById('exclEnd').min = pickStart;
+  document.getElementById('exclEnd').max = pickEnd;
+  renderExclusionList();
+}
+
+function renderExclusionList(){
+  const listEl = document.getElementById('exclusionList');
+  listEl.innerHTML = '';
+  pendingExcludedRanges.forEach((r, idx)=>{
+    const days = Math.round((toDate(r.end) - toDate(r.start)) / 86400000) + 1;
+    const item = document.createElement('div');
+    item.className = 'exclusion-item';
+    item.innerHTML = `<span>${fmt(r.start)} – ${fmt(r.end)} (${days} day${days===1?'':'s'})</span>`;
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'link-btn danger-link';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', ()=>{
+      pendingExcludedRanges.splice(idx, 1);
+      renderExclusionList();
+    });
+    item.appendChild(removeBtn);
+    listEl.appendChild(item);
+  });
+}
+
+document.getElementById('addExclusionBtn').addEventListener('click', ()=>{
+  const errEl = document.getElementById('exclusionError');
+  errEl.style.display = 'none';
+  const exStart = document.getElementById('exclStart').value;
+  const exEnd = document.getElementById('exclEnd').value;
+  if(!exStart || !exEnd){
+    errEl.textContent = 'Pick both a start and end date for the excluded range.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(exEnd < exStart){
+    errEl.textContent = 'End date must be on or after the start date.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(exStart < pickStart || exEnd > pickEnd){
+    errEl.textContent = 'The excluded range must fall within the stay\'s entry and exit dates.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const overlaps = pendingExcludedRanges.some(r => exStart <= r.end && exEnd >= r.start);
+  if(overlaps){
+    errEl.textContent = 'That range overlaps an exclusion you already added.';
+    errEl.style.display = 'block';
+    return;
+  }
+  pendingExcludedRanges.push({ start: exStart, end: exEnd });
+  pendingExcludedRanges.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+  document.getElementById('exclStart').value = '';
+  document.getElementById('exclEnd').value = '';
+  renderExclusionList();
+});
 
 document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
   stopEditTrip();
@@ -717,6 +826,7 @@ document.getElementById('nextMonth').addEventListener('click', ()=>{
 function handlePick(iso){
   if(!pickStart || (pickStart && pickEnd)){
     pickStart = iso; pickEnd = null;
+    pendingExcludedRanges = []; // range is changing — old exclusions may no longer make sense
   } else {
     if(iso >= pickStart) pickEnd = iso;
     else { pickEnd = pickStart; pickStart = iso; }
@@ -726,6 +836,7 @@ function handlePick(iso){
   document.getElementById('pickStartLbl').textContent = 'Entry: ' + (pickStart ? fmt(pickStart) : '—');
   document.getElementById('pickEndLbl').textContent = 'Exit: ' + (pickEnd ? fmt(pickEnd) : '—');
   renderCalendar();
+  renderExclusionSection();
 }
 
 document.getElementById('addTripBtn').addEventListener('click', async ()=>{
@@ -753,9 +864,9 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   const wasEditing = editingTripId !== null;
   try{
     if(wasEditing){
-      await updateTrip(editingTripId, start, end, label);
+      await updateTrip(editingTripId, start, end, label, pendingExcludedRanges);
     } else {
-      await insertTrip(start, end, label);
+      await insertTrip(start, end, label, pendingExcludedRanges);
     }
   }catch(e){
     errEl.textContent = 'Could not save that stay — please try again.';
@@ -791,6 +902,54 @@ function enabledThresholds(){
   const prefs = new Set(loadNotifPrefs());
   return [14, 7, 3].filter(t => prefs.has(t));
 }
+
+// --- Export trip history for visa/border use (CSV + print) — separate from the JSON backup ---
+
+function csvEscape(val){
+  const s = String(val);
+  return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+function sortedTrips(){
+  return [...trips].sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+}
+
+function excludedDayCount(trip){
+  let n = 0;
+  for(const r of (trip.excludedRanges || [])) n += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
+  return n;
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
+  const header = ['Country','Entry date','Exit date','Days','Excluded days','Status'];
+  const rows = [header];
+  for(const t of sortedTrips()){
+    const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
+    rows.push([t.label || '', t.start, t.end, String(days), String(excludedDayCount(t)), classifyTrip(t)]);
+  }
+  const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `schengen-guard-trips-${todayISO()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('printTripsBtn').addEventListener('click', ()=>{
+  let html = `<h1>Schengen Guard — trip history</h1><p>Generated ${fmt(todayISO())}</p>`;
+  html += '<table><thead><tr><th>Country</th><th>Entry</th><th>Exit</th><th>Days</th><th>Excluded days</th><th>Status</th></tr></thead><tbody>';
+  for(const t of sortedTrips()){
+    const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
+    html += `<tr><td>${t.label || ''}</td><td>${fmt(t.start)}</td><td>${fmt(t.end)}</td><td>${days}</td><td>${excludedDayCount(t)}</td><td>${classifyTrip(t)}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+});
 
 function initNotifCheckboxes(){
   const prefs = new Set(loadNotifPrefs());
@@ -843,6 +1002,7 @@ function openBreakdown(list, windowEndISO){
   const windowStart = addDays(windowEnd, -179);
   const windowStartISO = isoOf(windowStart);
   const covered = coveredDates(list);
+  const excluded = excludedDatesSet(list);
   const todayIso = todayISO();
 
   const rowsEl = document.getElementById('breakdownRows');
@@ -853,10 +1013,11 @@ function openBreakdown(list, windowEndISO){
     const iso = isoOf(cur);
     const counts = covered.has(iso);
     if(counts) running++;
+    const label = counts ? 'In Schengen' : (excluded.has(iso) ? 'Outside Schengen (excluded)' : '—');
     const tr = document.createElement('tr');
     if(counts) tr.classList.add('counts');
     if(iso === todayIso) tr.classList.add('today-row');
-    tr.innerHTML = `<td>${fmtShort(iso)}</td><td>${counts ? 'In Schengen' : '—'}</td><td>${running} / 90</td>`;
+    tr.innerHTML = `<td>${fmtShort(iso)}</td><td>${label}</td><td>${running} / 90</td>`;
     rowsEl.appendChild(tr);
     cur = addDays(cur,1);
   }
@@ -997,7 +1158,7 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
 async function applyImport(mode){
   if(!pendingImportTrips) return;
   if(mode === 'replace'){
-    await dbClear();
+    await dbClearAll();
     await dbPutAll(pendingImportTrips);
   } else {
     await dbPutAll(pendingImportTrips);
