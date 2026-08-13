@@ -574,7 +574,7 @@ function renderCountries(){
     const tile = document.createElement('div');
     if(visited.has(name)){
       tile.className = 'country-tile visited';
-      tile.innerHTML = `<div class="tile-icons">${flagIconHtml(name)}<svg viewBox="0 0 24 24" fill="var(--color-accent-700)"><path d="M12 0l2.9 8.1 8.6.1-6.9 5.3 2.6 8.2L12 16.9 5.8 21.7l2.6-8.2L1.5 8.2l8.6-.1z"></path></svg></div><div class="name">${name}</div>`;
+      tile.innerHTML = `<div class="tile-icons">${flagIconHtml(name)}</div><div class="name">${name}</div>`;
     } else {
       tile.className = 'country-tile pending';
       tile.innerHTML = `<div class="name">${name}</div>`;

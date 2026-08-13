@@ -367,7 +367,6 @@ a:hover{text-decoration:underline;}
   gap:6px;padding:8px;text-align:center;border-radius:var(--radius-md);
 }
 .country-tile.visited{background:var(--color-accent-200);box-shadow:var(--shadow-sm);}
-.country-tile.visited svg{width:20px;height:20px;}
 .country-tile.pending{border:1px dashed var(--color-neutral-400);color:var(--color-neutral-500);}
 .country-tile .tile-icons{display:flex;align-items:center;justify-content:center;gap:var(--space-1);min-height:16px;}
 .country-tile .name{font-size:12px;font-weight:600;line-height:1.15;}
