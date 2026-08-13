@@ -7,6 +7,7 @@ const NOTIF_PREFS_KEY = 'schengenGuardNotifThresholds';
 const NOTIF_LAST_FIRED_KEY = 'schengenGuardNotifLastFired';
 const LAST_BACKUP_KEY = 'schengenGuardLastBackupAt';
 const BACKUP_NUDGE_DISMISSED_KEY = 'schengenGuardBackupNudgeDismissedAt';
+const DISCLAIMER_ACK_KEY = 'schengenGuardDisclaimerAcknowledged';
 const RING_RADIUS = 99;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -75,6 +76,11 @@ function tn(key, n, vars){
 function applyStaticI18n(){
   document.querySelectorAll('[data-i18n]').forEach(el => {
     el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  // Elements whose translation needs embedded markup (e.g. a link) rather than
+  // plain text — the translation string itself is trusted app copy, not user input.
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.getAttribute('data-i18n-html'));
   });
 }
 
@@ -402,6 +408,8 @@ document.getElementById('homeAddTripBtn').addEventListener('click', ()=>{
 });
 document.getElementById('faqCard').addEventListener('click', ()=> switchTab('faq'));
 document.getElementById('faqBackBtn').addEventListener('click', ()=> switchTab('settings'));
+document.getElementById('privacyCard').addEventListener('click', ()=> switchTab('privacy'));
+document.getElementById('privacyBackBtn').addEventListener('click', ()=> switchTab('settings'));
 
 // --- Home: arc ring + last-day card + next trip + countries ---
 
@@ -1341,6 +1349,17 @@ document.addEventListener('visibilitychange', ()=>{
 });
 setInterval(checkDayRollover, 60 * 60 * 1000);
 
+// --- First-run disclaimer modal — blocking, no dismissal except the acknowledge button ---
+
+function maybeShowFirstRunModal(){
+  if(localStorage.getItem(DISCLAIMER_ACK_KEY) === 'true') return;
+  document.getElementById('firstRunModal').style.display = 'flex';
+}
+document.getElementById('firstRunAckBtn').addEventListener('click', ()=>{
+  localStorage.setItem(DISCLAIMER_ACK_KEY, 'true');
+  document.getElementById('firstRunModal').style.display = 'none';
+});
+
 (async function init(){
   applyTheme(localStorage.getItem(THEME_KEY) || 'system');
 
@@ -1351,6 +1370,7 @@ setInterval(checkDayRollover, 60 * 60 * 1000);
   });
   applyStaticI18n();
   renderEtiasLastChecked();
+  maybeShowFirstRunModal();
 
   document.getElementById('todayTag').textContent = fmt(todayISO());
   document.getElementById('refDate').value = todayISO();

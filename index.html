@@ -23,7 +23,6 @@
 <link rel="alternate" hreflang="zh" href="https://g59dtjys8y-cmd.github.io/schengen-guard/?lang=zh">
 <link rel="alternate" hreflang="ja" href="https://g59dtjys8y-cmd.github.io/schengen-guard/?lang=ja">
 <link rel="alternate" hreflang="x-default" href="https://g59dtjys8y-cmd.github.io/schengen-guard/">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
 </head>
@@ -71,6 +70,7 @@
           <label for="refDate" data-i18n="home.checkAsOf">Check as of</label>
           <input class="input" type="date" id="refDate">
         </div>
+        <p class="disclaimer-footer" data-i18n-html="home.disclaimerFooter">Not legal advice — verify with the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">official EU calculator</a></p>
       </div>
 
       <div class="card elev-sm" id="nextTripPanel" style="display:none; cursor:pointer;">
@@ -129,6 +129,34 @@
       <h1 style="font-size:22px; margin-top:10px;" data-i18n="countries.heading">Countries visited</h1>
       <div class="card-meta" id="countriesSubtitle" style="margin-top:2px;"></div>
       <div class="countries-grid" id="countriesGrid"></div>
+    </div>
+
+    <!-- PRIVACY & TERMS (secondary screen, reached from Settings) -->
+    <div class="screen" id="tab-privacy" style="display:none;">
+      <button type="button" class="countries-back" id="privacyBackBtn" data-i18n="privacy.back">← Settings</button>
+      <h1 style="font-size:22px; margin-top:10px;" data-i18n="privacy.heading">Privacy &amp; Terms</h1>
+
+      <div class="card">
+        <div class="card-kicker" data-i18n="privacy.noticeTitle">Privacy Notice</div>
+        <ul class="legal-list">
+          <li data-i18n="privacy.notice.1">No account, no sign-in, no server, no network calls of any kind.</li>
+          <li data-i18n="privacy.notice.2">Trip data, notification preferences, and theme choice are stored only in this browser's local storage on this device.</li>
+          <li data-i18n="privacy.notice.3">Nothing is transmitted to the developer or any third party. There is no analytics, tracking, or advertising in this app.</li>
+          <li data-i18n="privacy.notice.4">Local storage is used solely to run the app's own features (saving trips, remembering your theme and notification settings) — never for tracking.</li>
+          <li data-i18n="privacy.notice.5">Export, Import, and "Clear all logged stays" (Settings → Data) are the only ways your data moves off, into, or out of this device.</li>
+        </ul>
+        <p class="card-body" data-i18n-html="privacy.notice.ios"><strong>iOS note:</strong> if you don't open the app for roughly a week or more, iOS may automatically clear locally stored website/app data as part of its normal storage-management behaviour. Export a backup periodically if you want to keep your trip history safe.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-kicker" data-i18n="privacy.termsTitle">Terms of Use</div>
+        <ul class="legal-list">
+          <li data-i18n="privacy.terms.1">Schengen Guard is provided "as is," for informational and personal record-keeping purposes only.</li>
+          <li data-i18n="privacy.terms.2">It is not immigration, legal, or professional advice, and no warranty is made as to the accuracy, completeness, or fitness of its calculations for any particular purpose.</li>
+          <li data-i18n="privacy.terms.3">You are responsible for independently verifying your compliance with the 90/180-day rule (or any other entry requirement) using official sources — the European Commission's short-stay calculator, the border authority of the country you're visiting, or a qualified immigration professional — particularly for any borderline case.</li>
+          <li data-i18n="privacy.terms.4">To the fullest extent permitted by law, the developer disclaims liability for any loss or damage arising from reliance on the app's output, including missed flights, denied entry, fines, or other immigration consequences.</li>
+        </ul>
+      </div>
     </div>
 
     <!-- CALENDAR -->
@@ -277,7 +305,16 @@
         <div class="card-kicker" data-i18n="settings.dataTitle">Data</div>
         <p class="card-body" data-i18n="settings.dataRule">Rolling 180-day window, max 90 days in Schengen — the standard short-stay rule for non-EU visitors. Not immigration advice.</p>
         <p class="card-body" data-i18n="settings.dataOffline">This app works fully offline and never sends your trip data anywhere. If you lose this device, uninstall the app, or clear browser data without a backup, your trips can't be recovered.</p>
+        <p class="card-body" data-i18n="settings.iosDataNote">Your data lives only on this device and browser — it won't sync anywhere on its own. On iPhone/iPad, if you don't open the app for about a week or more, iOS may clear it automatically. Export a backup now and then if you want to keep your history safe.</p>
         <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn" data-i18n="settings.clearStays">Clear all logged stays</button>
+      </div>
+
+      <div class="card elev-sm card-row" id="privacyCard" style="cursor:pointer;">
+        <div>
+          <div class="card-kicker" data-i18n="settings.helpTitle">Help</div>
+          <div class="card-title" style="font-size:18px;" data-i18n="settings.privacyTitle">Privacy &amp; Terms</div>
+        </div>
+        <span class="tag tag-neutral" data-i18n="settings.viewArrow">View →</span>
       </div>
 
       <div class="card elev-sm card-row" id="countriesCard" style="cursor:pointer;">
@@ -396,6 +433,15 @@
   </nav>
 
   <div id="printArea" class="print-only"></div>
+
+  <div class="modal-backdrop" id="firstRunModal" style="display:none;">
+    <div class="card modal-card">
+      <div class="card-kicker" data-i18n="firstRun.title">Before you start</div>
+      <p class="card-body" data-i18n-html="firstRun.p1">Schengen Guard is a personal trip-tracking tool, not immigration or legal advice. Its 90/180-day calculations are provided for informational purposes only, with no warranty of accuracy. Always verify borderline cases against the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">European Commission's official short-stay calculator</a> and with the relevant border authority or consulate before you travel.</p>
+      <p class="card-body" data-i18n="firstRun.p2">All your trip data stays on this device only — nothing is sent anywhere. See Settings → Privacy &amp; Terms for details.</p>
+      <button type="button" class="btn btn-primary btn-block" id="firstRunAckBtn" data-i18n="firstRun.ack">I understand</button>
+    </div>
+  </div>
 
   <div class="modal-backdrop" id="importModal" style="display:none;">
     <div class="card modal-card">
