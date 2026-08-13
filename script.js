@@ -18,6 +18,23 @@ const ALL_COUNTRIES = [
   'Slovenia','Spain','Sweden','Switzerland'
 ];
 
+// ISO 3166-1 alpha-2 codes, keyed to the flag-icons CSS class (fi-<code>)
+const COUNTRY_ISO = {
+  'Austria':'at','Belgium':'be','Bulgaria':'bg','Croatia':'hr','Czechia':'cz','Denmark':'dk',
+  'Estonia':'ee','Finland':'fi','France':'fr','Germany':'de','Greece':'gr','Hungary':'hu',
+  'Iceland':'is','Italy':'it','Latvia':'lv','Liechtenstein':'li','Lithuania':'lt',
+  'Luxembourg':'lu','Malta':'mt','Netherlands':'nl','Norway':'no','Poland':'pl',
+  'Portugal':'pt','Romania':'ro','Slovakia':'sk','Slovenia':'si','Spain':'es','Sweden':'se',
+  'Switzerland':'ch'
+};
+
+// Decorative flag icon markup for a country name; text label stays the a11y source of truth.
+function flagIconHtml(name){
+  const code = COUNTRY_ISO[name];
+  if(!code) return '';
+  return `<span class="flag-icon fi fi-${code}" aria-hidden="true" aria-label="${name}"></span>`;
+}
+
 let trips = []; // {id, start:'YYYY-MM-DD', end:'YYYY-MM-DD', label, excludedRanges:[{start,end}]}
 let calCursor = new Date(); calCursor.setDate(1);
 let pickStart = null, pickEnd = null;
@@ -557,10 +574,10 @@ function renderCountries(){
     const tile = document.createElement('div');
     if(visited.has(name)){
       tile.className = 'country-tile visited';
-      tile.innerHTML = `<svg viewBox="0 0 24 24" fill="var(--color-accent-700)"><path d="M12 0l2.9 8.1 8.6.1-6.9 5.3 2.6 8.2L12 16.9 5.8 21.7l2.6-8.2L1.5 8.2l8.6-.1z"></path></svg><div class="name">${name}</div>`;
+      tile.innerHTML = `<div class="tile-icons">${flagIconHtml(name)}<svg viewBox="0 0 24 24" fill="var(--color-accent-700)"><path d="M12 0l2.9 8.1 8.6.1-6.9 5.3 2.6 8.2L12 16.9 5.8 21.7l2.6-8.2L1.5 8.2l8.6-.1z"></path></svg></div><div class="name">${name}</div>`;
     } else {
       tile.className = 'country-tile pending';
-      tile.innerHTML = `<div class="name">${name}</div>`;
+      tile.innerHTML = `<div class="tile-icons">${flagIconHtml(name)}</div><div class="name">${name}</div>`;
     }
     grid.appendChild(tile);
   }
@@ -604,7 +621,7 @@ function renderTripRows(){
     row.innerHTML = `
       <div class="trip-days"><div class="n">${days}</div><div class="lbl">${t('trips.days')}</div></div>
       <div class="trip-info">
-        <div class="country">${trip.label || t('calendar.dash')}${warnIcon}</div>
+        <div class="country">${trip.label ? flagIconHtml(trip.label) : ''}${trip.label || t('calendar.dash')}${warnIcon}</div>
         <div class="dates">${fmt(trip.start)} – ${fmt(trip.end)}</div>
         ${exclNote}
         <div class="row-actions">
