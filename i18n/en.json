@@ -65,7 +65,7 @@
   "trips.suggestion.trim": "Leave by <strong>{{date}}</strong> instead ({{n}}) to stay compliant.",
   "trips.suggestion.laterStart": "Shift the whole trip to start <strong>{{date}}</strong> instead (still {{n}}).",
 
-  "countries.back": "← Home",
+  "countries.back": "← Settings",
   "countries.heading": "Countries visited",
   "countries.subtitle": "{{count}} of {{total}} Schengen countries stamped",
 
@@ -151,6 +151,8 @@
   "faq.backupHow.q": "How do I back up or move my data to a new device?",
   "faq.backupHow.a": "Go to Settings → Backup & restore → \"Back up my trips\" to download a JSON file. On your new device (or after reinstalling), use \"Restore from backup\" to load it back in.",
   "faq.ruleTitle": "The rule itself",
+  "faq.rollingPeriod.q": "What does \"rolling period\" mean?",
+  "faq.rollingPeriod.a": "It means the 180-day window that counts toward your limit isn't fixed to the calendar — it moves with you. On any given day, the app looks back at the previous 180 days and adds up how many of them you spent in Schengen. As days roll out of that window, they stop counting, even if you never left. That's why your days-left number can go up over time on its own — you're not spending down a fixed allowance, you're always looking at a fresh 180-day slice ending today.",
   "faq.dayCounts.q": "What counts as a day in the Schengen Area?",
   "faq.dayCounts.a": "Any calendar day you're physically present in the Schengen Area counts as a full day — including your entry and exit days, even if you only cross the border for an hour.",
   "faq.howCalculated.q": "How is the 90/180 rule actually calculated?",

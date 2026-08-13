@@ -392,8 +392,12 @@ document.getElementById('countriesCard').addEventListener('click', ()=>{
   renderCountries();
   switchTab('countries');
 });
-document.getElementById('countriesBackBtn').addEventListener('click', ()=> switchTab('home'));
+document.getElementById('countriesBackBtn').addEventListener('click', ()=> switchTab('settings'));
 document.getElementById('addTripShortcutBtn').addEventListener('click', ()=>{
+  document.getElementById('checkerEntry').focus();
+});
+document.getElementById('homeAddTripBtn').addEventListener('click', ()=>{
+  switchTab('trips');
   document.getElementById('checkerEntry').focus();
 });
 document.getElementById('faqCard').addEventListener('click', ()=> switchTab('faq'));
@@ -1048,6 +1052,14 @@ function checkNotifications(){
 
 // --- "How is this calculated?" day-by-day breakdown (Home + Safe Trip Checker) ---
 
+// Which trip's label (if any) accounts for a given counted day — lets the breakdown
+// show "France" instead of a generic "In Schengen" status, so it's clear at a glance
+// which stay is responsible for each day.
+function coveringTripLabel(list, iso){
+  const trip = list.find(t => t.start <= iso && iso <= t.end && !isExcludedDay(t, iso));
+  return trip ? (trip.label || t('calendar.dash')) : t('breakdown.inSchengen');
+}
+
 function openBreakdown(list, windowEndISO){
   const windowEnd = toDate(windowEndISO);
   const windowStart = addDays(windowEnd, -179);
@@ -1056,21 +1068,36 @@ function openBreakdown(list, windowEndISO){
   const excluded = excludedDatesSet(list);
   const todayIso = todayISO();
 
-  const rowsEl = document.getElementById('breakdownRows');
-  rowsEl.innerHTML = '';
+  // One entry per day first — label, counted status, and running total as of that day.
+  const days = [];
   let running = 0;
   let cur = windowStart;
   while(cur <= windowEnd){
     const iso = isoOf(cur);
     const counts = covered.has(iso);
     if(counts) running++;
-    const label = counts ? t('breakdown.inSchengen') : (excluded.has(iso) ? t('breakdown.excluded') : t('breakdown.notCounted'));
+    const label = counts ? coveringTripLabel(list, iso) : (excluded.has(iso) ? t('breakdown.excluded') : t('breakdown.notCounted'));
+    days.push({ iso, counts, label, running });
+    cur = addDays(cur, 1);
+  }
+
+  // Then collapse consecutive days sharing the same (counts, label) into one range row —
+  // a 15-day trip becomes a single row instead of 15. The running total shown is the
+  // value as of the last day in the range, since that's what changes day-to-day within it.
+  const rowsEl = document.getElementById('breakdownRows');
+  rowsEl.innerHTML = '';
+  let i = 0;
+  while(i < days.length){
+    let j = i;
+    while(j + 1 < days.length && days[j+1].counts === days[i].counts && days[j+1].label === days[i].label) j++;
+    const first = days[i], last = days[j];
+    const dateText = (i === j) ? fmtShort(first.iso) : `${fmtShort(first.iso)} – ${fmtShort(last.iso)}`;
     const tr = document.createElement('tr');
-    if(counts) tr.classList.add('counts');
-    if(iso === todayIso) tr.classList.add('today-row');
-    tr.innerHTML = `<td>${fmtShort(iso)}</td><td>${label}</td><td>${running} / 90</td>`;
+    if(first.counts) tr.classList.add('counts');
+    if(first.iso <= todayIso && todayIso <= last.iso) tr.classList.add('today-row');
+    tr.innerHTML = `<td>${dateText}</td><td>${first.label}</td><td>${last.running} / 90</td>`;
     rowsEl.appendChild(tr);
-    cur = addDays(cur,1);
+    i = j + 1;
   }
 
   let agedOut = 0;
@@ -1090,7 +1117,8 @@ document.getElementById('checkerBreakdownBtn').addEventListener('click', ()=>{
   const start = document.getElementById('checkerEntry').value;
   const end = document.getElementById('checkerExit').value;
   if(!start || !end || end < start) return;
-  openBreakdown(trips.concat([{ start, end, label: '__checker__' }]), end);
+  const label = document.getElementById('checkerCountry').value;
+  openBreakdown(trips.concat([{ start, end, label }]), end);
 });
 document.getElementById('breakdownCloseBtn').addEventListener('click', ()=>{
   document.getElementById('breakdownModal').style.display = 'none';

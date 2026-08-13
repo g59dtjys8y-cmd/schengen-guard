@@ -39,6 +39,9 @@
 
     <!-- HOME -->
     <div class="screen" id="tab-home">
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <button type="button" class="btn btn-primary btn-icon" id="homeAddTripBtn" aria-label="Add a trip">+</button>
+      </div>
       <div class="card backup-nudge" id="backupNudge" style="display:none;">
         <p class="card-body" style="margin:0;" id="backupNudgeText">Your trips live only on this device. <a href="#" id="backupNudgeLink">Back them up</a> so you don't lose them.</p>
         <button type="button" class="link-btn" id="backupNudgeDismiss" aria-label="Dismiss" data-i18n="backupNudge.dismiss">Dismiss</button>
@@ -85,13 +88,6 @@
         <p class="card-body" style="margin:0;" data-i18n="home.noUpcomingTrips">No upcoming trips logged yet.</p>
       </div>
 
-      <div class="card elev-sm card-row" id="countriesCard" style="cursor:pointer;">
-        <div>
-          <div class="card-kicker" data-i18n="home.countriesVisited">Countries visited</div>
-          <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
-        </div>
-        <span class="tag tag-neutral" data-i18n="home.view">View →</span>
-      </div>
     </div>
 
     <!-- TRIPS -->
@@ -129,7 +125,7 @@
 
     <!-- COUNTRIES (secondary screen, reached from Home) -->
     <div class="screen" id="tab-countries" style="display:none;">
-      <button type="button" class="countries-back" id="countriesBackBtn" data-i18n="countries.back">← Home</button>
+      <button type="button" class="countries-back" id="countriesBackBtn" data-i18n="countries.back">← Settings</button>
       <h1 style="font-size:22px; margin-top:10px;" data-i18n="countries.heading">Countries visited</h1>
       <div class="card-meta" id="countriesSubtitle" style="margin-top:2px;"></div>
       <div class="countries-grid" id="countriesGrid"></div>
@@ -284,6 +280,14 @@
         <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn" data-i18n="settings.clearStays">Clear all logged stays</button>
       </div>
 
+      <div class="card elev-sm card-row" id="countriesCard" style="cursor:pointer;">
+        <div>
+          <div class="card-kicker" data-i18n="home.countriesVisited">Countries visited</div>
+          <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
+        </div>
+        <span class="tag tag-neutral" data-i18n="home.view">View →</span>
+      </div>
+
       <div class="card elev-sm card-row" id="faqCard" style="cursor:pointer;">
         <div>
           <div class="card-kicker" data-i18n="settings.helpTitle">Help</div>
@@ -324,6 +328,10 @@
 
       <div class="card">
         <div class="card-kicker" data-i18n="faq.ruleTitle">The rule itself</div>
+        <details class="faq-item">
+          <summary data-i18n="faq.rollingPeriod.q">What does "rolling period" mean?</summary>
+          <p class="card-body" data-i18n="faq.rollingPeriod.a">It means the 180-day window that counts toward your limit isn't fixed to the calendar — it moves with you. On any given day, the app looks back at the previous 180 days and adds up how many of them you spent in Schengen. As days roll out of that window, they stop counting, even if you never left. That's why your days-left number can go up over time on its own — you're not spending down a fixed allowance, you're always looking at a fresh 180-day slice ending today.</p>
+        </details>
         <details class="faq-item">
           <summary data-i18n="faq.dayCounts.q">What counts as a day in the Schengen Area?</summary>
           <p class="card-body" data-i18n="faq.dayCounts.a">Any calendar day you're physically present in the Schengen Area counts as a full day — including your entry and exit days, even if you only cross the border for an hour.</p>
