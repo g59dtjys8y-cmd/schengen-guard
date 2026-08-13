@@ -1,4 +1,9 @@
-# Schengen Guard
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="wordmark-dark.png">
+    <img src="wordmark-light.png" alt="Schengen Guard" height="40">
+  </picture>
+</h1>
 
 A free web app for tracking Schengen Area visits and staying compliant with the 90/180-day short-stay rule. Live, installable as an app, and fully private — your trips are stored only on your own device, with no account and no server.
 
