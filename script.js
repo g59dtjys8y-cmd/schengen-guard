@@ -35,6 +35,31 @@ function flagIconHtml(name){
   return `<span class="flag-icon fi fi-${code}" aria-hidden="true" aria-label="${name}"></span>`;
 }
 
+// Small stable hash so each country's stamp tilt is fixed (not re-randomized on every
+// render) without having to store a rotation value anywhere — same input, same output.
+function stampRotationDeg(code){
+  let hash = 0;
+  for(let i = 0; i < code.length; i++) hash = (hash * 31 + code.charCodeAt(i)) | 0;
+  const t = ((hash % 1000) + 1000) % 1000 / 1000; // 0..1, stable per code
+  return (t * 8 - 4).toFixed(2); // -4..4deg
+}
+
+// Postage-stamp flag for the Countries grid's visited tiles — see flagIconHtml() above
+// for the plain inline flag used everywhere else (trip rows, etc.), which this doesn't
+// replace. Decorative + aria-hidden, same as flagIconHtml(): the tile's visible .name
+// text underneath stays the a11y source of truth rather than duplicating an announcement.
+function stampHtml(name){
+  const code = COUNTRY_ISO[name];
+  if(!code) return '';
+  const rotate = stampRotationDeg(code);
+  return `<div class="stamp" style="--stamp-rotate:${rotate}deg;">
+    <div class="stamp-paper">
+      <span class="stamp-flag fi fi-${code}" aria-hidden="true" aria-label="${name}"></span>
+      <span class="postmark" aria-hidden="true"></span>
+    </div>
+  </div>`;
+}
+
 // Trip labels normally only ever come from the fixed country <select>, but a restored
 // backup file can carry arbitrary text — escape before any innerHTML interpolation so a
 // crafted label can't inject markup/event handlers.
@@ -582,7 +607,7 @@ function renderCountries(){
     const tile = document.createElement('div');
     if(visited.has(name)){
       tile.className = 'country-tile visited';
-      tile.innerHTML = `<div class="tile-icons">${flagIconHtml(name)}</div><div class="name">${name}</div>`;
+      tile.innerHTML = `${stampHtml(name)}<div class="name">${name}</div>`;
     } else {
       tile.className = 'country-tile pending';
       tile.innerHTML = `<div class="name">${name}</div>`;
