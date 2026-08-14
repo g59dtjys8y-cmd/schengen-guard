@@ -566,27 +566,91 @@ function render(){
   renderBackupNudge();
 }
 
-// Soonest trip that hasn't finished yet (ongoing or upcoming)
-function nextTrip(){
-  const today = todayISO();
-  const upcoming = trips.filter(t => t.end >= today);
-  upcoming.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
-  return upcoming[0] || null;
+// The trip actually in progress today, if any
+function activeTrip(){
+  return trips.find(t => classifyTrip(t) === 'active') || null;
+}
+
+// Soonest trip that hasn't started yet
+function upcomingTrip(){
+  const planned = trips.filter(t => classifyTrip(t) === 'planned');
+  planned.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+  return planned[0] || null;
 }
 
 function renderNextTrip(){
-  const panel = document.getElementById('nextTripPanel');
+  const active = activeTrip();
+  const next = upcomingTrip();
+
+  const activePanel = document.getElementById('activeTripPanel');
+  const compactPanel = document.getElementById('nextTripCompact');
+  const fullPanel = document.getElementById('nextTripPanel');
   const empty = document.getElementById('nextTripEmpty');
-  const trip = nextTrip();
 
-  if(!trip){
-    panel.style.display = 'none';
-    empty.style.display = 'block';
-    return;
+  activePanel.style.display = active ? 'flex' : 'none';
+  compactPanel.style.display = (active && next) ? 'flex' : 'none';
+  fullPanel.style.display = (!active && next) ? 'flex' : 'none';
+  empty.style.display = !next ? 'block' : 'none';
+
+  if(active) renderActiveTrip(active);
+  if(active && next) renderCompactNextTrip(next);
+  if(!active && next) renderFullNextTrip(next);
+}
+
+function renderActiveTrip(trip){
+  const panel = document.getElementById('activeTripPanel');
+  const tagRow = document.getElementById('activeTripTagRow');
+  const tagEl = document.getElementById('activeTripTag');
+  const bigEl = document.getElementById('activeTripBig');
+  const bigLabelEl = document.getElementById('activeTripBigLabel');
+  const dividerEl = document.getElementById('activeTripDivider');
+  const bodyEl = document.getElementById('activeTripBody');
+
+  document.getElementById('activeTripKicker').textContent = t('home.tripInProgress', { label: trip.label || t('calendar.dash') });
+
+  // A trip already in progress can't shift its start or trim its already-lived days, so
+  // the overstay case is framed as "you're over" (reusing the same copy as the Quick check
+  // card above) rather than the forward-looking trim/later-start suggestions used for a
+  // trip that hasn't started yet.
+  const overstay = tripOverstayInfo(trips, trip, 90);
+  if(overstay){
+    const overBy = overstay.used - 90;
+    tagRow.style.display = 'flex';
+    tagEl.textContent = t('home.overstayRisk');
+    tagEl.className = 'tag tag-accent-2';
+    bigEl.style.display = 'none';
+    bigLabelEl.style.display = 'none';
+    dividerEl.style.display = 'none';
+    bodyEl.innerHTML = tn('home.overLimitBody', overBy, { used: overstay.used, date: boldDate(overstay.date) });
+  } else {
+    const maxDays = maxConsecutiveFrom(trips, trip.start, 90);
+    const lastExit = isoOf(addDays(toDate(trip.start), maxDays - 1));
+    const daysLeft = Math.round((toDate(lastExit) - toDate(todayISO())) / 86400000) + 1;
+
+    tagRow.style.display = 'none';
+    bigEl.style.display = 'block';
+    bigEl.textContent = String(daysLeft);
+    bigLabelEl.style.display = 'block';
+    bigLabelEl.textContent = tn('home.activeDaysLeft', daysLeft);
+    dividerEl.style.display = 'block';
+    bodyEl.innerHTML = t('home.activeTripMeta', {
+      entry: fmt(trip.start),
+      exit: fmt(trip.end),
+      maxDate: boldDate(lastExit)
+    });
   }
-  empty.style.display = 'none';
-  panel.style.display = 'flex';
 
+  panel.onclick = () => switchTab('trips');
+}
+
+function renderCompactNextTrip(trip){
+  const row = document.getElementById('nextTripCompact');
+  document.getElementById('nextTripCompactCountry').textContent = trip.label || t('calendar.dash');
+  document.getElementById('nextTripCompactDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)}`;
+  row.onclick = () => switchTab('trips');
+}
+
+function renderFullNextTrip(trip){
   const days = Math.round((toDate(trip.end) - toDate(trip.start)) / 86400000) + 1;
   document.getElementById('nextTripCountry').textContent = trip.label || t('calendar.dash');
   document.getElementById('nextTripDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)} · ${tn('trips.marginDays', days)}`;
@@ -607,7 +671,7 @@ function renderNextTrip(){
       : '';
   }
 
-  panel.onclick = () => switchTab('trips');
+  document.getElementById('nextTripPanel').onclick = () => switchTab('trips');
 }
 
 // Countries with a trip that's already started (active or past) count as "visited" —

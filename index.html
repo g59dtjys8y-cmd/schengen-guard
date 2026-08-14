@@ -105,7 +105,26 @@
         <p class="disclaimer-footer" data-i18n-html="home.disclaimerFooter">Not legal advice — verify with the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">official EU calculator</a></p>
       </div>
 
-      <div class="card elev-sm" id="nextTripPanel" style="display:none; cursor:pointer;">
+      <div class="card elev-sm" id="activeTripPanel" style="display:none; cursor:pointer;">
+        <div class="card-kicker" id="activeTripKicker"></div>
+        <div class="card-row" id="activeTripTagRow" style="display:none;">
+          <span class="tag" id="activeTripTag"></span>
+        </div>
+        <div class="qc-big-date" id="activeTripBig" style="margin:2px 0 0;"></div>
+        <div class="card-meta" id="activeTripBigLabel"></div>
+        <div class="card-divider" id="activeTripDivider" style="display:none;"></div>
+        <p class="card-body" id="activeTripBody" style="margin-top:0;"></p>
+      </div>
+      <div class="compact-row" id="nextTripCompact" style="display:none; margin-top:14px;">
+        <div class="compact-row-left">
+          <div class="card-kicker" data-i18n="home.nextTrip">Next trip</div>
+          <span class="compact-row-name" id="nextTripCompactCountry"></span>
+          <span class="compact-row-dates" id="nextTripCompactDates"></span>
+        </div>
+        <span class="compact-row-chev" aria-hidden="true">›</span>
+      </div>
+
+      <div class="card elev-sm" id="nextTripPanel" style="display:none; cursor:pointer; margin-top:14px;">
         <div class="card-row" style="gap:14px;">
           <div>
             <div class="card-kicker" data-i18n="home.nextTrip">Next trip</div>
