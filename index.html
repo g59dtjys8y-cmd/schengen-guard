@@ -73,15 +73,35 @@
         </div>
       </div>
 
-      <div class="card" style="margin-top:22px;">
-        <div class="card-kicker" id="lastDayKicker">Last day to leave</div>
-        <div class="card-title" style="font-size:26px;" id="lastDayTitle">—</div>
-        <p class="card-body" id="lastDayBody"></p>
-        <button type="button" class="link-btn" id="homeBreakdownBtn" style="font-size:12.5px;" data-i18n="home.howCalculated">How is this calculated?</button>
-        <div class="check-as-of">
-          <label for="refDate" data-i18n="home.checkAsOf">Check as of</label>
-          <input class="input" type="date" id="refDate">
+      <div class="card qc-card" style="margin-top:22px;">
+        <div class="qc-title-row">
+          <span class="qc-title-label">
+            <span class="qc-title-black">Quick</span>
+            <span class="qc-title-blue">check</span>
+          </span>
+          <span class="qc-title-rule"></span>
         </div>
+
+        <label class="qc-field-row" for="refDate">
+          <span class="qc-field-label" data-i18n="home.checkAsOf">Check as of</span>
+          <span class="qc-field-input-group">
+            <span class="qc-today-pill" id="qcTodayPill" data-i18n="home.today">Today</span>
+            <input class="qc-field-input" type="date" id="refDate">
+          </span>
+        </label>
+
+        <div class="qc-arrow" aria-hidden="true">
+          <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l5 5 5-5"/></svg>
+        </div>
+
+        <div class="qc-result" id="qcResult">
+          <div class="qc-eyebrow" id="lastDayKicker">Last day to leave</div>
+          <div class="qc-big-date" id="lastDayTitle">—</div>
+          <div class="qc-explain" id="lastDayBody"></div>
+        </div>
+
+        <button type="button" class="qc-link" id="homeBreakdownBtn" data-i18n="home.howCalculated">How is this calculated?</button>
+
         <p class="disclaimer-footer" data-i18n-html="home.disclaimerFooter">Not legal advice — verify with the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">official EU calculator</a></p>
       </div>
 
