@@ -1,4 +1,4 @@
-const CACHE_NAME = 'schengen-guard-v3';
+const CACHE_NAME = 'schengen-guard-v4';
 const CORE_FILES = [
   './', 'index.html', 'style.css', 'script.js', 'manifest.json', 'icon-192.png', 'icon-512.png',
   'fonts/source-serif-4/source-serif-4-400.woff2', 'fonts/source-serif-4/source-serif-4-400-italic.woff2'
