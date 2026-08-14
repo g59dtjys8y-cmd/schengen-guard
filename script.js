@@ -35,6 +35,14 @@ function flagIconHtml(name){
   return `<span class="flag-icon fi fi-${code}" aria-hidden="true" aria-label="${name}"></span>`;
 }
 
+// Trip labels normally only ever come from the fixed country <select>, but a restored
+// backup file can carry arbitrary text — escape before any innerHTML interpolation so a
+// crafted label can't inject markup/event handlers.
+const HTML_ESCAPES = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => HTML_ESCAPES[c]);
+}
+
 let trips = []; // {id, start:'YYYY-MM-DD', end:'YYYY-MM-DD', label, excludedRanges:[{start,end}]}
 let calCursor = new Date(); calCursor.setDate(1);
 let pickStart = null, pickEnd = null;
@@ -621,7 +629,7 @@ function renderTripRows(){
     row.innerHTML = `
       <div class="trip-days"><div class="n">${days}</div><div class="lbl">${t('trips.days')}</div></div>
       <div class="trip-info">
-        <div class="country">${trip.label ? flagIconHtml(trip.label) : ''}${trip.label || t('calendar.dash')}${warnIcon}</div>
+        <div class="country">${trip.label ? flagIconHtml(trip.label) : ''}${trip.label ? escapeHtml(trip.label) : t('calendar.dash')}${warnIcon}</div>
         <div class="dates">${fmt(trip.start)} – ${fmt(trip.end)}</div>
         ${exclNote}
         <div class="row-actions">
@@ -1024,7 +1032,7 @@ document.getElementById('printTripsBtn').addEventListener('click', ()=>{
   html += '<table><thead><tr><th>Country</th><th>Entry</th><th>Exit</th><th>Days</th><th>Excluded days</th><th>Status</th></tr></thead><tbody>';
   for(const t of sortedTrips()){
     const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
-    html += `<tr><td>${t.label || ''}</td><td>${fmt(t.start)}</td><td>${fmt(t.end)}</td><td>${days}</td><td>${excludedDayCount(t)}</td><td>${classifyTrip(t)}</td></tr>`;
+    html += `<tr><td>${escapeHtml(t.label || '')}</td><td>${fmt(t.start)}</td><td>${fmt(t.end)}</td><td>${days}</td><td>${excludedDayCount(t)}</td><td>${classifyTrip(t)}</td></tr>`;
   }
   html += '</tbody></table>';
   document.getElementById('printArea').innerHTML = html;
@@ -1120,7 +1128,7 @@ function openBreakdown(list, windowEndISO){
     const tr = document.createElement('tr');
     if(first.counts) tr.classList.add('counts');
     if(first.iso <= todayIso && todayIso <= last.iso) tr.classList.add('today-row');
-    tr.innerHTML = `<td>${dateText}</td><td>${first.label}</td><td>${last.running} / 90</td>`;
+    tr.innerHTML = `<td>${dateText}</td><td>${escapeHtml(first.label)}</td><td>${last.running} / 90</td>`;
     rowsEl.appendChild(tr);
     i = j + 1;
   }
