@@ -717,7 +717,12 @@ function renderTripRows(){
     rowsEl.innerHTML = `<div class="empty-note">${t('trips.noStaysLogged')}</div>`;
     return;
   }
-  trips.sort((a,b)=> a.start < b.start ? 1 : a.start > b.start ? -1 : 0);
+  trips.sort((a,b)=>{
+    const aActive = classifyTrip(a) === 'active';
+    const bActive = classifyTrip(b) === 'active';
+    if(aActive !== bActive) return aActive ? -1 : 1;
+    return a.start < b.start ? 1 : a.start > b.start ? -1 : 0;
+  });
   for(const trip of trips){
     const days = Math.round((toDate(trip.end) - toDate(trip.start))/86400000) + 1;
     const status = classifyTrip(trip);
