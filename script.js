@@ -152,6 +152,9 @@ function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; 
 function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function fmt(iso){ const d=toDate(iso); return new Intl.DateTimeFormat(INTL_LOCALE[currentLang] || 'en-GB', {day:'2-digit',month:'short',year:'numeric'}).format(d); }
 function fmtShort(iso){ const d=toDate(iso); return new Intl.DateTimeFormat(INTL_LOCALE[currentLang] || 'en-GB', {day:'2-digit',month:'short'}).format(d); }
+// Wraps a formatted date in a bold span for use inside the Quick check result's innerHTML —
+// day-count phrases (margins, overages) stay plain text and are never passed through this.
+function boldDate(iso){ return `<b class="qc-date">${fmt(iso)}</b>`; }
 
 function isExcludedDay(trip, iso){
   for(const r of (trip.excludedRanges || [])){
@@ -478,6 +481,13 @@ function statusColorVar(used, remaining, exitIsoIsNull){
   return 'var(--color-accent)';
 }
 
+// Result-block background tint — healthy gets the accent tint, warning and danger
+// (over limit / no valid exit) share the same accent-2 tint the eyebrow/big-date use.
+function statusTintVar(used, remaining, exitIsoIsNull){
+  if(used > 90 || exitIsoIsNull || remaining <= 20) return 'var(--color-accent-2-100)';
+  return 'var(--color-accent-100)';
+}
+
 function updateRing(remaining, colorVar){
   const fraction = Math.max(0, Math.min(1, remaining / 90));
   const fg = document.getElementById('ringFg');
@@ -512,30 +522,39 @@ function render(){
   const exitISO = maxDays > 0 ? isoOf(addDays(toDate(entryForCalc), maxDays - 1)) : null;
 
   const colorVar = statusColorVar(used, remaining, exitISO === null);
+  const tintVar = statusTintVar(used, remaining, exitISO === null);
   updateRing(remaining, colorVar);
 
+  const resultEl = document.getElementById('qcResult');
   const kickerEl = document.getElementById('lastDayKicker');
   const titleEl = document.getElementById('lastDayTitle');
   const bodyEl = document.getElementById('lastDayBody');
+  resultEl.style.background = tintVar;
+  kickerEl.style.color = colorVar;
   titleEl.style.color = colorVar;
 
   if(used > 90){
     const overBy = used - 90;
     kickerEl.textContent = t('home.daysOverLimit');
     titleEl.textContent = `+${overBy}`;
-    bodyEl.textContent = tn('home.overLimitBody', overBy, { date: fmt(refISO) });
+    let html = tn('home.overLimitBody', overBy, { used, date: boldDate(refISO) });
     const free = nextFreeDate(trips, 90);
-    if(free) bodyEl.textContent += t('home.compliantAgainFrom', { date: fmt(free) });
+    if(free) html += t('home.compliantAgainFrom', { date: boldDate(free) });
+    bodyEl.innerHTML = html;
   } else if(exitISO === null){
     kickerEl.textContent = t('home.status');
     titleEl.textContent = t('home.na');
-    bodyEl.textContent = t('home.noCompliantStay', { date: fmt(entryForCalc) });
+    bodyEl.innerHTML = t('home.noCompliantStay', { date: boldDate(entryForCalc) });
   } else {
     kickerEl.textContent = t('home.lastDayToLeave');
     titleEl.textContent = fmt(exitISO);
-    const whose = coveringTrip ? t('home.thisStay') : t('home.stayEntering', { date: fmt(refISO) });
-    bodyEl.textContent = t('home.usedOfWindow', { used, date: fmt(refISO), whose, exit: fmt(exitISO) });
+    let html = t('home.usedOfWindow', { used, date: boldDate(refISO) });
+    if(remaining <= 20) html += tn('home.marginLeft', remaining);
+    bodyEl.innerHTML = html;
   }
+
+  const todayPill = document.getElementById('qcTodayPill');
+  todayPill.style.display = (refISO === todayISO()) ? '' : 'none';
 
   renderTripRows();
   renderNextTrip();

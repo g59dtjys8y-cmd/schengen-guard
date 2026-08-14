@@ -353,13 +353,51 @@ a:hover{text-decoration:underline;}
 }
 .ring-star svg{width:15px;height:15px;}
 
-/* — check-as-of row inside last-day card — */
-.check-as-of{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  border-top:1px solid var(--color-divider);margin-top:4px;padding-top:10px;
+/* — Quick check card (home) — */
+.qc-card{gap:0;}
+
+.qc-title-row{display:flex;align-items:center;gap:10px;margin-bottom:var(--space-3);}
+.qc-title-label{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;}
+.qc-title-black{color:var(--color-text);}
+.qc-title-blue{color:var(--color-accent);}
+.qc-title-rule{height:1px;background:var(--color-divider);flex:1;}
+
+.qc-field-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;
+  background:var(--color-field-bg);border:1px solid var(--color-divider);border-radius:var(--radius-sm);
+  padding:9px 12px 9px 14px;transition:border-color 150ms ease, box-shadow 150ms ease;
 }
-.check-as-of label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600);white-space:nowrap;}
-.check-as-of input{width:auto;min-height:36px;padding:6px 9px;font-size:13px;}
+.qc-field-row:focus-within{border-color:var(--color-accent);box-shadow:0 0 0 2px var(--color-accent-100);}
+.qc-field-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--color-neutral-600);white-space:nowrap;}
+.qc-field-input-group{display:flex;align-items:center;gap:8px;}
+.qc-field-input{
+  border:none;background:transparent;padding:0;min-height:auto;width:auto;
+  font-size:15px;font-weight:600;color:var(--color-text);text-align:right;
+}
+.qc-field-row:focus-within .qc-field-input{color:var(--color-accent-700);}
+.qc-today-pill{
+  font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--color-accent-700);background:var(--color-accent-100);
+  padding:2px 6px;border-radius:20px;white-space:nowrap;
+}
+
+.qc-arrow{display:flex;align-items:center;justify-content:center;margin:10px 0;color:var(--color-neutral-500);}
+.qc-arrow svg{width:16px;height:16px;display:block;}
+
+.qc-result{
+  border-radius:var(--radius-sm);padding:var(--space-3);text-align:center;
+  transition:background 220ms ease;
+}
+.qc-eyebrow{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;transition:color 220ms ease;}
+.qc-big-date{font-family:var(--font-heading);font-size:32px;font-weight:700;margin:4px 0 8px;transition:color 220ms ease;}
+.qc-explain{font-size:13.5px;color:var(--color-text);line-height:1.5;}
+.qc-explain .qc-date{font-weight:600;}
+
+.qc-link{
+  align-self:center;margin-top:10px;background:none;border:none;cursor:pointer;font:inherit;
+  color:var(--color-accent);font-weight:600;font-size:14px;padding:0;min-height:32px;
+  text-decoration:underline;text-decoration-color:var(--color-accent-100);text-underline-offset:3px;
+}
 
 /* — trips list — */
 .trip-row{
