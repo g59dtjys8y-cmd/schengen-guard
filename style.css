@@ -85,7 +85,8 @@
 
   --stamp-paper:#ffffff;
   --stamp-shadow:0 3px 8px rgba(45,43,43,.22);
-  --stamp-postmark:rgba(0,0,0,.38);
+  --stamp-postmark:rgba(0,0,0,.4);
+  --stamp-border:rgba(20,17,17,.55);
 }
 
 /* — CJK locales: Source Serif 4 has no CJK glyph coverage, so fall back to platform
@@ -139,7 +140,8 @@
 
     --stamp-paper:var(--color-neutral-800);
     --stamp-shadow:0 3px 10px rgba(0,0,0,.5);
-    --stamp-postmark:rgba(0,0,0,.45);
+    --stamp-postmark:rgba(0,0,0,.5);
+    --stamp-border:rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
@@ -180,7 +182,8 @@
 
   --stamp-paper:var(--color-neutral-800);
   --stamp-shadow:0 3px 10px rgba(0,0,0,.5);
-  --stamp-postmark:rgba(0,0,0,.45);
+  --stamp-postmark:rgba(0,0,0,.5);
+  --stamp-border:rgba(0,0,0,.6);
 }
 
 *,*::before,*::after{box-sizing:border-box;}
@@ -433,6 +436,7 @@ a:hover{text-decoration:underline;}
   position:relative;
   width:100%;height:100%;
   background:var(--stamp-paper);
+  border:1px solid var(--stamp-border);
   padding:4px;
   box-sizing:border-box;
   mask-image:
@@ -456,15 +460,20 @@ a:hover{text-decoration:underline;}
   background-size:cover;background-position:center;
   border-radius:1px;
 }
+/* Passport-style "VISITED" postmark: circle + curved text along the top arc + a
+   cancellation line through the middle, like a real entry stamp. SVG (not a plain
+   circle + ::after line) so the text can actually curve — CSS alone can't bend text
+   along a path. */
 .postmark{
   position:absolute;inset:0;margin:auto;
-  width:76%;aspect-ratio:1;border-radius:50%;
-  border:1.5px solid var(--stamp-postmark);
+  width:76%;aspect-ratio:1;
+  color:var(--stamp-postmark);
   transform:rotate(8deg);
+  overflow:visible;
 }
-.postmark::after{
-  content:'';position:absolute;top:50%;left:-15%;width:130%;
-  border-top:1.5px solid var(--stamp-postmark);
+.postmark text{
+  font-family:var(--font-heading);font-weight:700;font-size:12px;letter-spacing:1px;
+  fill:currentColor;
 }
 
 /* — calendar — */

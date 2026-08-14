@@ -52,10 +52,19 @@ function stampHtml(name){
   const code = COUNTRY_ISO[name];
   if(!code) return '';
   const rotate = stampRotationDeg(code);
+  // arc id needs to be unique per tile (up to 29 on screen at once) since textPath
+  // references it by id and duplicate ids would make every stamp's text follow
+  // whichever <path> the browser happens to resolve first.
+  const arcId = `stamp-arc-${code}`;
   return `<div class="stamp" style="--stamp-rotate:${rotate}deg;">
     <div class="stamp-paper">
       <span class="stamp-flag fi fi-${code}" aria-hidden="true" aria-label="${name}"></span>
-      <span class="postmark" aria-hidden="true"></span>
+      <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
+        <path id="${arcId}" d="M 15,50 A 35,35 0 0,1 85,50" fill="none"/>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" stroke-width="2"/>
+        <text><textPath href="#${arcId}" startOffset="50%" text-anchor="middle">VISITED</textPath></text>
+        <line x1="15" y1="50" x2="85" y2="50" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
     </div>
   </div>`;
 }
