@@ -106,7 +106,14 @@
       </div>
 
       <div class="card elev-sm" id="activeTripPanel" style="display:none; cursor:pointer;">
-        <div class="card-kicker" id="activeTripKicker"></div>
+        <div class="qc-title-row" style="margin-bottom:2px;">
+          <span class="qc-title-label">
+            <span class="qc-title-black" data-i18n="home.tripInProgressWord1">Trip</span>
+            <span class="qc-title-blue" data-i18n="home.tripInProgressWord2">in progress</span>
+          </span>
+          <span class="qc-title-rule"></span>
+        </div>
+        <div class="card-title" style="font-size:19px;" id="activeTripCountry"></div>
         <div class="card-row" id="activeTripTagRow" style="display:none;">
           <span class="tag" id="activeTripTag"></span>
         </div>
@@ -116,18 +123,32 @@
         <p class="card-body" id="activeTripBody" style="margin-top:0;"></p>
       </div>
       <div class="compact-row" id="nextTripCompact" style="display:none; margin-top:14px;">
-        <div class="compact-row-left">
-          <div class="card-kicker" data-i18n="home.nextTrip">Next trip</div>
-          <span class="compact-row-name" id="nextTripCompactCountry"></span>
-          <span class="compact-row-dates" id="nextTripCompactDates"></span>
+        <div class="qc-title-row" style="margin-bottom:0;">
+          <span class="qc-title-label">
+            <span class="qc-title-black" data-i18n="home.nextTripWord1">Next</span>
+            <span class="qc-title-blue" data-i18n="home.nextTripWord2">trip</span>
+          </span>
+          <span class="qc-title-rule"></span>
         </div>
-        <span class="compact-row-chev" aria-hidden="true">›</span>
+        <div class="compact-row-main">
+          <div class="compact-row-left">
+            <span class="compact-row-name" id="nextTripCompactCountry"></span>
+            <span class="compact-row-dates" id="nextTripCompactDates"></span>
+          </div>
+          <span class="compact-row-chev" aria-hidden="true">›</span>
+        </div>
       </div>
 
       <div class="card elev-sm" id="nextTripPanel" style="display:none; cursor:pointer; margin-top:14px;">
+        <div class="qc-title-row" style="margin-bottom:2px;">
+          <span class="qc-title-label">
+            <span class="qc-title-black" data-i18n="home.nextTripWord1">Next</span>
+            <span class="qc-title-blue" data-i18n="home.nextTripWord2">trip</span>
+          </span>
+          <span class="qc-title-rule"></span>
+        </div>
         <div class="card-row" style="gap:14px;">
           <div>
-            <div class="card-kicker" data-i18n="home.nextTrip">Next trip</div>
             <div class="card-title" style="font-size:21px;" id="nextTripCountry"></div>
             <div class="card-meta" id="nextTripDates"></div>
           </div>

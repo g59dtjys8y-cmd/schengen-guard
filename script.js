@@ -588,7 +588,7 @@ function renderNextTrip(){
   const empty = document.getElementById('nextTripEmpty');
 
   activePanel.style.display = active ? 'flex' : 'none';
-  compactPanel.style.display = (active && next) ? 'flex' : 'none';
+  compactPanel.style.display = (active && next) ? 'block' : 'none';
   fullPanel.style.display = (!active && next) ? 'flex' : 'none';
   empty.style.display = !next ? 'block' : 'none';
 
@@ -606,7 +606,7 @@ function renderActiveTrip(trip){
   const dividerEl = document.getElementById('activeTripDivider');
   const bodyEl = document.getElementById('activeTripBody');
 
-  document.getElementById('activeTripKicker').textContent = t('home.tripInProgress', { label: trip.label || t('calendar.dash') });
+  document.getElementById('activeTripCountry').textContent = trip.label || t('calendar.dash');
 
   // A trip already in progress can't shift its start or trim its already-lived days, so
   // the overstay case is framed as "you're over" (reusing the same copy as the Quick check
