@@ -1,5 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
-  <title>Schengen Guard app icon</title>
   <defs>
     <style>
       @font-face {
@@ -40,12 +39,12 @@
   <use href="#star" x="29.4016" y="17.9482"/>
   </g>
 
-  <g id="shield" transform="translate(18.8043,18.7500) scale(0.760870)">
+  <g id="shield" transform="translate(18.8043,15.0000) scale(0.760870)">
     <path d="M41 6 L72 18 V44 C72 65 58 80 41 85 C24 80 10 65 10 44 V18 Z"
           fill="#242f8c" stroke="#FFC72C" stroke-width="1.7500"
           vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
   </g>
 
-  <text class="numeral" x="50.0" y="53.7500"
+  <text class="numeral" x="50.0" y="50.0000"
         text-anchor="middle" dominant-baseline="central">90</text>
 </svg>
