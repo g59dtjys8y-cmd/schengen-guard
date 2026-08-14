@@ -646,7 +646,7 @@ function renderActiveTrip(trip){
 function renderCompactNextTrip(trip){
   const row = document.getElementById('nextTripCompact');
   document.getElementById('nextTripCompactCountry').textContent = trip.label || t('calendar.dash');
-  document.getElementById('nextTripCompactDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)} · ${t('home.nextTrip')}`;
+  document.getElementById('nextTripCompactDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)}`;
   row.onclick = () => switchTab('trips');
 }
 
