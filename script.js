@@ -1451,6 +1451,24 @@ document.getElementById('firstRunAckBtn').addEventListener('click', ()=>{
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // iOS Safari is slow to notice a changed sw.js on its own — force a check
+      // whenever the app opens or comes back to the foreground, the two moments
+      // someone actually expects to see a fresh version.
+      reg.update();
+      document.addEventListener('visibilitychange', () => {
+        if(document.visibilityState === 'visible') reg.update();
+      });
+    }).catch(() => {});
+  });
+
+  // Once a new service worker takes over, this page's already-loaded JS/CSS is
+  // stale — reload once to pick up what it just activated, rather than leaving
+  // the user on the old version until they manually relaunch the app.
+  let refreshingForNewSW = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(refreshingForNewSW) return;
+    refreshingForNewSW = true;
+    window.location.reload();
   });
 }
