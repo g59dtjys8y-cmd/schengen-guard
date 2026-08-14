@@ -61,9 +61,9 @@ function stampHtml(name){
       <span class="stamp-flag fi fi-${code}" aria-hidden="true" aria-label="${name}"></span>
       <svg class="postmark" viewBox="0 0 100 100" aria-hidden="true">
         <path id="${arcId}" d="M 15,50 A 35,35 0 0,1 85,50" fill="none"/>
-        <circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="50" cy="50" r="34" fill="none" stroke="currentColor" stroke-width="2.5"/>
         <text><textPath href="#${arcId}" startOffset="50%" text-anchor="middle">VISITED</textPath></text>
-        <line x1="15" y1="50" x2="85" y2="50" stroke="currentColor" stroke-width="1.5"/>
+        <line x1="15" y1="50" x2="85" y2="50" stroke="currentColor" stroke-width="2"/>
       </svg>
     </div>
   </div>`;

@@ -85,7 +85,7 @@
 
   --stamp-paper:#ffffff;
   --stamp-shadow:0 3px 8px rgba(45,43,43,.22);
-  --stamp-postmark:rgba(0,0,0,.4);
+  --stamp-postmark:rgba(0,0,0,.65);
   --stamp-border:rgba(20,17,17,.55);
 }
 
@@ -140,7 +140,7 @@
 
     --stamp-paper:var(--color-neutral-800);
     --stamp-shadow:0 3px 10px rgba(0,0,0,.5);
-    --stamp-postmark:rgba(0,0,0,.5);
+    --stamp-postmark:rgba(0,0,0,.7);
     --stamp-border:rgba(0,0,0,.6);
   }
 }
@@ -182,7 +182,7 @@
 
   --stamp-paper:var(--color-neutral-800);
   --stamp-shadow:0 3px 10px rgba(0,0,0,.5);
-  --stamp-postmark:rgba(0,0,0,.5);
+  --stamp-postmark:rgba(0,0,0,.7);
   --stamp-border:rgba(0,0,0,.6);
 }
 
@@ -472,7 +472,7 @@ a:hover{text-decoration:underline;}
   overflow:visible;
 }
 .postmark text{
-  font-family:var(--font-heading);font-weight:700;font-size:12px;letter-spacing:1px;
+  font-family:var(--font-heading);font-weight:900;font-size:13px;letter-spacing:.5px;
   fill:currentColor;
 }
 
