@@ -82,6 +82,11 @@
   --shadow-md:0 3px 10px rgba(45,43,43,.16);
 
   --color-field-bg:#fff;
+
+  --stamp-paper:#ffffff;
+  --stamp-shadow:0 3px 8px rgba(45,43,43,.22);
+  --stamp-postmark:rgba(0,0,0,.65);
+  --stamp-border:rgba(20,17,17,.55);
 }
 
 /* — CJK locales: Source Serif 4 has no CJK glyph coverage, so fall back to platform
@@ -132,6 +137,11 @@
     --shadow-md:0 3px 10px rgba(0,0,0,.5);
 
     --color-field-bg:#2c2825;
+
+    --stamp-paper:var(--color-neutral-800);
+    --stamp-shadow:0 3px 10px rgba(0,0,0,.5);
+    --stamp-postmark:rgba(0,0,0,.7);
+    --stamp-border:rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
@@ -169,6 +179,11 @@
   --shadow-md:0 3px 10px rgba(0,0,0,.5);
 
   --color-field-bg:#2c2825;
+
+  --stamp-paper:var(--color-neutral-800);
+  --stamp-shadow:0 3px 10px rgba(0,0,0,.5);
+  --stamp-postmark:rgba(0,0,0,.7);
+  --stamp-border:rgba(0,0,0,.6);
 }
 
 *,*::before,*::after{box-sizing:border-box;}
@@ -381,12 +396,85 @@ a:hover{text-decoration:underline;}
 }
 .country-tile.visited{background:var(--color-accent-200);box-shadow:var(--shadow-sm);}
 .country-tile.pending{border:1px dashed var(--color-neutral-400);color:var(--color-neutral-500);}
-.country-tile .tile-icons{display:flex;align-items:center;justify-content:center;gap:var(--space-1);min-height:16px;}
 .country-tile .name{font-size:12px;font-weight:600;line-height:1.15;}
 .country-tile.visited .name{color:var(--color-accent-800);}
 
 /* — flag icons (flag-icons CDN) — decorative, sized to sit inline with country names — */
 .flag-icon.fi{width:20px;height:15px;flex-shrink:0;border-radius:var(--radius-md);}
+
+/* — postage-stamp flag (Countries grid, visited tiles only) —
+   Two nested elements for the perforated edge rather than one: this technique needs a
+   4-layer mask-composite intersection (one radial-gradient per edge), and some engines'
+   mask-composite (both -webkit- and standard) only reliably intersects 2 layers at a
+   time — a 3rd+ layer in the same chain silently drops out. Splitting left/right (outer,
+   also carries rotation/shadow) from top/bottom (inner, carries the paper background)
+   keeps each element's own composite to a proven-working 2 layers. */
+.stamp{
+  position:relative;
+  width:52px;
+  aspect-ratio:4/3;
+  transform:rotate(var(--stamp-rotate,0deg));
+  box-shadow:var(--stamp-shadow);
+  --hole:3.2px;
+  --gap:12px;
+  mask-image:
+    radial-gradient(circle var(--hole) at 0 var(--gap), transparent 99%, black 100%),
+    radial-gradient(circle var(--hole) at 100% var(--gap), transparent 99%, black 100%);
+  mask-repeat:repeat-y,repeat-y;
+  mask-size:100% var(--gap),100% var(--gap);
+  mask-position:0 0,0 0;
+  mask-composite:intersect;
+  -webkit-mask-image:
+    radial-gradient(circle var(--hole) at 0 var(--gap), transparent 99%, black 100%),
+    radial-gradient(circle var(--hole) at 100% var(--gap), transparent 99%, black 100%);
+  -webkit-mask-repeat:repeat-y,repeat-y;
+  -webkit-mask-size:100% var(--gap),100% var(--gap);
+  -webkit-mask-position:0 0,0 0;
+  -webkit-mask-composite:source-in;
+}
+.stamp-paper{
+  position:relative;
+  width:100%;height:100%;
+  background:var(--stamp-paper);
+  border:1px solid var(--stamp-border);
+  padding:4px;
+  box-sizing:border-box;
+  mask-image:
+    radial-gradient(circle var(--hole) at var(--gap) 0, transparent 99%, black 100%),
+    radial-gradient(circle var(--hole) at var(--gap) 100%, transparent 99%, black 100%);
+  mask-repeat:repeat-x,repeat-x;
+  mask-size:var(--gap) 100%,var(--gap) 100%;
+  mask-position:0 0,0 0;
+  mask-composite:intersect;
+  -webkit-mask-image:
+    radial-gradient(circle var(--hole) at var(--gap) 0, transparent 99%, black 100%),
+    radial-gradient(circle var(--hole) at var(--gap) 100%, transparent 99%, black 100%);
+  -webkit-mask-repeat:repeat-x,repeat-x;
+  -webkit-mask-size:var(--gap) 100%,var(--gap) 100%;
+  -webkit-mask-position:0 0,0 0;
+  -webkit-mask-composite:source-in;
+}
+.stamp-flag{
+  position:absolute;inset:4px;
+  display:block;width:auto;height:auto; /* override flag-icons' own width:1.333333em, which would otherwise over-constrain this inset-based sizing */
+  background-size:cover;background-position:center;
+  border-radius:1px;
+}
+/* Passport-style "VISITED" postmark: circle + curved text along the top arc + a
+   cancellation line through the middle, like a real entry stamp. SVG (not a plain
+   circle + ::after line) so the text can actually curve — CSS alone can't bend text
+   along a path. */
+.postmark{
+  position:absolute;inset:0;margin:auto;
+  width:76%;aspect-ratio:1;
+  color:var(--stamp-postmark);
+  transform:rotate(8deg);
+  overflow:visible;
+}
+.postmark text{
+  font-family:var(--font-heading);font-weight:900;font-size:13px;letter-spacing:.5px;
+  fill:currentColor;
+}
 
 /* — calendar — */
 .cal-head{display:flex;align-items:center;justify-content:space-between;margin:18px 0 10px;}
