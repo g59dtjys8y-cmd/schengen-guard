@@ -246,10 +246,10 @@ a:hover{text-decoration:underline;}
 
 /* — compact trip row (secondary "next trip" shown alongside an in-progress trip) — */
 .compact-row{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:11px 13px;background:var(--color-surface);border-radius:var(--radius-md);
   box-shadow:var(--shadow-sm);cursor:pointer;
 }
+.compact-row-main{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px;}
 .compact-row-left{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .compact-row-name{font-family:var(--font-heading);font-weight:600;font-size:15px;}
 .compact-row-dates{font-size:11.5px;color:var(--color-neutral-700);}
