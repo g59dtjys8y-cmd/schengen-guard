@@ -972,8 +972,14 @@ function renderExclusionSection(){
   }
   section.style.display = 'block';
   document.getElementById('exclusionNote').textContent = t('calendar.exclusionNote', { start: fmt(pickStart), end: fmt(pickEnd) });
-  document.getElementById('markSideTripBtn').style.display = pickingExclusion ? 'none' : 'block';
-  document.getElementById('exclusionPicker').style.display = pickingExclusion ? 'block' : 'none';
+
+  const tooShort = pickStart === pickEnd;
+  if(tooShort){
+    pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
+  }
+  document.getElementById('markSideTripBtn').style.display = (!tooShort && !pickingExclusion) ? 'block' : 'none';
+  document.getElementById('exclusionTooShort').style.display = tooShort ? 'block' : 'none';
+  document.getElementById('exclusionPicker').style.display = (!tooShort && pickingExclusion) ? 'block' : 'none';
   updateExclusionPickLabels();
   renderExclusionList();
 }
