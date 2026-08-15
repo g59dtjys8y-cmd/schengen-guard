@@ -569,6 +569,7 @@ function render(){
   renderNextTrip();
   renderCountriesCard();
   renderCalendar();
+  renderExclusionSection();
   renderCheckerCalendar();
   updateChecker();
   updateAppBadge();
@@ -955,12 +956,15 @@ function renderCheckerExclusionSection(){
   const start = document.getElementById('checkerEntry').value;
   const end = document.getElementById('checkerExit').value;
   const section = document.getElementById('checkerExclusionSection');
+  const prompt = document.getElementById('checkerExclusionPrompt');
   if(!start || !end || end < start){
     section.style.display = 'none';
+    prompt.style.display = 'block';
     checkerPickingExclusion = false; checkerEditingExclusionIndex = null;
     renderCheckerExclusionList();
     return;
   }
+  prompt.style.display = 'none';
   section.style.display = 'block';
   document.getElementById('checkerExclusionNote').textContent = t('calendar.exclusionNote', { start: fmt(start), end: fmt(end) });
 
@@ -1199,11 +1203,14 @@ function stopEditTrip(){
 
 function renderExclusionSection(){
   const section = document.getElementById('exclusionSection');
+  const prompt = document.getElementById('exclusionPrompt');
   if(!pickStart || !pickEnd){
     section.style.display = 'none';
+    prompt.style.display = 'block';
     pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
     return;
   }
+  prompt.style.display = 'none';
   section.style.display = 'block';
   document.getElementById('exclusionNote').textContent = t('calendar.exclusionNote', { start: fmt(pickStart), end: fmt(pickEnd) });
 
