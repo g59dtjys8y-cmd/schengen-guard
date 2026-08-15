@@ -177,6 +177,7 @@
           </span>
           <span class="qc-title-rule"></span>
         </div>
+        <p class="card-body" id="checkerEditingNote" style="display:none; margin-top:2px;" data-i18n="trips.editingNote">Editing an existing trip.</p>
         <div class="field" style="margin-top:2px;">
           <label for="checkerCountry" data-i18n="trips.country">Country</label>
           <select class="input" id="checkerCountry"></select>
@@ -228,6 +229,7 @@
         <div id="checkerSuggestions" class="stack" style="display:none;"></div>
         <div class="form-error" id="checkerError" style="display:none;"></div>
         <button type="button" class="btn btn-primary btn-block" id="checkerSaveBtn" disabled data-i18n="trips.saveTrip">Save trip</button>
+        <button type="button" class="link-btn" id="checkerCancelEditBtn" style="display:none; margin-top:8px;" data-i18n="trips.cancelEdit">Cancel edit</button>
       </div>
 
       <div id="tripRows" style="margin-top:14px; display:flex; flex-direction:column; gap:12px;"></div>
@@ -267,93 +269,6 @@
           <li data-i18n="privacy.terms.4">To the fullest extent permitted by law, the developer disclaims liability for any loss or damage arising from reliance on the app's output, including missed flights, denied entry, fines, or other immigration consequences.</li>
         </ul>
       </div>
-    </div>
-
-    <!-- CALENDAR -->
-    <div class="screen" id="tab-calendar" style="display:none;">
-      <h1 style="font-size:22px; padding-top:4px;" id="calendarHeading" data-i18n="calendar.logHeading">Log a stay</h1>
-      <p class="card-body" style="margin:6px 0 16px;" data-i18n="calendar.intro">Tap the entry date, then the exit date, right on the calendar. Each date also shows your days remaining as of that day.</p>
-
-      <div class="field">
-        <label for="tripLabel" data-i18n="calendar.country">Country</label>
-        <select class="input" id="tripLabel">
-          <option>Austria</option>
-          <option>Belgium</option>
-          <option>Bulgaria</option>
-          <option>Croatia</option>
-          <option>Czechia</option>
-          <option>Denmark</option>
-          <option>Estonia</option>
-          <option>Finland</option>
-          <option>France</option>
-          <option>Germany</option>
-          <option>Greece</option>
-          <option>Hungary</option>
-          <option>Iceland</option>
-          <option>Italy</option>
-          <option>Latvia</option>
-          <option>Liechtenstein</option>
-          <option>Lithuania</option>
-          <option>Luxembourg</option>
-          <option>Malta</option>
-          <option>Netherlands</option>
-          <option>Norway</option>
-          <option>Poland</option>
-          <option>Portugal</option>
-          <option>Romania</option>
-          <option>Slovakia</option>
-          <option>Slovenia</option>
-          <option selected>Spain</option>
-          <option>Sweden</option>
-          <option>Switzerland</option>
-        </select>
-      </div>
-      <div class="form-row" style="margin-top:8px;">
-        <span class="tag tag-outline" id="pickStartLbl">Entry: —</span>
-        <span class="tag tag-outline" id="pickEndLbl">Exit: —</span>
-      </div>
-      <input type="hidden" id="tripStart">
-      <input type="hidden" id="tripEnd">
-
-      <div class="cal-head">
-        <button type="button" id="prevMonth" data-i18n="calendar.prevMonth">← Prev</button>
-        <div class="cal-month" id="calMonthLabel"></div>
-        <button type="button" id="nextMonth" data-i18n="calendar.nextMonth">Next →</button>
-      </div>
-      <div class="cal-grid" id="calGrid"></div>
-      <div class="legend">
-        <span><i style="background:var(--color-accent);"></i><span data-i18n="calendar.legend.pastActive">past / active stay</span></span>
-        <span><i style="background:var(--color-accent-2);"></i><span data-i18n="calendar.legend.planned">planned stay</span></span>
-        <span><i style="background:var(--color-accent-2-700);"></i><span data-i18n="calendar.legend.overstay">overstay</span></span>
-        <span><i style="background:repeating-linear-gradient(45deg, var(--color-neutral-300), var(--color-neutral-300) 2px, var(--color-neutral-400) 2px, var(--color-neutral-400) 4px); border:1px dashed var(--color-neutral-600);"></i><span data-i18n="calendar.legend.excluded">outside Schengen (excluded)</span></span>
-        <span><i style="background:transparent;border:2px dashed var(--color-text);"></i><span data-i18n="calendar.legend.selecting">selecting</span></span>
-      </div>
-
-      <p class="note" id="exclusionPrompt" style="display:none; margin-top:14px;" data-i18n="calendar.exclusionPrompt">Pick your entry and exit dates above — you'll then be able to mark part of the stay as a side trip outside Schengen.</p>
-      <div id="exclusionSection" style="display:none; margin-top:14px;">
-        <div class="card-kicker" data-i18n="calendar.exclusionTitle">Time within this trip outside Schengen (optional)</div>
-        <p class="note" id="exclusionNote">Left and came back during this stay — like a UK leg? Add the dates below and they won't count toward your 90-day limit.</p>
-
-        <button type="button" class="btn btn-secondary btn-block" id="markSideTripBtn" data-i18n="calendar.markSideTrip">+ Mark a side trip on the calendar</button>
-        <p class="note" id="exclusionTooShort" style="display:none;" data-i18n="calendar.exclusionTooShort">Your stay is only 1 day, so there's no time to leave and come back.</p>
-
-        <div id="exclusionPicker" style="display:none;">
-          <div class="form-row" style="margin-top:8px;">
-            <span class="tag tag-outline" id="exclPickStartLbl">From: —</span>
-            <span class="tag tag-outline" id="exclPickEndLbl">To: —</span>
-          </div>
-          <button type="button" class="btn btn-primary btn-block" id="addExclusionBtn" data-i18n="calendar.addExclusion">Add side trip</button>
-          <button type="button" class="link-btn" id="cancelExclusionBtn" data-i18n="calendar.cancelExclusion">Cancel</button>
-        </div>
-
-        <div class="form-error" id="exclusionError" style="display:none;"></div>
-        <div id="exclusionList" class="stack" style="margin-top:6px;"></div>
-      </div>
-
-      <button type="button" class="btn btn-primary btn-block" id="addTripBtn" data-i18n="calendar.logStay" style="margin-top:14px;">Log stay</button>
-      <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:8px;" data-i18n="calendar.cancelEdit">Cancel edit</button>
-      <div class="form-error" id="formError" style="display:none;"></div>
-      <p class="note" style="margin-top:10px;" data-i18n="calendar.remainingNote">Small figure under each date is days remaining of your 90 as of that day.</p>
     </div>
 
     <!-- SETTINGS -->
@@ -529,7 +444,7 @@
         </details>
         <details class="faq-item">
           <summary data-i18n="faq.sideTrips.q">Do side trips outside Schengen (UK, etc.) count?</summary>
-          <p class="card-body" data-i18n="faq.sideTrips.a">No. If part of a longer trip takes you outside the Schengen Area — a UK leg, for example — mark those days as excluded when logging the stay in Calendar, and they won't count toward your 90-day total.</p>
+          <p class="card-body" data-i18n="faq.sideTrips.a">No. If part of a longer trip takes you outside the Schengen Area — a UK leg, for example — mark those days as excluded when you add the stay in the Safe Trip Checker, and they won't count toward your 90-day total.</p>
         </details>
       </div>
 
@@ -537,7 +452,7 @@
         <div class="card-kicker" data-i18n="faq.situationsTitle">Common situations</div>
         <details class="faq-item">
           <summary data-i18n="faq.roadTrip.q">I cross in and out of Schengen a lot on a road trip. Can I exclude side trips outside Schengen from my count?</summary>
-          <p class="card-body" data-i18n="faq.roadTrip.a">Yes. When you log the trip in Calendar, mark the part that's outside Schengen — for example, a few days in the UK or Morocco in the middle of a longer Europe trip. Those days won't count toward your 90-day total.</p>
+          <p class="card-body" data-i18n="faq.roadTrip.a">Yes. When you add the trip in the Safe Trip Checker, mark the part that's outside Schengen — for example, a few days in the UK or Morocco in the middle of a longer Europe trip. Those days won't count toward your 90-day total.</p>
         </details>
         <details class="faq-item">
           <summary data-i18n="faq.oneTrip.q">I'm only taking one trip to Europe. Do I need to keep using the app afterward?</summary>
@@ -583,10 +498,6 @@
     <button class="tab-btn" data-tab="trips">
       <svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="12" rx="1.5"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
       <span data-i18n="nav.trips">Trips</span>
-    </button>
-    <button class="tab-btn" data-tab="calendar">
-      <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="1.5"/><path d="M3.5 10h17"/><path d="M8 3v4M16 3v4"/></svg>
-      <span data-i18n="nav.calendar">Calendar</span>
     </button>
     <button class="tab-btn" data-tab="settings">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.6 7.6 0 0 0 0-2l2-1.5-2-3.5-2.4 1a7.6 7.6 0 0 0-1.7-1L15 3h-4l-.3 2.4a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2 1.5 2 3.5 2.4-1a7.6 7.6 0 0 0 1.7 1L11 21h4l.3-2.4a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.5z"/></svg>

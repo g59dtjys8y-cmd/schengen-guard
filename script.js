@@ -78,14 +78,8 @@ function escapeHtml(str){
 }
 
 let trips = []; // {id, start:'YYYY-MM-DD', end:'YYYY-MM-DD', label, excludedRanges:[{start,end}]}
-let calCursor = new Date(); calCursor.setDate(1);
-let pickStart = null, pickEnd = null;
 let editingTripId = null;
 let pendingImportTrips = null;
-let pendingExcludedRanges = [];
-let pickingExclusion = false;
-let exclPickStart = null, exclPickEnd = null;
-let editingExclusionIndex = null;
 let checkerPendingExcludedRanges = [];
 let checkerPickingExclusion = false;
 let checkerEditingExclusionIndex = null;
@@ -444,7 +438,7 @@ function clearAppBadge(){
 }
 
 // --- Tab / screen navigation ---
-const PRIMARY_TABS = ['home','trips','calendar','settings'];
+const PRIMARY_TABS = ['home','trips','settings'];
 
 function switchTab(name){
   document.querySelectorAll('.screen').forEach(el=>{
@@ -568,8 +562,6 @@ function render(){
   renderTripRows();
   renderNextTrip();
   renderCountriesCard();
-  renderCalendar();
-  renderExclusionSection();
   renderCheckerCalendar();
   updateChecker();
   updateAppBadge();
@@ -1074,330 +1066,77 @@ document.getElementById('checkerSaveBtn').addEventListener('click', async ()=>{
   errEl.style.display = 'none';
   if(!start || !end || end < start) return;
 
-  const overlapping = trips.find(ot => start <= ot.end && end >= ot.start);
-  if(overlapping){
-    const proceed = confirm(t('trips.overlapWarning', { label: overlapping.label, start: fmt(overlapping.start), end: fmt(overlapping.end) }));
-    if(!proceed) return;
-  }
-  try{
-    await insertTrip(start, end, label, checkerPendingExcludedRanges);
-  }catch(e){
-    errEl.textContent = t('trips.saveError');
-    errEl.style.display = 'block';
-    return;
-  }
-  checkerPickStart = null; checkerPickEnd = null;
-  document.getElementById('checkerEntry').value = '';
-  document.getElementById('checkerExit').value = '';
-  document.getElementById('checkerPickStartLbl').textContent = t('calendar.entryTag', { date: t('calendar.dash') });
-  document.getElementById('checkerPickEndLbl').textContent = t('calendar.exitTag', { date: t('calendar.dash') });
-  checkerPendingExcludedRanges = [];
-  checkerPickingExclusion = false;
-  checkerExclPickStart = null; checkerExclPickEnd = null;
-  checkerEditingExclusionIndex = null;
-  renderCheckerCalendar();
-  render();
-});
-
-// --- Calendar tab (log/edit a stay by tapping dates) ---
-
-function renderCalendar(){
-  const label = document.getElementById('calMonthLabel');
-  label.textContent = calCursor.toLocaleDateString('en-GB',{month:'long', year:'numeric'});
-  const grid = document.getElementById('calGrid');
-  grid.innerHTML = '';
-  ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d=>{
-    const el = document.createElement('div');
-    el.className='cal-dow'; el.textContent=d;
-    grid.appendChild(el);
-  });
-  const year = calCursor.getFullYear(), month = calCursor.getMonth();
-  const firstDay = new Date(year, month, 1);
-  let startOffset = firstDay.getDay() - 1; if(startOffset < 0) startOffset = 6;
-  const daysInMonth = new Date(year, month+1, 0).getDate();
-  const covered = coveredDates(trips);
-  const plannedSet = coveredDates(trips.filter(t=>classifyTrip(t)==='planned'));
-  const excluded = excludedDatesSet(trips);
-  const today = todayISO();
-
-  for(let i=0;i<startOffset;i++){
-    const pad = document.createElement('div'); pad.className='cal-day pad';
-    grid.appendChild(pad);
-  }
-  for(let day=1; day<=daysInMonth; day++){
-    const iso = year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
-    const el = document.createElement('div');
-    el.className = 'cal-day';
-    if(covered.has(iso)){
-      el.classList.add('in-trip');
-      if(plannedSet.has(iso)) el.classList.add('planned');
-    } else if(excluded.has(iso)){
-      el.classList.add('excluded');
-    }
-    if(pendingExcludedRanges.some(r => iso >= r.start && iso <= r.end)) el.classList.add('excluded');
-    if(iso === today) el.classList.add('today');
-    const used = usedDaysInWindow(trips, iso);
-    const remaining = 90 - used;
-    if(used > 90) el.classList.add('overstay');
-    if(pickStart && iso === pickStart) el.classList.add('pick-start');
-    if(pickEnd && iso === pickEnd) el.classList.add('pick-end');
-    if(pickStart && pickEnd && iso > pickStart && iso < pickEnd) el.classList.add('pick-range');
-    if(pickingExclusion){
-      if(!pickStart || !pickEnd || iso < pickStart || iso > pickEnd){
-        el.classList.add('excl-disabled');
-      } else if(exclPickStart && (iso === exclPickStart || (exclPickEnd && iso >= exclPickStart && iso <= exclPickEnd))){
-        el.classList.add('selecting');
-      }
-    }
-    el.innerHTML = `<span class="daynum">${day}</span><span class="rem">${used>90 ? '−'+(used-90) : remaining}</span>`;
-    el.addEventListener('click', ()=>handlePick(iso));
-    grid.appendChild(el);
-  }
-}
-
-// Pre-fill the log-a-stay form with an existing trip's data and switch into edit mode
-function startEditTrip(id){
-  const trip = trips.find(t => String(t.id) === String(id));
-  if(!trip) return;
-
-  editingTripId = trip.id;
-  pickStart = trip.start;
-  pickEnd = trip.end;
-  pendingExcludedRanges = (trip.excludedRanges || []).map(r => ({ ...r }));
-  pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-  document.getElementById('tripLabel').value = trip.label;
-  document.getElementById('tripStart').value = trip.start;
-  document.getElementById('tripEnd').value = trip.end;
-  document.getElementById('pickStartLbl').textContent = t('calendar.entryTag', { date: fmt(trip.start) });
-  document.getElementById('pickEndLbl').textContent = t('calendar.exitTag', { date: fmt(trip.end) });
-  document.getElementById('formError').style.display = 'none';
-  document.getElementById('addTripBtn').textContent = t('calendar.updateStay');
-  document.getElementById('cancelEditBtn').style.display = 'block';
-  document.getElementById('calendarHeading').textContent = t('calendar.editHeading');
-
-  calCursor = new Date(toDate(trip.start)); calCursor.setDate(1);
-  switchTab('calendar');
-  renderCalendar();
-  renderExclusionSection();
-}
-
-function stopEditTrip(){
-  editingTripId = null;
-  pickStart = null; pickEnd = null;
-  pendingExcludedRanges = [];
-  pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-  document.getElementById('tripLabel').value = '';
-  document.getElementById('tripStart').value = '';
-  document.getElementById('tripEnd').value = '';
-  document.getElementById('pickStartLbl').textContent = t('calendar.entryTag', { date: t('calendar.dash') });
-  document.getElementById('pickEndLbl').textContent = t('calendar.exitTag', { date: t('calendar.dash') });
-  document.getElementById('formError').style.display = 'none';
-  document.getElementById('addTripBtn').textContent = t('calendar.logStay');
-  document.getElementById('cancelEditBtn').style.display = 'none';
-  document.getElementById('calendarHeading').textContent = t('calendar.logHeading');
-  renderCalendar();
-  renderExclusionSection();
-}
-
-// --- Side-trip exclusion (mark days within a logged stay as spent outside Schengen) ---
-
-function renderExclusionSection(){
-  const section = document.getElementById('exclusionSection');
-  const prompt = document.getElementById('exclusionPrompt');
-  if(!pickStart || !pickEnd){
-    section.style.display = 'none';
-    prompt.style.display = 'block';
-    pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-    return;
-  }
-  prompt.style.display = 'none';
-  section.style.display = 'block';
-  document.getElementById('exclusionNote').textContent = t('calendar.exclusionNote', { start: fmt(pickStart), end: fmt(pickEnd) });
-
-  const tooShort = pickStart === pickEnd;
-  if(tooShort){
-    pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-  }
-  document.getElementById('markSideTripBtn').style.display = !tooShort ? 'block' : 'none';
-  document.getElementById('exclusionTooShort').style.display = tooShort ? 'block' : 'none';
-  document.getElementById('exclusionPicker').style.display = (!tooShort && pickingExclusion) ? 'block' : 'none';
-  document.getElementById('addExclusionBtn').textContent = editingExclusionIndex !== null ? t('calendar.saveExclusion') : t('calendar.addExclusion');
-  updateExclusionPickLabels();
-  renderExclusionList();
-}
-
-function updateExclusionPickLabels(){
-  document.getElementById('exclPickStartLbl').textContent = t('calendar.exclusionFromTag', { date: exclPickStart ? fmt(exclPickStart) : t('calendar.dash') });
-  document.getElementById('exclPickEndLbl').textContent = t('calendar.exclusionToTag', { date: exclPickEnd ? fmt(exclPickEnd) : t('calendar.dash') });
-}
-
-function renderExclusionList(){
-  const listEl = document.getElementById('exclusionList');
-  listEl.innerHTML = '';
-  pendingExcludedRanges.forEach((r, idx)=>{
-    const days = Math.round((toDate(r.end) - toDate(r.start)) / 86400000) + 1;
-    const item = document.createElement('div');
-    item.className = 'exclusion-item';
-    item.innerHTML = `<span>${fmt(r.start)} – ${fmt(r.end)} (${tn('calendar.exclusionDays', days)})</span>`;
-    const editBtn = document.createElement('button');
-    editBtn.type = 'button';
-    editBtn.className = 'link-btn';
-    editBtn.textContent = t('calendar.exclusionEdit');
-    editBtn.addEventListener('click', ()=>{
-      editingExclusionIndex = idx;
-      pickingExclusion = true;
-      exclPickStart = r.start; exclPickEnd = r.end;
-      document.getElementById('exclusionError').style.display = 'none';
-      renderExclusionSection();
-      renderCalendar();
-    });
-    const removeBtn = document.createElement('button');
-    removeBtn.type = 'button';
-    removeBtn.className = 'link-btn danger-link';
-    removeBtn.textContent = t('calendar.exclusionRemove');
-    removeBtn.addEventListener('click', ()=>{
-      pendingExcludedRanges.splice(idx, 1);
-      if(editingExclusionIndex === idx){
-        pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-      }
-      renderExclusionSection();
-      renderCalendar();
-    });
-    const actions = document.createElement('div');
-    actions.className = 'exclusion-item-actions';
-    actions.appendChild(editBtn);
-    actions.appendChild(removeBtn);
-    item.appendChild(actions);
-    listEl.appendChild(item);
-  });
-}
-
-document.getElementById('markSideTripBtn').addEventListener('click', ()=>{
-  pickingExclusion = true;
-  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-  document.getElementById('exclusionError').style.display = 'none';
-  renderExclusionSection();
-  renderCalendar();
-});
-
-document.getElementById('cancelExclusionBtn').addEventListener('click', ()=>{
-  pickingExclusion = false;
-  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-  document.getElementById('exclusionError').style.display = 'none';
-  renderExclusionSection();
-  renderCalendar();
-});
-
-document.getElementById('addExclusionBtn').addEventListener('click', ()=>{
-  const errEl = document.getElementById('exclusionError');
-  errEl.style.display = 'none';
-  if(!exclPickStart || !exclPickEnd){
-    errEl.textContent = t('calendar.exclusionMissingDates');
-    errEl.style.display = 'block';
-    return;
-  }
-  const overlaps = pendingExcludedRanges.some((r, idx) => idx !== editingExclusionIndex && exclPickStart <= r.end && exclPickEnd >= r.start);
-  if(overlaps){
-    errEl.textContent = t('calendar.exclusionOverlap');
-    errEl.style.display = 'block';
-    return;
-  }
-  if(editingExclusionIndex !== null){
-    pendingExcludedRanges[editingExclusionIndex] = { start: exclPickStart, end: exclPickEnd };
-  } else {
-    pendingExcludedRanges.push({ start: exclPickStart, end: exclPickEnd });
-  }
-  pendingExcludedRanges.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
-  pickingExclusion = false;
-  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
-  renderExclusionSection();
-  renderCalendar();
-});
-
-document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
-  stopEditTrip();
-  switchTab('trips');
-});
-
-document.getElementById('prevMonth').addEventListener('click', ()=>{
-  calCursor.setMonth(calCursor.getMonth()-1);
-  renderCalendar();
-});
-document.getElementById('nextMonth').addEventListener('click', ()=>{
-  calCursor.setMonth(calCursor.getMonth()+1);
-  renderCalendar();
-});
-
-function handlePick(iso){
-  if(pickingExclusion){
-    handleExclusionPick(iso);
-    return;
-  }
-  if(!pickStart || (pickStart && pickEnd)){
-    pickStart = iso; pickEnd = null;
-    pendingExcludedRanges = []; // range is changing — old exclusions may no longer make sense
-  } else {
-    if(iso >= pickStart) pickEnd = iso;
-    else { pickEnd = pickStart; pickStart = iso; }
-  }
-  document.getElementById('tripStart').value = pickStart || '';
-  document.getElementById('tripEnd').value = pickEnd || '';
-  document.getElementById('pickStartLbl').textContent = t('calendar.entryTag', { date: pickStart ? fmt(pickStart) : t('calendar.dash') });
-  document.getElementById('pickEndLbl').textContent = t('calendar.exitTag', { date: pickEnd ? fmt(pickEnd) : t('calendar.dash') });
-  renderCalendar();
-  renderExclusionSection();
-}
-
-function handleExclusionPick(iso){
-  if(!pickStart || !pickEnd || iso < pickStart || iso > pickEnd) return;
-  if(!exclPickStart || (exclPickStart && exclPickEnd)){
-    exclPickStart = iso; exclPickEnd = null;
-  } else {
-    if(iso >= exclPickStart) exclPickEnd = iso;
-    else { exclPickEnd = exclPickStart; exclPickStart = iso; }
-  }
-  document.getElementById('exclusionError').style.display = 'none';
-  updateExclusionPickLabels();
-  renderCalendar();
-}
-
-document.getElementById('addTripBtn').addEventListener('click', async ()=>{
-  const label = document.getElementById('tripLabel').value.trim();
-  const start = document.getElementById('tripStart').value;
-  const end = document.getElementById('tripEnd').value;
-  const errEl = document.getElementById('formError');
-  errEl.style.display = 'none';
-  if(!start || !end){
-    errEl.textContent = t('calendar.missingDates');
-    errEl.style.display = 'block';
-    return;
-  }
-  if(end < start){
-    errEl.textContent = t('calendar.exitBeforeEntry');
-    errEl.style.display = 'block';
-    return;
-  }
   const overlapping = trips.find(ot => ot.id !== editingTripId && start <= ot.end && end >= ot.start);
   if(overlapping){
-    const key = editingTripId ? 'trips.overlapUpdateWarning' : 'trips.overlapLogWarning';
+    const key = editingTripId ? 'trips.overlapUpdateWarning' : 'trips.overlapWarning';
     const proceed = confirm(t(key, { label: overlapping.label, start: fmt(overlapping.start), end: fmt(overlapping.end) }));
     if(!proceed) return;
   }
   const wasEditing = editingTripId !== null;
   try{
     if(wasEditing){
-      await updateTrip(editingTripId, start, end, label, pendingExcludedRanges);
+      await updateTrip(editingTripId, start, end, label, checkerPendingExcludedRanges);
     } else {
-      await insertTrip(start, end, label, pendingExcludedRanges);
+      await insertTrip(start, end, label, checkerPendingExcludedRanges);
     }
   }catch(e){
     errEl.textContent = t('trips.saveError');
     errEl.style.display = 'block';
     return;
   }
-  stopEditTrip();
+  stopCheckerEdit();
   render();
-  if(wasEditing) switchTab('trips');
+});
+
+// Pre-fill the Safe Trip Checker with an existing trip's data and switch it into edit mode
+function startEditTrip(id){
+  const trip = trips.find(t => String(t.id) === String(id));
+  if(!trip) return;
+
+  editingTripId = trip.id;
+  checkerPickStart = trip.start;
+  checkerPickEnd = trip.end;
+  checkerPendingExcludedRanges = (trip.excludedRanges || []).map(r => ({ ...r }));
+  checkerPickingExclusion = false; checkerExclPickStart = null; checkerExclPickEnd = null; checkerEditingExclusionIndex = null;
+  document.getElementById('checkerCountry').value = trip.label;
+  document.getElementById('checkerEntry').value = trip.start;
+  document.getElementById('checkerExit').value = trip.end;
+  document.getElementById('checkerPickStartLbl').textContent = t('calendar.entryTag', { date: fmt(trip.start) });
+  document.getElementById('checkerPickEndLbl').textContent = t('calendar.exitTag', { date: fmt(trip.end) });
+  document.getElementById('checkerError').style.display = 'none';
+  document.getElementById('checkerSaveBtn').textContent = t('trips.updateTrip');
+  document.getElementById('checkerCancelEditBtn').style.display = 'block';
+  document.getElementById('checkerEditingNote').style.display = 'block';
+
+  checkerCalCursor = new Date(toDate(trip.start)); checkerCalCursor.setDate(1);
+  switchTab('trips');
+  renderCheckerCalendar();
+  renderCheckerExclusionSection();
+  updateChecker();
+  document.getElementById('checkerCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Leaves edit mode, whether from a successful save or an explicit cancel
+function stopCheckerEdit(){
+  editingTripId = null;
+  checkerPickStart = null; checkerPickEnd = null;
+  checkerPendingExcludedRanges = [];
+  checkerPickingExclusion = false; checkerExclPickStart = null; checkerExclPickEnd = null; checkerEditingExclusionIndex = null;
+  document.getElementById('checkerEntry').value = '';
+  document.getElementById('checkerExit').value = '';
+  document.getElementById('checkerPickStartLbl').textContent = t('calendar.entryTag', { date: t('calendar.dash') });
+  document.getElementById('checkerPickEndLbl').textContent = t('calendar.exitTag', { date: t('calendar.dash') });
+  document.getElementById('checkerError').style.display = 'none';
+  document.getElementById('checkerSaveBtn').textContent = t('trips.saveTrip');
+  document.getElementById('checkerCancelEditBtn').style.display = 'none';
+  document.getElementById('checkerEditingNote').style.display = 'none';
+  renderCheckerCalendar();
+  renderCheckerExclusionSection();
+  updateChecker();
+}
+
+document.getElementById('checkerCancelEditBtn').addEventListener('click', ()=>{
+  stopCheckerEdit();
 });
 
 document.getElementById('refDate').addEventListener('change', render);
@@ -1784,7 +1523,6 @@ async function applyLang(lang){
   applyStaticI18n();
   renderEtiasLastChecked();
   render();
-  renderExclusionSection();
 }
 document.getElementById('langEnBtn').addEventListener('click', ()=> applyLang('en'));
 document.getElementById('langZhBtn').addEventListener('click', ()=> applyLang('zh'));
