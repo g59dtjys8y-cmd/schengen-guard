@@ -283,6 +283,20 @@
       <input type="hidden" id="tripStart">
       <input type="hidden" id="tripEnd">
 
+      <div class="cal-head">
+        <button type="button" id="prevMonth" data-i18n="calendar.prevMonth">← Prev</button>
+        <div class="cal-month" id="calMonthLabel"></div>
+        <button type="button" id="nextMonth" data-i18n="calendar.nextMonth">Next →</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="legend">
+        <span><i style="background:var(--color-accent);"></i><span data-i18n="calendar.legend.pastActive">past / active stay</span></span>
+        <span><i style="background:var(--color-accent-2);"></i><span data-i18n="calendar.legend.planned">planned stay</span></span>
+        <span><i style="background:var(--color-accent-2-700);"></i><span data-i18n="calendar.legend.overstay">overstay</span></span>
+        <span><i style="background:var(--color-neutral-300); border:1px dashed var(--color-neutral-600);"></i><span data-i18n="calendar.legend.excluded">outside Schengen (excluded)</span></span>
+        <span><i style="background:transparent;border:2px dashed var(--color-text);"></i><span data-i18n="calendar.legend.selecting">selecting</span></span>
+      </div>
+
       <div id="exclusionSection" style="display:none; margin-top:14px;">
         <div class="card-kicker" data-i18n="calendar.exclusionTitle">Time within this trip outside Schengen (optional)</div>
         <p class="note" id="exclusionNote">Left and came back during this stay — like a UK leg? Add the dates below and they won't count toward your 90-day limit.</p>
@@ -303,23 +317,9 @@
         <div id="exclusionList" class="stack" style="margin-top:6px;"></div>
       </div>
 
-      <button type="button" class="btn btn-primary btn-block" id="addTripBtn" data-i18n="calendar.logStay">Log stay</button>
+      <button type="button" class="btn btn-primary btn-block" id="addTripBtn" data-i18n="calendar.logStay" style="margin-top:14px;">Log stay</button>
       <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:8px;" data-i18n="calendar.cancelEdit">Cancel edit</button>
       <div class="form-error" id="formError" style="display:none;"></div>
-
-      <div class="cal-head">
-        <button type="button" id="prevMonth" data-i18n="calendar.prevMonth">← Prev</button>
-        <div class="cal-month" id="calMonthLabel"></div>
-        <button type="button" id="nextMonth" data-i18n="calendar.nextMonth">Next →</button>
-      </div>
-      <div class="cal-grid" id="calGrid"></div>
-      <div class="legend">
-        <span><i style="background:var(--color-accent);"></i><span data-i18n="calendar.legend.pastActive">past / active stay</span></span>
-        <span><i style="background:var(--color-accent-2);"></i><span data-i18n="calendar.legend.planned">planned stay</span></span>
-        <span><i style="background:var(--color-accent-2-700);"></i><span data-i18n="calendar.legend.overstay">overstay</span></span>
-        <span><i style="background:var(--color-neutral-300); border:1px dashed var(--color-neutral-600);"></i><span data-i18n="calendar.legend.excluded">outside Schengen (excluded)</span></span>
-        <span><i style="background:transparent;border:2px dashed var(--color-text);"></i><span data-i18n="calendar.legend.selecting">selecting</span></span>
-      </div>
       <p class="note" style="margin-top:10px;" data-i18n="calendar.remainingNote">Small figure under each date is days remaining of your 90 as of that day.</p>
     </div>
 
