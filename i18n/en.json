@@ -99,6 +99,8 @@
   "calendar.exclusionFromTag": "From: {{date}}",
   "calendar.exclusionToTag": "To: {{date}}",
   "calendar.addExclusion": "Add side trip",
+  "calendar.saveExclusion": "Save changes",
+  "calendar.exclusionEdit": "Edit",
   "calendar.exclusionRemove": "Remove",
   "calendar.exclusionDays.one": "{{n}} day",
   "calendar.exclusionDays.other": "{{n}} days",
