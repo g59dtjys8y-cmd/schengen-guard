@@ -749,7 +749,7 @@ function renderTripRows(){
     let exclDays = 0;
     for(const r of (trip.excludedRanges || [])) exclDays += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
     const exclNote = exclDays > 0
-      ? `<div class="card-meta">${tn('trips.excludedDays', exclDays)}</div>`
+      ? `<div style="margin-top:4px;"><span class="tag tag-excluded">${tn('trips.excludedDays', exclDays)}</span></div>`
       : '';
 
     const row = document.createElement('div');
@@ -794,6 +794,7 @@ function updateChecker(){
   breakdownBtn.style.display = 'none';
   suggestionsEl.style.display = 'none';
   suggestionsEl.innerHTML = '';
+  renderCheckerExclusionSection();
 
   if(!start || !end){
     msgEl.textContent = t('trips.checkerPrompt');
@@ -836,7 +837,6 @@ function updateChecker(){
     msgEl.innerHTML = t('trips.checkerResult.safe', { n: days, margin: tn('trips.marginDays', margin), date: fmt(end) });
   }
   saveBtn.disabled = false;
-  renderCheckerExclusionSection();
 }
 
 // --- Side-trip exclusion for the Safe Trip Checker (plain date fields, no calendar here) ---
