@@ -11,12 +11,13 @@ A free web app for tracking Schengen Area visits and staying compliant with the 
 
 ## Features
 
-- **Home dashboard** — an arc progress ring shows days left of your rolling 90, with a gold EU-star marker that travels around it and shifts color as the limit approaches. Below it: your last day to leave (checkable against any reference date, not just today), your next upcoming trip, and a countries-visited summary.
+- **Home dashboard** — an arc progress ring shows days left of your rolling 90, with a gold EU-star marker that travels around it and shifts color as the limit approaches. Below it, a "Quick check" card lets you check compliance as of any reference date, and — once you have a trip logged — a "Trip in progress" or "Next trip" panel surfaces the most relevant one.
 - **Tabbed navigation** — Home, Trips, Calendar, and Settings, with a fixed bottom tab bar for quick switching between views.
-- **Safe Trip Checker** — on the Trips tab, enter a country and candidate entry/exit dates to see live whether that stay would keep you compliant and how many days of margin you'd have, *before* you save it.
-- **Trip list with status** — logged stays show a "DONE" stamp once they're in the past and a planned tag while they're upcoming; edit or remove any trip inline.
-- **Countries visited** — a stamp-style grid of all 29 Schengen countries, marking which ones you've logged a stay in.
-- **One calendar for everything** — tap an entry date, then an exit date, to log a stay. Every date also shows your remaining day allowance as of that day, with past/active, planned, and overstay stays visually distinguished.
+- **Safe Trip Checker** — on the Trips tab, tap a country and candidate entry/exit dates on an embedded calendar to see live whether that stay would keep you compliant and how many days of margin you'd have, *before* you save it.
+- **Side trips** — mark days within a logged stay as spent outside Schengen (e.g. a UK leg); they're excluded from your 90-day count, shown with a diagonal-hatch pattern on the calendar and a "Side trip: N days" badge on the trip card, and can be added, edited, or removed from either the Calendar tab or the Trip Checker.
+- **Trip list with status** — logged stays show a "DONE" stamp once they're in the past, and an Active or Planned tag otherwise; edit or remove any trip inline.
+- **Countries visited** (Settings) — a postage-stamp-style grid of all 29 Schengen countries, marking which ones you've logged a stay in.
+- **One calendar for everything** — the same tap-an-entry-date-then-an-exit-date interaction logs or edits a stay, drives the Safe Trip Checker, and marks a side trip. Every date also shows your remaining day allowance as of that day, with past/active, planned, overstay, and excluded days visually distinguished.
 - **Overstay warnings** — any logged trip that pushes your rolling 180-day total past 90 days is flagged directly against that trip, with the exact date and running total.
 - **Overlap detection** — warns you if a new stay overlaps one you've already logged.
 - **Notification thresholds** — opt in (from Settings) to a browser notification when your days remaining hits 14, 7, or 3, based on your logged and planned trips.
