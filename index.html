@@ -170,7 +170,13 @@
       </div>
 
       <div class="card safe-trip-checker" id="checkerCard">
-        <div class="card-kicker" data-i18n="trips.checkerTitle">Safe Trip Checker</div>
+        <div class="qc-title-row">
+          <span class="qc-title-label">
+            <span class="qc-title-black" data-i18n="trips.checkerTitleWord1">Safe</span>
+            <span class="qc-title-blue" data-i18n="trips.checkerTitleWord2">Trip Checker</span>
+          </span>
+          <span class="qc-title-rule"></span>
+        </div>
         <div class="field" style="margin-top:2px;">
           <label for="checkerCountry" data-i18n="trips.country">Country</label>
           <select class="input" id="checkerCountry"></select>
@@ -409,16 +415,16 @@
         <button type="button" class="btn btn-secondary btn-block" id="printTripsBtn" data-i18n="settings.printBtn">Print / save as PDF</button>
       </div>
 
-      <div class="card">
-        <div class="qc-title-row">
-          <span class="qc-title-label"><span class="qc-title-black" data-i18n="settings.dataTitle">Data</span></span>
+      <details class="card">
+        <summary class="qc-title-row">
+          <span class="qc-title-label"><span class="qc-title-black" data-i18n="settings.clearStays">Clear all logged stays</span></span>
           <span class="qc-title-rule"></span>
-        </div>
+        </summary>
         <p class="card-body" data-i18n="settings.dataRule">Rolling 180-day window, max 90 days in Schengen — the standard short-stay rule for non-EU visitors. Not immigration advice.</p>
         <p class="card-body" data-i18n="settings.dataOffline">This app works fully offline and never sends your trip data anywhere. If you lose this device, uninstall the app, or clear browser data without a backup, your trips can't be recovered.</p>
         <p class="card-body" data-i18n="settings.iosDataNote">Your data lives only on this device and browser — it won't sync anywhere on its own. On iPhone/iPad, if you don't open the app for about a week or more, iOS may clear it automatically. Export a backup now and then if you want to keep your history safe.</p>
         <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn" data-i18n="settings.clearStays">Clear all logged stays</button>
-      </div>
+      </details>
 
       <div class="card elev-sm card-row" id="privacyCard" style="cursor:pointer;">
         <div>
