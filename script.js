@@ -958,10 +958,18 @@ function renderExclusionSection(){
     return;
   }
   section.style.display = 'block';
-  document.getElementById('exclStart').min = pickStart;
-  document.getElementById('exclStart').max = pickEnd;
-  document.getElementById('exclEnd').min = pickStart;
-  document.getElementById('exclEnd').max = pickEnd;
+  const exclStartEl = document.getElementById('exclStart');
+  const exclEndEl = document.getElementById('exclEnd');
+  exclStartEl.min = pickStart;
+  exclStartEl.max = pickEnd;
+  exclEndEl.min = pickStart;
+  exclEndEl.max = pickEnd;
+  if(!exclStartEl.value || exclStartEl.value < pickStart || exclStartEl.value > pickEnd){
+    exclStartEl.value = pickStart;
+  }
+  if(!exclEndEl.value || exclEndEl.value < pickStart || exclEndEl.value > pickEnd){
+    exclEndEl.value = pickStart;
+  }
   renderExclusionList();
 }
 
