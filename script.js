@@ -85,6 +85,7 @@ let pendingImportTrips = null;
 let pendingExcludedRanges = [];
 let pickingExclusion = false;
 let exclPickStart = null, exclPickEnd = null;
+let editingExclusionIndex = null;
 
 function newId(){
   if('randomUUID' in crypto) return crypto.randomUUID();
@@ -926,7 +927,7 @@ function startEditTrip(id){
   pickStart = trip.start;
   pickEnd = trip.end;
   pendingExcludedRanges = (trip.excludedRanges || []).map(r => ({ ...r }));
-  pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
+  pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
@@ -947,7 +948,7 @@ function stopEditTrip(){
   editingTripId = null;
   pickStart = null; pickEnd = null;
   pendingExcludedRanges = [];
-  pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
+  pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
   document.getElementById('tripLabel').value = '';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
@@ -967,7 +968,7 @@ function renderExclusionSection(){
   const section = document.getElementById('exclusionSection');
   if(!pickStart || !pickEnd){
     section.style.display = 'none';
-    pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
+    pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
     return;
   }
   section.style.display = 'block';
@@ -975,11 +976,12 @@ function renderExclusionSection(){
 
   const tooShort = pickStart === pickEnd;
   if(tooShort){
-    pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
+    pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
   }
-  document.getElementById('markSideTripBtn').style.display = (!tooShort && !pickingExclusion) ? 'block' : 'none';
+  document.getElementById('markSideTripBtn').style.display = !tooShort ? 'block' : 'none';
   document.getElementById('exclusionTooShort').style.display = tooShort ? 'block' : 'none';
   document.getElementById('exclusionPicker').style.display = (!tooShort && pickingExclusion) ? 'block' : 'none';
+  document.getElementById('addExclusionBtn').textContent = editingExclusionIndex !== null ? t('calendar.saveExclusion') : t('calendar.addExclusion');
   updateExclusionPickLabels();
   renderExclusionList();
 }
@@ -997,23 +999,42 @@ function renderExclusionList(){
     const item = document.createElement('div');
     item.className = 'exclusion-item';
     item.innerHTML = `<span>${fmt(r.start)} – ${fmt(r.end)} (${tn('calendar.exclusionDays', days)})</span>`;
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'link-btn';
+    editBtn.textContent = t('calendar.exclusionEdit');
+    editBtn.addEventListener('click', ()=>{
+      editingExclusionIndex = idx;
+      pickingExclusion = true;
+      exclPickStart = r.start; exclPickEnd = r.end;
+      document.getElementById('exclusionError').style.display = 'none';
+      renderExclusionSection();
+      renderCalendar();
+    });
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'link-btn danger-link';
     removeBtn.textContent = t('calendar.exclusionRemove');
     removeBtn.addEventListener('click', ()=>{
       pendingExcludedRanges.splice(idx, 1);
-      renderExclusionList();
+      if(editingExclusionIndex === idx){
+        pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+      }
+      renderExclusionSection();
       renderCalendar();
     });
-    item.appendChild(removeBtn);
+    const actions = document.createElement('div');
+    actions.className = 'exclusion-item-actions';
+    actions.appendChild(editBtn);
+    actions.appendChild(removeBtn);
+    item.appendChild(actions);
     listEl.appendChild(item);
   });
 }
 
 document.getElementById('markSideTripBtn').addEventListener('click', ()=>{
   pickingExclusion = true;
-  exclPickStart = null; exclPickEnd = null;
+  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
   document.getElementById('exclusionError').style.display = 'none';
   renderExclusionSection();
   renderCalendar();
@@ -1021,7 +1042,7 @@ document.getElementById('markSideTripBtn').addEventListener('click', ()=>{
 
 document.getElementById('cancelExclusionBtn').addEventListener('click', ()=>{
   pickingExclusion = false;
-  exclPickStart = null; exclPickEnd = null;
+  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
   document.getElementById('exclusionError').style.display = 'none';
   renderExclusionSection();
   renderCalendar();
@@ -1035,16 +1056,20 @@ document.getElementById('addExclusionBtn').addEventListener('click', ()=>{
     errEl.style.display = 'block';
     return;
   }
-  const overlaps = pendingExcludedRanges.some(r => exclPickStart <= r.end && exclPickEnd >= r.start);
+  const overlaps = pendingExcludedRanges.some((r, idx) => idx !== editingExclusionIndex && exclPickStart <= r.end && exclPickEnd >= r.start);
   if(overlaps){
     errEl.textContent = t('calendar.exclusionOverlap');
     errEl.style.display = 'block';
     return;
   }
-  pendingExcludedRanges.push({ start: exclPickStart, end: exclPickEnd });
+  if(editingExclusionIndex !== null){
+    pendingExcludedRanges[editingExclusionIndex] = { start: exclPickStart, end: exclPickEnd };
+  } else {
+    pendingExcludedRanges.push({ start: exclPickStart, end: exclPickEnd });
+  }
   pendingExcludedRanges.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
   pickingExclusion = false;
-  exclPickStart = null; exclPickEnd = null;
+  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
   renderExclusionSection();
   renderCalendar();
 });
