@@ -94,6 +94,7 @@
   "calendar.exclusionTitle": "Time within this trip outside Schengen (optional)",
   "calendar.exclusionNote": "Left and came back during this stay — like a UK leg? Add the dates below (must fall within {{start}}–{{end}}) and they won't count toward your 90-day limit.",
   "calendar.markSideTrip": "+ Mark a side trip on the calendar",
+  "calendar.exclusionTooShort": "Your stay is only 1 day, so there's no time to leave and come back.",
   "calendar.cancelExclusion": "Cancel",
   "calendar.exclusionFromTag": "From: {{date}}",
   "calendar.exclusionToTag": "To: {{date}}",
