@@ -83,6 +83,8 @@ let pickStart = null, pickEnd = null;
 let editingTripId = null;
 let pendingImportTrips = null;
 let pendingExcludedRanges = [];
+let pickingExclusion = false;
+let exclPickStart = null, exclPickEnd = null;
 
 function newId(){
   if('randomUUID' in crypto) return crypto.randomUUID();
@@ -894,6 +896,7 @@ function renderCalendar(){
     } else if(excluded.has(iso)){
       el.classList.add('excluded');
     }
+    if(pendingExcludedRanges.some(r => iso >= r.start && iso <= r.end)) el.classList.add('excluded');
     if(iso === today) el.classList.add('today');
     const used = usedDaysInWindow(trips, iso);
     const remaining = 90 - used;
@@ -901,6 +904,13 @@ function renderCalendar(){
     if(pickStart && iso === pickStart) el.classList.add('pick-start');
     if(pickEnd && iso === pickEnd) el.classList.add('pick-end');
     if(pickStart && pickEnd && iso > pickStart && iso < pickEnd) el.classList.add('pick-range');
+    if(pickingExclusion){
+      if(!pickStart || !pickEnd || iso < pickStart || iso > pickEnd){
+        el.classList.add('excl-disabled');
+      } else if(exclPickStart && (iso === exclPickStart || (exclPickEnd && iso >= exclPickStart && iso <= exclPickEnd))){
+        el.classList.add('selecting');
+      }
+    }
     el.innerHTML = `<span class="daynum">${day}</span><span class="rem">${used>90 ? '−'+(used-90) : remaining}</span>`;
     el.addEventListener('click', ()=>handlePick(iso));
     grid.appendChild(el);
@@ -916,6 +926,7 @@ function startEditTrip(id){
   pickStart = trip.start;
   pickEnd = trip.end;
   pendingExcludedRanges = (trip.excludedRanges || []).map(r => ({ ...r }));
+  pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
@@ -936,6 +947,7 @@ function stopEditTrip(){
   editingTripId = null;
   pickStart = null; pickEnd = null;
   pendingExcludedRanges = [];
+  pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
   document.getElementById('tripLabel').value = '';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
@@ -955,22 +967,20 @@ function renderExclusionSection(){
   const section = document.getElementById('exclusionSection');
   if(!pickStart || !pickEnd){
     section.style.display = 'none';
+    pickingExclusion = false; exclPickStart = null; exclPickEnd = null;
     return;
   }
   section.style.display = 'block';
-  const exclStartEl = document.getElementById('exclStart');
-  const exclEndEl = document.getElementById('exclEnd');
-  exclStartEl.min = pickStart;
-  exclStartEl.max = pickEnd;
-  exclEndEl.min = pickStart;
-  exclEndEl.max = pickEnd;
-  if(!exclStartEl.value || exclStartEl.value < pickStart || exclStartEl.value > pickEnd){
-    exclStartEl.value = pickStart;
-  }
-  if(!exclEndEl.value || exclEndEl.value < pickStart || exclEndEl.value > pickEnd){
-    exclEndEl.value = pickStart;
-  }
+  document.getElementById('exclusionNote').textContent = t('calendar.exclusionNote', { start: fmt(pickStart), end: fmt(pickEnd) });
+  document.getElementById('markSideTripBtn').style.display = pickingExclusion ? 'none' : 'block';
+  document.getElementById('exclusionPicker').style.display = pickingExclusion ? 'block' : 'none';
+  updateExclusionPickLabels();
   renderExclusionList();
+}
+
+function updateExclusionPickLabels(){
+  document.getElementById('exclPickStartLbl').textContent = t('calendar.exclusionFromTag', { date: exclPickStart ? fmt(exclPickStart) : t('calendar.dash') });
+  document.getElementById('exclPickEndLbl').textContent = t('calendar.exclusionToTag', { date: exclPickEnd ? fmt(exclPickEnd) : t('calendar.dash') });
 }
 
 function renderExclusionList(){
@@ -988,43 +998,49 @@ function renderExclusionList(){
     removeBtn.addEventListener('click', ()=>{
       pendingExcludedRanges.splice(idx, 1);
       renderExclusionList();
+      renderCalendar();
     });
     item.appendChild(removeBtn);
     listEl.appendChild(item);
   });
 }
 
+document.getElementById('markSideTripBtn').addEventListener('click', ()=>{
+  pickingExclusion = true;
+  exclPickStart = null; exclPickEnd = null;
+  document.getElementById('exclusionError').style.display = 'none';
+  renderExclusionSection();
+  renderCalendar();
+});
+
+document.getElementById('cancelExclusionBtn').addEventListener('click', ()=>{
+  pickingExclusion = false;
+  exclPickStart = null; exclPickEnd = null;
+  document.getElementById('exclusionError').style.display = 'none';
+  renderExclusionSection();
+  renderCalendar();
+});
+
 document.getElementById('addExclusionBtn').addEventListener('click', ()=>{
   const errEl = document.getElementById('exclusionError');
   errEl.style.display = 'none';
-  const exStart = document.getElementById('exclStart').value;
-  const exEnd = document.getElementById('exclEnd').value;
-  if(!exStart || !exEnd){
+  if(!exclPickStart || !exclPickEnd){
     errEl.textContent = t('calendar.exclusionMissingDates');
     errEl.style.display = 'block';
     return;
   }
-  if(exEnd < exStart){
-    errEl.textContent = t('calendar.exclusionEndBeforeStart');
-    errEl.style.display = 'block';
-    return;
-  }
-  if(exStart < pickStart || exEnd > pickEnd){
-    errEl.textContent = t('calendar.exclusionOutOfRange');
-    errEl.style.display = 'block';
-    return;
-  }
-  const overlaps = pendingExcludedRanges.some(r => exStart <= r.end && exEnd >= r.start);
+  const overlaps = pendingExcludedRanges.some(r => exclPickStart <= r.end && exclPickEnd >= r.start);
   if(overlaps){
     errEl.textContent = t('calendar.exclusionOverlap');
     errEl.style.display = 'block';
     return;
   }
-  pendingExcludedRanges.push({ start: exStart, end: exEnd });
+  pendingExcludedRanges.push({ start: exclPickStart, end: exclPickEnd });
   pendingExcludedRanges.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
-  document.getElementById('exclStart').value = '';
-  document.getElementById('exclEnd').value = '';
-  renderExclusionList();
+  pickingExclusion = false;
+  exclPickStart = null; exclPickEnd = null;
+  renderExclusionSection();
+  renderCalendar();
 });
 
 document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
@@ -1042,6 +1058,10 @@ document.getElementById('nextMonth').addEventListener('click', ()=>{
 });
 
 function handlePick(iso){
+  if(pickingExclusion){
+    handleExclusionPick(iso);
+    return;
+  }
   if(!pickStart || (pickStart && pickEnd)){
     pickStart = iso; pickEnd = null;
     pendingExcludedRanges = []; // range is changing — old exclusions may no longer make sense
@@ -1055,6 +1075,19 @@ function handlePick(iso){
   document.getElementById('pickEndLbl').textContent = t('calendar.exitTag', { date: pickEnd ? fmt(pickEnd) : t('calendar.dash') });
   renderCalendar();
   renderExclusionSection();
+}
+
+function handleExclusionPick(iso){
+  if(!pickStart || !pickEnd || iso < pickStart || iso > pickEnd) return;
+  if(!exclPickStart || (exclPickStart && exclPickEnd)){
+    exclPickStart = iso; exclPickEnd = null;
+  } else {
+    if(iso >= exclPickStart) exclPickEnd = iso;
+    else { exclPickEnd = exclPickStart; exclPickStart = iso; }
+  }
+  document.getElementById('exclusionError').style.display = 'none';
+  updateExclusionPickLabels();
+  renderCalendar();
 }
 
 document.getElementById('addTripBtn').addEventListener('click', async ()=>{
@@ -1480,6 +1513,7 @@ async function applyLang(lang){
   applyStaticI18n();
   renderEtiasLastChecked();
   render();
+  renderExclusionSection();
 }
 document.getElementById('langEnBtn').addEventListener('click', ()=> applyLang('en'));
 document.getElementById('langZhBtn').addEventListener('click', ()=> applyLang('zh'));
