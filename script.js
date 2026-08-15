@@ -86,6 +86,9 @@ let pendingExcludedRanges = [];
 let pickingExclusion = false;
 let exclPickStart = null, exclPickEnd = null;
 let editingExclusionIndex = null;
+let checkerPendingExcludedRanges = [];
+let checkerPickingExclusion = false;
+let checkerEditingExclusionIndex = null;
 
 function newId(){
   if('randomUUID' in crypto) return crypto.randomUUID();
@@ -806,7 +809,7 @@ function updateChecker(){
   }
 
   const days = Math.round((toDate(end) - toDate(start)) / 86400000) + 1;
-  const hypothetical = trips.concat([{ start, end, label: '__checker__' }]);
+  const hypothetical = trips.concat([{ start, end, label: '__checker__', excludedRanges: checkerPendingExcludedRanges }]);
   const overstay = tripOverstayInfo(hypothetical, { start, end }, 90);
   breakdownBtn.style.display = 'inline-flex';
   if(overstay){
@@ -822,6 +825,7 @@ function updateChecker(){
         btn.addEventListener('click', ()=>{
           document.getElementById('checkerEntry').value = s.start;
           document.getElementById('checkerExit').value = s.end;
+          pruneCheckerExclusions();
           updateChecker();
         });
         suggestionsEl.appendChild(btn);
@@ -832,10 +836,152 @@ function updateChecker(){
     msgEl.innerHTML = t('trips.checkerResult.safe', { n: days, margin: tn('trips.marginDays', margin), date: fmt(end) });
   }
   saveBtn.disabled = false;
+  renderCheckerExclusionSection();
 }
 
-document.getElementById('checkerEntry').addEventListener('change', updateChecker);
-document.getElementById('checkerExit').addEventListener('change', updateChecker);
+// --- Side-trip exclusion for the Safe Trip Checker (plain date fields, no calendar here) ---
+
+function pruneCheckerExclusions(){
+  const start = document.getElementById('checkerEntry').value;
+  const end = document.getElementById('checkerExit').value;
+  if(!start || !end){ checkerPendingExcludedRanges = []; return; }
+  checkerPendingExcludedRanges = checkerPendingExcludedRanges.filter(r => r.start >= start && r.end <= end);
+}
+
+function renderCheckerExclusionSection(){
+  const start = document.getElementById('checkerEntry').value;
+  const end = document.getElementById('checkerExit').value;
+  const section = document.getElementById('checkerExclusionSection');
+  if(!start || !end || end < start){
+    section.style.display = 'none';
+    checkerPickingExclusion = false; checkerEditingExclusionIndex = null;
+    return;
+  }
+  section.style.display = 'block';
+
+  const tooShort = start === end;
+  if(tooShort){
+    checkerPickingExclusion = false; checkerEditingExclusionIndex = null;
+  }
+  document.getElementById('checkerMarkSideTripBtn').style.display = !tooShort ? 'block' : 'none';
+  document.getElementById('checkerExclusionTooShort').style.display = tooShort ? 'block' : 'none';
+  document.getElementById('checkerExclusionPicker').style.display = (!tooShort && checkerPickingExclusion) ? 'block' : 'none';
+  document.getElementById('checkerAddExclusionBtn').textContent = checkerEditingExclusionIndex !== null ? t('calendar.saveExclusion') : t('calendar.addExclusion');
+
+  const exclStartEl = document.getElementById('checkerExclStart');
+  const exclEndEl = document.getElementById('checkerExclEnd');
+  exclStartEl.min = start; exclStartEl.max = end;
+  exclEndEl.min = start; exclEndEl.max = end;
+  if(!exclStartEl.value || exclStartEl.value < start || exclStartEl.value > end) exclStartEl.value = start;
+  if(!exclEndEl.value || exclEndEl.value < start || exclEndEl.value > end) exclEndEl.value = start;
+
+  renderCheckerExclusionList();
+}
+
+function renderCheckerExclusionList(){
+  const listEl = document.getElementById('checkerExclusionList');
+  listEl.innerHTML = '';
+  checkerPendingExcludedRanges.forEach((r, idx)=>{
+    const days = Math.round((toDate(r.end) - toDate(r.start)) / 86400000) + 1;
+    const item = document.createElement('div');
+    item.className = 'exclusion-item';
+    item.innerHTML = `<span>${fmt(r.start)} – ${fmt(r.end)} (${tn('calendar.exclusionDays', days)})</span>`;
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'link-btn';
+    editBtn.textContent = t('calendar.exclusionEdit');
+    editBtn.addEventListener('click', ()=>{
+      checkerEditingExclusionIndex = idx;
+      checkerPickingExclusion = true;
+      document.getElementById('checkerExclStart').value = r.start;
+      document.getElementById('checkerExclEnd').value = r.end;
+      document.getElementById('checkerExclusionError').style.display = 'none';
+      renderCheckerExclusionSection();
+      updateChecker();
+    });
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'link-btn danger-link';
+    removeBtn.textContent = t('calendar.exclusionRemove');
+    removeBtn.addEventListener('click', ()=>{
+      checkerPendingExcludedRanges.splice(idx, 1);
+      if(checkerEditingExclusionIndex === idx){
+        checkerPickingExclusion = false; checkerEditingExclusionIndex = null;
+      }
+      renderCheckerExclusionSection();
+      updateChecker();
+    });
+    const actions = document.createElement('div');
+    actions.className = 'exclusion-item-actions';
+    actions.appendChild(editBtn);
+    actions.appendChild(removeBtn);
+    item.appendChild(actions);
+    listEl.appendChild(item);
+  });
+}
+
+document.getElementById('checkerMarkSideTripBtn').addEventListener('click', ()=>{
+  checkerPickingExclusion = true;
+  checkerEditingExclusionIndex = null;
+  document.getElementById('checkerExclusionError').style.display = 'none';
+  renderCheckerExclusionSection();
+});
+
+document.getElementById('checkerCancelExclusionBtn').addEventListener('click', ()=>{
+  checkerPickingExclusion = false;
+  checkerEditingExclusionIndex = null;
+  document.getElementById('checkerExclusionError').style.display = 'none';
+  renderCheckerExclusionSection();
+});
+
+document.getElementById('checkerAddExclusionBtn').addEventListener('click', ()=>{
+  const errEl = document.getElementById('checkerExclusionError');
+  errEl.style.display = 'none';
+  const start = document.getElementById('checkerEntry').value;
+  const end = document.getElementById('checkerExit').value;
+  const exStart = document.getElementById('checkerExclStart').value;
+  const exEnd = document.getElementById('checkerExclEnd').value;
+  if(!exStart || !exEnd){
+    errEl.textContent = t('calendar.exclusionMissingDatesSimple');
+    errEl.style.display = 'block';
+    return;
+  }
+  if(exEnd < exStart){
+    errEl.textContent = t('calendar.exclusionEndBeforeStart');
+    errEl.style.display = 'block';
+    return;
+  }
+  if(exStart < start || exEnd > end){
+    errEl.textContent = t('calendar.exclusionOutOfRange');
+    errEl.style.display = 'block';
+    return;
+  }
+  const overlaps = checkerPendingExcludedRanges.some((r, idx) => idx !== checkerEditingExclusionIndex && exStart <= r.end && exEnd >= r.start);
+  if(overlaps){
+    errEl.textContent = t('calendar.exclusionOverlap');
+    errEl.style.display = 'block';
+    return;
+  }
+  if(checkerEditingExclusionIndex !== null){
+    checkerPendingExcludedRanges[checkerEditingExclusionIndex] = { start: exStart, end: exEnd };
+  } else {
+    checkerPendingExcludedRanges.push({ start: exStart, end: exEnd });
+  }
+  checkerPendingExcludedRanges.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+  checkerPickingExclusion = false;
+  checkerEditingExclusionIndex = null;
+  renderCheckerExclusionSection();
+  updateChecker();
+});
+
+document.getElementById('checkerEntry').addEventListener('change', ()=>{
+  pruneCheckerExclusions();
+  updateChecker();
+});
+document.getElementById('checkerExit').addEventListener('change', ()=>{
+  pruneCheckerExclusions();
+  updateChecker();
+});
 
 document.getElementById('checkerSaveBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('checkerCountry').value;
@@ -851,7 +997,7 @@ document.getElementById('checkerSaveBtn').addEventListener('click', async ()=>{
     if(!proceed) return;
   }
   try{
-    await insertTrip(start, end, label);
+    await insertTrip(start, end, label, checkerPendingExcludedRanges);
   }catch(e){
     errEl.textContent = t('trips.saveError');
     errEl.style.display = 'block';
@@ -859,6 +1005,9 @@ document.getElementById('checkerSaveBtn').addEventListener('click', async ()=>{
   }
   document.getElementById('checkerEntry').value = '';
   document.getElementById('checkerExit').value = '';
+  checkerPendingExcludedRanges = [];
+  checkerPickingExclusion = false;
+  checkerEditingExclusionIndex = null;
   render();
 });
 
