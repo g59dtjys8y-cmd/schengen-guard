@@ -971,6 +971,7 @@ function renderExclusionSection(){
     return;
   }
   section.style.display = 'block';
+  document.getElementById('exclusionNote').textContent = t('calendar.exclusionNote', { start: fmt(pickStart), end: fmt(pickEnd) });
   document.getElementById('markSideTripBtn').style.display = pickingExclusion ? 'none' : 'block';
   document.getElementById('exclusionPicker').style.display = pickingExclusion ? 'block' : 'none';
   updateExclusionPickLabels();
@@ -1512,6 +1513,7 @@ async function applyLang(lang){
   applyStaticI18n();
   renderEtiasLastChecked();
   render();
+  renderExclusionSection();
 }
 document.getElementById('langEnBtn').addEventListener('click', ()=> applyLang('en'));
 document.getElementById('langZhBtn').addEventListener('click', ()=> applyLang('zh'));
