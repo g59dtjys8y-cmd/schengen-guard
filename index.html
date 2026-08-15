@@ -194,6 +194,29 @@
         <p class="card-body" id="checkerMsg" style="margin-top:6px;" data-i18n="trips.checkerPrompt">Pick an entry and exit date to check compliance before you save it.</p>
         <button type="button" class="link-btn" id="checkerBreakdownBtn" style="display:none; font-size:12.5px;" data-i18n="trips.howCalculated">How is this calculated?</button>
         <div id="checkerSuggestions" class="stack" style="display:none;"></div>
+
+        <div id="checkerExclusionSection" style="display:none; margin-top:10px;">
+          <button type="button" class="btn btn-secondary btn-block" id="checkerMarkSideTripBtn" data-i18n="calendar.markSideTripSimple">+ Add a side trip within this stay</button>
+          <p class="note" id="checkerExclusionTooShort" style="display:none;" data-i18n="calendar.exclusionTooShort">Your stay is only 1 day, so there's no time to leave and come back.</p>
+
+          <div id="checkerExclusionPicker" style="display:none; margin-top:8px;">
+            <div class="form-row">
+              <div class="field">
+                <label for="checkerExclStart" data-i18n="calendar.exclusionFromLabel">From</label>
+                <input class="input" type="date" id="checkerExclStart">
+              </div>
+              <div class="field">
+                <label for="checkerExclEnd" data-i18n="calendar.exclusionToLabel">To</label>
+                <input class="input" type="date" id="checkerExclEnd">
+              </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-block" id="checkerAddExclusionBtn" data-i18n="calendar.addExclusion">Add side trip</button>
+            <button type="button" class="link-btn" id="checkerCancelExclusionBtn" data-i18n="calendar.cancelExclusion">Cancel</button>
+          </div>
+
+          <div class="form-error" id="checkerExclusionError" style="display:none;"></div>
+          <div id="checkerExclusionList" class="stack" style="margin-top:6px;"></div>
+        </div>
         <div class="form-error" id="checkerError" style="display:none;"></div>
         <button type="button" class="btn btn-primary btn-block" id="checkerSaveBtn" disabled data-i18n="trips.saveTrip">Save trip</button>
       </div>
