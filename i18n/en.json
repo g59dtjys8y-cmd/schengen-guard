@@ -2,8 +2,9 @@
   "app.name": "Schengen Guard",
 
   "firstRun.title": "Before you start",
+  "firstRun.privacyLead": "No account. No cloud. Your data stays on this device.",
   "firstRun.p1": "Schengen Guard is a personal trip-tracking tool, not immigration or legal advice. Its 90/180-day calculations are provided for informational purposes only, with no warranty of accuracy. Always verify borderline cases against the <a href=\"https://ec.europa.eu/assets/home/visa-calculator/calculator.htm\" target=\"_blank\" rel=\"noopener\">European Commission's official short-stay calculator</a> and with the relevant border authority or consulate before you travel.",
-  "firstRun.p2": "All your trip data stays on this device only — nothing is sent anywhere. See Settings → Privacy & Terms for details.",
+  "firstRun.p2": "Nothing you enter is uploaded or synced. See Settings → Privacy & Terms for details.",
   "firstRun.ack": "I understand",
   "home.disclaimerFooter": "Not legal advice — verify with the <a href=\"https://ec.europa.eu/assets/home/visa-calculator/calculator.htm\" target=\"_blank\" rel=\"noopener\">official EU calculator</a>",
 

@@ -1,7 +1,7 @@
 {
   "name": "Schengen Guard",
   "short_name": "Schengen Guard",
-  "description": "Track Schengen 90/180-day rolling window compliance",
+  "description": "Track your Schengen days with total privacy. No account, no cloud — your trips stay on your phone. Add stays, see your balance, plan ahead with confidence.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
