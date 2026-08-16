@@ -373,7 +373,13 @@
             <span><i style="background:var(--color-warn);"></i><span>14 days or fewer left</span></span>
             <span><i style="background:var(--color-danger);"></i><span>7 or fewer / over limit</span></span>
           </div>
-          <div class="period-list" id="checkerHistoryList"></div>
+          <details id="checkerHistoryDetails" style="margin-top:10px;">
+            <summary class="qc-title-row">
+              <span class="qc-title-label"><span class="qc-title-black">Breakdown</span></span>
+              <span class="qc-title-rule"></span>
+            </summary>
+            <div class="period-list" id="checkerHistoryList" style="margin-top:10px;"></div>
+          </details>
         </div>
       </div>
     </div>
