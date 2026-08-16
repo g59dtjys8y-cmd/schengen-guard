@@ -64,6 +64,13 @@
 
   --color-process-yellow:#edbb00;
 
+  --color-warn:#ef4444;
+  --color-warn-tint:#fee2e2;
+  --color-danger:#b91c1c;
+  --color-danger-tint:#fce4e4;
+  --color-safe:#15803d;
+  --color-safe-tint:#e0f5e6;
+
   --font-heading:"Source Serif 4", Georgia, serif;
   --font-body:"Source Serif 4", Georgia, serif;
 
@@ -122,6 +129,13 @@
     --color-accent-2-700:#ff8bb9;
     --color-accent-2-800:#ffb1cf;
 
+    --color-warn:#f87171;
+    --color-warn-tint:#3a1a18;
+    --color-danger:#ff6b60;
+    --color-danger-tint:#3a1512;
+    --color-safe:#4ade80;
+    --color-safe-tint:#14301f;
+
     --shadow-sm:0 1px 2px rgba(0,0,0,.4);
     --shadow-md:0 3px 10px rgba(0,0,0,.5);
 
@@ -163,6 +177,13 @@
   --color-accent-2-600:#ff6ba8;
   --color-accent-2-700:#ff8bb9;
   --color-accent-2-800:#ffb1cf;
+
+  --color-warn:#f87171;
+  --color-warn-tint:#3a1a18;
+  --color-danger:#ff6b60;
+  --color-danger-tint:#3a1512;
+  --color-safe:#4ade80;
+  --color-safe-tint:#14301f;
 
   --shadow-sm:0 1px 2px rgba(0,0,0,.4);
   --shadow-md:0 3px 10px rgba(0,0,0,.5);
@@ -216,6 +237,7 @@ a:hover{text-decoration:underline;}
 }
 .tag-accent{background:var(--color-accent-100);color:var(--color-accent-800);}
 .tag-accent-2{background:var(--color-accent-2-100);color:var(--color-accent-2-800);}
+.tag-safe{background:var(--color-safe-tint);color:var(--color-safe);}
 .tag-neutral{background:var(--color-neutral-100);color:var(--color-neutral-800);}
 .tag-outline{border:1px solid var(--color-accent);color:var(--color-accent-700);background:transparent;}
 .tag-outline-2{border:1px solid var(--color-accent-2);color:var(--color-accent-2-700);background:transparent;}
@@ -629,7 +651,7 @@ details[open] > summary.qc-title-row::after{content:'−';}
 .period-used{font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--color-text);font-variant-numeric:tabular-nums;}
 .period-used span{font-size:10.5px;font-weight:400;color:var(--color-neutral-600);}
 .period-pill{font-size:9.5px;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:20px;white-space:nowrap;}
-.period-pill.safe{background:var(--color-accent-100);color:var(--color-accent-700);}
+.period-pill.safe{background:var(--color-safe-tint);color:var(--color-safe);}
 .period-pill.warn{background:var(--color-warn-tint);color:var(--color-warn);}
 .period-pill.danger{background:var(--color-danger-tint);color:var(--color-danger);}
 
