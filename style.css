@@ -569,6 +569,115 @@ details[open] > summary.qc-title-row::after{content:'−';}
 .legend span{display:inline-flex;align-items:center;gap:6px;}
 .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;}
 
+/* — Calendar card mode toggle (Month / Year / History) — */
+.mode-toggle{display:inline-flex;background:var(--color-neutral-200);border-radius:20px;padding:3px;gap:2px;margin-top:12px;}
+.mode-toggle button{
+  border:none;background:none;font-family:var(--font-heading);font-size:12.5px;font-weight:600;
+  padding:6px 16px;border-radius:16px;color:var(--color-neutral-700);cursor:pointer;min-height:auto;
+}
+.mode-toggle button.active{background:var(--color-surface);color:var(--color-accent-700);box-shadow:var(--shadow-sm);}
+
+/* — Year view: twelve mini month grids — */
+.year-stat{font-family:var(--font-heading);font-size:13px;color:var(--color-neutral-700);margin-top:12px;}
+.year-stat strong{color:var(--color-text);font-size:15px;}
+.year-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+.mini-month{background:var(--color-bg);border-radius:8px;padding:6px 5px;cursor:pointer;transition:transform 100ms ease;}
+.mini-month:hover{transform:translateY(-1px);}
+.mini-month-label{
+  font-family:var(--font-heading);font-size:10px;font-weight:700;text-align:center;
+  color:var(--color-neutral-700);margin-bottom:4px;letter-spacing:.02em;
+}
+.mini-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1.5px;}
+.myd{
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  font-size:6px;border-radius:1.5px;background:var(--color-neutral-200);color:var(--color-neutral-600);
+  font-family:var(--font-heading);font-variant-numeric:tabular-nums;line-height:1;
+}
+.myd.pad{background:transparent;}
+.myd.active{background:var(--color-accent);color:#fff;}
+.myd.planned{background:var(--color-accent-2);color:#fff;}
+.myd.overstay{background:var(--color-accent-2-700);color:#fff;}
+.myd.excluded{
+  background:repeating-linear-gradient(45deg, var(--color-neutral-300), var(--color-neutral-300) 1.5px, var(--color-neutral-400) 1.5px, var(--color-neutral-400) 3px);
+  color:var(--color-neutral-800);
+}
+.myd.today{outline:1px solid var(--color-text);outline-offset:-1px;font-weight:700;}
+
+/* — History view: 180-day rolling window trend + monthly checkpoint list — */
+.chart-wrap{margin-top:14px;background:var(--color-bg);border-radius:10px;padding:10px 8px 6px;}
+.chart-wrap svg{width:100%;height:auto;display:block;overflow:visible;}
+.chart-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:10.5px;color:var(--color-neutral-700);}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px;}
+.chart-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.period-list{display:flex;flex-direction:column;margin-top:14px;}
+.period-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 2px;border-bottom:1px solid var(--color-divider);cursor:pointer;
+}
+.period-row:last-child{border-bottom:none;}
+.period-month{font-family:var(--font-heading);font-size:13px;font-weight:700;color:var(--color-text);}
+.period-range{font-size:10.5px;color:var(--color-neutral-600);margin-top:1px;}
+.period-stat{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.period-used{font-family:var(--font-heading);font-size:15px;font-weight:700;color:var(--color-text);font-variant-numeric:tabular-nums;}
+.period-used span{font-size:10.5px;font-weight:400;color:var(--color-neutral-600);}
+.period-pill{font-size:9.5px;font-weight:700;letter-spacing:.03em;padding:3px 9px;border-radius:20px;white-space:nowrap;}
+.period-pill.safe{background:var(--color-accent-100);color:var(--color-accent-700);}
+.period-pill.warn{background:var(--color-warn-tint);color:var(--color-warn);}
+.period-pill.danger{background:var(--color-danger-tint);color:var(--color-danger);}
+
+/* — Year recap ("Share your year"): a fixed passport-styled card, deliberately not
+   reskinned for light/dark — same idea as the app icon staying gold-on-navy regardless
+   of the phone's theme, since this card only exists to be looked at and shared. */
+.recap-modal-card{display:flex;flex-direction:column;align-items:center;}
+.recap-card{
+  --rc-navy-deep:#0a1428;
+  --rc-navy-mid:#173463;
+  --rc-gold:#e8b923;
+  --rc-gold-dim:#a9832f;
+  --rc-cream:#f4ead9;
+  --rc-teal:#3fc2e4;
+  --rc-violet:#a58bf0;
+  position:relative;width:100%;max-width:336px;border-radius:22px;overflow:hidden;
+  background:
+    radial-gradient(120% 90% at 78% -10%, var(--rc-navy-mid) 0%, transparent 55%),
+    linear-gradient(155deg, var(--rc-navy-mid) 0%, var(--rc-navy-deep) 62%);
+  box-shadow:var(--shadow-md), inset 0 0 0 1px rgba(232,185,35,.35);
+  color:var(--rc-cream);
+  font-family:var(--font-heading);
+  padding:28px 22px 24px;
+  display:flex;flex-direction:column;
+}
+.recap-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;opacity:.05;
+  background-image:
+    repeating-linear-gradient(0deg, var(--rc-cream) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(90deg, var(--rc-cream) 0 1px, transparent 1px 34px);
+}
+.recap-star-arc{position:relative;height:22px;margin-bottom:16px;}
+.recap-star-arc span{position:absolute;top:0;color:var(--rc-gold);font-size:11px;line-height:1;transform:translate(-50%,-50%);}
+.recap-kicker{
+  text-align:center;font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--rc-gold);margin:0 0 12px;
+}
+.recap-rule{width:64px;height:1px;background:var(--rc-gold-dim);margin:0 auto 18px;opacity:.8;}
+.recap-year{text-align:center;font-size:56px;font-weight:800;font-style:italic;line-height:1;letter-spacing:-.01em;color:var(--rc-cream);}
+.recap-subtitle{text-align:center;font-size:13px;font-style:italic;color:var(--rc-cream);opacity:.72;margin:6px 0 22px;}
+.recap-hero{text-align:center;margin-bottom:20px;}
+.recap-hero .n{font-size:84px;font-weight:800;line-height:.9;color:var(--rc-gold);text-shadow:0 0 34px rgba(232,185,35,.35);}
+.recap-hero .l{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--rc-cream);opacity:.85;margin-top:4px;}
+.recap-month-strip{display:flex;align-items:flex-end;gap:3px;height:30px;margin:0 4px 22px;flex-shrink:0;}
+.recap-month-strip i{flex:1;border-radius:2px 2px 0 0;background:var(--rc-teal);opacity:.85;display:block;}
+.recap-month-strip i.violet{background:var(--rc-violet);}
+.recap-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;margin-bottom:20px;}
+.recap-stat .n{font-size:24px;font-weight:800;color:var(--rc-cream);line-height:1;}
+.recap-stat .l{font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--rc-cream);opacity:.65;margin-top:3px;line-height:1.35;}
+.recap-stamp-row{display:flex;justify-content:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.recap-footer{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--rc-gold-dim);
+}
+.recap-footer svg{width:11px;height:11px;flex-shrink:0;}
+
 /* — FAQ & terms — */
 .faq-item{border-bottom:1px solid var(--color-divider);padding:8px 0;}
 .faq-item:last-child{border-bottom:none;}

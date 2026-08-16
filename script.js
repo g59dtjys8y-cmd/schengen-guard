@@ -92,6 +92,8 @@ let checkerEditingExclusionIndex = null;
 let checkerCalCursor = new Date(); checkerCalCursor.setDate(1);
 let checkerPickStart = null, checkerPickEnd = null;
 let checkerExclPickStart = null, checkerExclPickEnd = null;
+let checkerMode = 'month'; // 'month' | 'year' | 'history' — which view the Calendar card shows
+let checkerYearCursor = new Date().getFullYear();
 
 function newId(){
   if('randomUUID' in crypto) return crypto.randomUUID();
@@ -522,6 +524,7 @@ function render(){
   renderCountriesCard();
   renderCalendar();
   renderCheckerCalendar();
+  renderCheckerMode();
   updateChecker();
   updateAppBadge();
   checkNotifications();
@@ -859,6 +862,265 @@ document.getElementById('checkerPrevMonth').addEventListener('click', ()=>{
 document.getElementById('checkerNextMonth').addEventListener('click', ()=>{
   checkerCalCursor.setMonth(checkerCalCursor.getMonth()+1);
   renderCheckerCalendar();
+});
+
+// --- Calendar card mode toggle: Month (the picker above) / Year / History ---
+
+function renderCheckerMode(){
+  document.getElementById('checkerMonthView').style.display = checkerMode === 'month' ? 'block' : 'none';
+  document.getElementById('checkerYearView').style.display = checkerMode === 'year' ? 'block' : 'none';
+  document.getElementById('checkerHistoryView').style.display = checkerMode === 'history' ? 'block' : 'none';
+  document.querySelectorAll('#checkerModeToggle button').forEach(btn=>{
+    btn.classList.toggle('active', btn.getAttribute('data-mode') === checkerMode);
+  });
+  if(checkerMode === 'year') renderYearView();
+  else if(checkerMode === 'history') renderHistoryView();
+}
+
+document.querySelectorAll('#checkerModeToggle button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    checkerMode = btn.getAttribute('data-mode');
+    renderCheckerMode();
+  });
+});
+
+// Classifies a single day for the Year/History views — same priority the month
+// calendar's CSS applies (cal-day.overstay's !important wins over in-trip/excluded).
+function classifyYearDay(iso, covered, plannedSet, excluded){
+  const used = usedDaysInWindow(trips, iso);
+  if(used > 90) return 'overstay';
+  if(covered.has(iso)) return plannedSet.has(iso) ? 'planned' : 'active';
+  if(excluded.has(iso)) return 'excluded';
+  return null;
+}
+
+function renderYearView(){
+  const year = checkerYearCursor;
+  document.getElementById('checkerYearLabel').textContent = String(year);
+  document.getElementById('checkerYearPrevLabel').textContent = String(year - 1);
+  document.getElementById('checkerYearNextLabel').textContent = String(year + 1);
+
+  const covered = coveredDates(trips);
+  const plannedSet = coveredDates(trips.filter(t=>classifyTrip(t)==='planned'));
+  const excluded = excludedDatesSet(trips);
+  const today = todayISO();
+
+  let daysInZone = 0;
+  let html = '';
+  for(let m=0; m<12; m++){
+    const monthLabel = new Date(year, m, 1).toLocaleDateString('en-GB', { month: 'short' });
+    const firstDay = new Date(year, m, 1);
+    let startOffset = firstDay.getDay() - 1; if(startOffset < 0) startOffset = 6;
+    const daysInMonth = new Date(year, m+1, 0).getDate();
+
+    let cells = '';
+    for(let i=0; i<startOffset; i++) cells += `<div class="myd pad"></div>`;
+    for(let day=1; day<=daysInMonth; day++){
+      const iso = year+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      const cls = classifyYearDay(iso, covered, plannedSet, excluded);
+      if(cls === 'active' || cls === 'planned' || cls === 'overstay') daysInZone++;
+      const todayCls = iso === today ? ' today' : '';
+      cells += `<div class="myd${cls ? ' '+cls : ''}${todayCls}">${day}</div>`;
+    }
+    html += `<div class="mini-month" data-month="${m}"><div class="mini-month-label">${escapeHtml(monthLabel)}</div><div class="mini-grid">${cells}</div></div>`;
+  }
+
+  document.getElementById('checkerYearGrid').innerHTML = html;
+  document.getElementById('checkerYearStat').innerHTML = `${daysInZone} day${daysInZone === 1 ? '' : 's'} spent in the Schengen zone in ${year}`;
+
+  document.querySelectorAll('#checkerYearGrid .mini-month').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const m = Number(el.getAttribute('data-month'));
+      checkerCalCursor = new Date(year, m, 1);
+      checkerMode = 'month';
+      renderCheckerMode();
+      renderCheckerCalendar();
+    });
+  });
+}
+
+document.getElementById('checkerYearPrev').addEventListener('click', ()=>{ checkerYearCursor--; renderYearView(); });
+document.getElementById('checkerYearNext').addEventListener('click', ()=>{ checkerYearCursor++; renderYearView(); });
+
+// Samples the rolling 180-day window at each month's last day across a year — the
+// underlying window is a genuine day-by-day slide, but listing all 365 would be
+// unreadable, so this shows the same trend at twelve checkpoints instead.
+function renderHistoryView(){
+  const year = checkerYearCursor;
+  document.getElementById('checkerHistoryLabel').textContent = String(year);
+  document.getElementById('checkerHistoryPrevLabel').textContent = String(year - 1);
+  document.getElementById('checkerHistoryNextLabel').textContent = String(year + 1);
+
+  const months = [];
+  for(let m=0; m<12; m++){
+    const lastDay = new Date(year, m+1, 0).getDate();
+    const endIso = year+'-'+String(m+1).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
+    const startIso = isoOf(addDays(toDate(endIso), -179));
+    const used = usedDaysInWindow(trips, endIso);
+    const remaining = Math.max(0, 90 - used);
+    let status = 'safe';
+    if(used > 90 || remaining <= 7) status = 'danger';
+    else if(remaining <= 14) status = 'warn';
+    months.push({ m, endIso, startIso, used, remaining, status });
+  }
+
+  const W = 620, H = 200, padL = 30, padR = 14, padT = 14, padB = 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const yMax = Math.max(100, Math.ceil((Math.max(...months.map(d=>d.used), 90) + 5) / 10) * 10);
+  const xAt = i => padL + (i / (months.length - 1)) * plotW;
+  const yAt = v => padT + plotH - (v / yMax) * plotH;
+  const statusColor = s => s === 'danger' ? 'var(--color-danger)' : s === 'warn' ? 'var(--color-warn)' : 'var(--color-accent)';
+
+  const linePoints = months.map((d,i)=> `${xAt(i).toFixed(1)},${yAt(d.used).toFixed(1)}`).join(' ');
+  const areaPoints = `${xAt(0).toFixed(1)},${yAt(0).toFixed(1)} ` + linePoints + ` ${xAt(months.length-1).toFixed(1)},${yAt(0).toFixed(1)}`;
+  const limitY = yAt(90).toFixed(1);
+  const zeroY = yAt(0).toFixed(1);
+  const midY = yAt(yMax/2).toFixed(1);
+
+  const dots = months.map((d,i)=>{
+    const isLast = i === months.length - 1;
+    return `<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(d.used).toFixed(1)}" r="${isLast ? 6 : 4}" fill="${statusColor(d.status)}"></circle>`;
+  }).join('');
+
+  const monthLabels = months.filter((d,i)=> i % 2 === 0).map(d=>{
+    const label = new Date(year, d.m, 1).toLocaleDateString('en-GB', { month: 'short' });
+    return `<text x="${xAt(d.m).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9" fill="var(--color-neutral-600)">${escapeHtml(label)}</text>`;
+  }).join('');
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(`Days used in the trailing 180 days, end of each month, ${year}`)}">
+    <line x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke="var(--color-neutral-300)" stroke-width="1"></line>
+    <line x1="${padL}" y1="${midY}" x2="${W-padR}" y2="${midY}" stroke="var(--color-neutral-300)" stroke-width="1"></line>
+    <text x="${padL-6}" y="${Number(zeroY)+3}" text-anchor="end" font-size="9" fill="var(--color-neutral-600)">0</text>
+    <text x="${padL-6}" y="${Number(midY)+3}" text-anchor="end" font-size="9" fill="var(--color-neutral-600)">${yMax/2}</text>
+    <line x1="${padL}" y1="${limitY}" x2="${W-padR}" y2="${limitY}" stroke="var(--color-danger)" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"></line>
+    <text x="${W-padR}" y="${Number(limitY)-4}" text-anchor="end" font-size="9" font-weight="700" fill="var(--color-danger)">${escapeHtml("90-day limit")}</text>
+    <polygon points="${areaPoints}" fill="var(--color-accent)" opacity="0.12"></polygon>
+    <polyline points="${linePoints}" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    ${dots}
+    ${monthLabels}
+  </svg>`;
+  document.getElementById('checkerHistoryChartWrap').innerHTML = svg;
+
+  const listHtml = months.map(d=>{
+    const monthName = new Date(year, d.m, 1).toLocaleDateString('en-GB', { month: 'long' });
+    return `<div class="period-row" data-month="${d.m}">
+      <div>
+        <div class="period-month">${escapeHtml(monthName)}</div>
+        <div class="period-range">${fmtShort(d.startIso)} – ${fmt(d.endIso)}</div>
+      </div>
+      <div class="period-stat">
+        <div class="period-used">${d.used}<span>/90</span></div>
+        <div class="period-pill ${d.status}">${d.remaining} left</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('checkerHistoryList').innerHTML = listHtml;
+
+  document.querySelectorAll('#checkerHistoryList .period-row').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const m = Number(el.getAttribute('data-month'));
+      openBreakdown(trips, months[m].endIso);
+    });
+  });
+}
+
+document.getElementById('checkerHistoryPrev').addEventListener('click', ()=>{ checkerYearCursor--; renderHistoryView(); });
+document.getElementById('checkerHistoryNext').addEventListener('click', ()=>{ checkerYearCursor++; renderHistoryView(); });
+
+// --- "Share your year" recap card — a passport-styled summary of Year view's own numbers ---
+
+function renderRecapStarArc(){
+  const arc = document.getElementById('recapStarArc');
+  arc.innerHTML = '';
+  const n = 9, spread = 280, cx = 146, baseY = 11, dip = 7;
+  for(let i = 0; i < n; i++){
+    const frac = i / (n - 1);
+    const el = document.createElement('span');
+    el.textContent = '★';
+    el.style.left = ((frac - 0.5) * spread + cx) + 'px';
+    el.style.top = (baseY - Math.sin(frac * Math.PI) * dip) + 'px';
+    el.style.opacity = String(0.55 + 0.45 * Math.sin(frac * Math.PI));
+    arc.appendChild(el);
+  }
+}
+
+function openYearRecap(){
+  const year = checkerYearCursor;
+  const yearTrips = trips.filter(tr => tr.start.slice(0, 4) === String(year));
+
+  const covered = coveredDates(trips);
+  const plannedSet = coveredDates(trips.filter(tr=>classifyTrip(tr)==='planned'));
+  const excluded = excludedDatesSet(trips);
+
+  let daysInZone = 0;
+  const perMonthTotal = new Array(12).fill(0);
+  const perMonthPlanned = new Array(12).fill(0);
+  for(let m=0; m<12; m++){
+    const daysInMonth = new Date(year, m+1, 0).getDate();
+    for(let day=1; day<=daysInMonth; day++){
+      const iso = year+'-'+String(m+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+      const cls = classifyYearDay(iso, covered, plannedSet, excluded);
+      if(cls === 'active' || cls === 'overstay' || cls === 'planned'){
+        daysInZone++;
+        perMonthTotal[m]++;
+        if(cls === 'planned') perMonthPlanned[m]++;
+      }
+    }
+  }
+
+  const visitedSet = new Set();
+  for(const tr of yearTrips){
+    if(classifyTrip(tr) !== 'planned' && tr.label) visitedSet.add(tr.label);
+  }
+
+  let longest = null;
+  for(const tr of yearTrips){
+    const days = Math.round((toDate(tr.end) - toDate(tr.start)) / 86400000) + 1;
+    if(!longest || days > longest.days) longest = { label: tr.label, days };
+  }
+
+  let closest = null;
+  for(let m=0; m<12; m++){
+    const lastDay = new Date(year, m+1, 0).getDate();
+    const endIso = year+'-'+String(m+1).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
+    const remaining = Math.max(0, 90 - usedDaysInWindow(trips, endIso));
+    if(!closest || remaining < closest.remaining) closest = { m, remaining };
+  }
+
+  document.getElementById('recapYear').textContent = String(year);
+  document.getElementById('recapDays').textContent = String(daysInZone);
+  document.getElementById('recapCountries').textContent = String(visitedSet.size);
+  document.getElementById('recapTrips').textContent = String(yearTrips.length);
+
+  document.getElementById('recapLongest').textContent = longest ? String(longest.days) : '—';
+  document.getElementById('recapLongestLabel').textContent = longest
+    ? `Longest stay · ${longest.label ? escapeHtml(longest.label) : '—'}`
+    : 'No trips logged this year';
+
+  document.getElementById('recapClosest').textContent = closest ? String(closest.remaining) : '—';
+  document.getElementById('recapClosestLabel').textContent = closest
+    ? `Days to spare · closest call, ${new Date(year, closest.m, 1).toLocaleDateString('en-GB', { month: 'long' })}`
+    : '';
+
+  const maxMonthDays = Math.max(...perMonthTotal, 1);
+  document.getElementById('recapMonthStrip').innerHTML = perMonthTotal.map((v, m) => {
+    const height = v === 0 ? 12 : 12 + (v / maxMonthDays) * 88;
+    const violet = perMonthPlanned[m] > v / 2;
+    return `<i class="${violet ? 'violet' : ''}" style="height:${height.toFixed(0)}%;"></i>`;
+  }).join('');
+
+  document.getElementById('recapStampRow').innerHTML = [...visitedSet].map(label => stampHtml(label)).join('');
+
+  renderRecapStarArc();
+  document.getElementById('yearRecapModal').style.display = 'flex';
+}
+
+document.getElementById('checkerShareYearBtn').addEventListener('click', openYearRecap);
+document.getElementById('yearRecapCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('yearRecapModal').style.display = 'none';
+});
+document.getElementById('yearRecapModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'yearRecapModal') document.getElementById('yearRecapModal').style.display = 'none';
 });
 
 function checkerHandlePick(iso){
