@@ -1223,7 +1223,6 @@ function startEditTrip(id){
   document.getElementById('formError').style.display = 'none';
   document.getElementById('addTripBtn').textContent = 'Update stay';
   document.getElementById('cancelEditBtn').style.display = 'block';
-  document.getElementById('calendarHeading').textContent = 'Edit stay';
 
   calCursor = new Date(toDate(trip.start)); calCursor.setDate(1);
   switchTab('calendar');
@@ -1244,7 +1243,6 @@ function stopEditTrip(){
   document.getElementById('formError').style.display = 'none';
   document.getElementById('addTripBtn').textContent = 'Log stay';
   document.getElementById('cancelEditBtn').style.display = 'none';
-  document.getElementById('calendarHeading').textContent = 'Log a stay';
   renderCalendar();
   renderExclusionSection();
 }
