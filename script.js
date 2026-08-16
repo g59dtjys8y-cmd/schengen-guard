@@ -664,11 +664,51 @@ function renderCountries(){
 
 // --- Trips list ---
 
+function buildTripRow(trip, status){
+  const days = Math.round((toDate(trip.end) - toDate(trip.start))/86400000) + 1;
+  const overstay = tripOverstayInfo(trips, trip, 90);
+  const warnIcon = overstay
+    ? `<span class="warn-icon" title="This stay tips you over the 90-day limit on ${fmt(overstay.date)} (${overstay.used} of 90 used)">&#9888;</span>`
+    : '';
+
+  let statusHtml;
+  if(status === 'past'){
+    statusHtml = `<div class="done-stamp"><div class="t">DONE</div><svg viewBox="0 0 24 24" fill="var(--color-text)"><path d="M12 0l2.9 8.1 8.6.1-6.9 5.3 2.6 8.2L12 16.9 5.8 21.7l2.6-8.2L1.5 8.2l8.6-.1z"></path></svg></div>`;
+  } else if(status === 'active'){
+    statusHtml = `<span class="tag tag-accent">Active</span>`;
+  } else {
+    statusHtml = `<span class="tag tag-outline">Planned</span>`;
+  }
+
+  let exclDays = 0;
+  for(const r of (trip.excludedRanges || [])) exclDays += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
+  const exclNote = exclDays > 0
+    ? `<div style="margin-top:4px;"><span class="tag tag-excluded">Side trip: ${dayCount(exclDays)}</span></div>`
+    : '';
+
+  const row = document.createElement('div');
+  row.className = 'card elev-sm trip-row';
+  row.innerHTML = `
+    <div class="trip-days"><div class="n">${days}</div><div class="lbl">days</div></div>
+    <div class="trip-info">
+      <div class="country">${trip.label ? flagIconHtml(trip.label) : ''}${trip.label ? escapeHtml(trip.label) : '—'}${warnIcon}</div>
+      <div class="dates">${fmt(trip.start)} – ${fmt(trip.end)}</div>
+      ${exclNote}
+      <div class="row-actions">
+        <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
+        <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Remove</button>
+      </div>
+    </div>
+    <div class="trip-status">${statusHtml}</div>
+  `;
+  return row;
+}
+
 function renderTripRows(){
   const rowsEl = document.getElementById('tripRows');
   rowsEl.innerHTML = '';
   if(trips.length === 0){
-    rowsEl.innerHTML = `<div class="empty-note">${"No stays logged yet."}</div>`;
+    rowsEl.innerHTML = `<div class="empty-note">No stays logged yet.</div>`;
     return;
   }
   trips.sort((a,b)=>{
@@ -677,46 +717,32 @@ function renderTripRows(){
     if(aActive !== bActive) return aActive ? -1 : 1;
     return a.start < b.start ? 1 : a.start > b.start ? -1 : 0;
   });
-  for(const trip of trips){
-    const days = Math.round((toDate(trip.end) - toDate(trip.start))/86400000) + 1;
-    const status = classifyTrip(trip);
-    const overstay = tripOverstayInfo(trips, trip, 90);
-    const warnIcon = overstay
-      ? `<span class="warn-icon" title="This stay tips you over the 90-day limit on ${fmt(overstay.date)} (${overstay.used} of 90 used)">&#9888;</span>`
-      : '';
 
-    let statusHtml;
-    if(status === 'past'){
-      statusHtml = `<div class="done-stamp"><div class="t">${"DONE"}</div><svg viewBox="0 0 24 24" fill="var(--color-text)"><path d="M12 0l2.9 8.1 8.6.1-6.9 5.3 2.6 8.2L12 16.9 5.8 21.7l2.6-8.2L1.5 8.2l8.6-.1z"></path></svg></div>`;
-    } else if(status === 'active'){
-      statusHtml = `<span class="tag tag-accent">${"Active"}</span>`;
-    } else {
-      statusHtml = `<span class="tag tag-outline">${"Planned"}</span>`;
-    }
+  const visible = trips.slice(0, 4);
+  const older = trips.slice(4);
 
-    let exclDays = 0;
-    for(const r of (trip.excludedRanges || [])) exclDays += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
-    const exclNote = exclDays > 0
-      ? `<div style="margin-top:4px;"><span class="tag tag-excluded">${'Side trip: ' + dayCount(exclDays)}</span></div>`
-      : '';
-
-    const row = document.createElement('div');
-    row.className = 'card elev-sm trip-row';
-    row.innerHTML = `
-      <div class="trip-days"><div class="n">${days}</div><div class="lbl">${"days"}</div></div>
-      <div class="trip-info">
-        <div class="country">${trip.label ? flagIconHtml(trip.label) : ''}${trip.label ? escapeHtml(trip.label) : '—'}${warnIcon}</div>
-        <div class="dates">${fmt(trip.start)} – ${fmt(trip.end)}</div>
-        ${exclNote}
-        <div class="row-actions">
-          <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">${'Edit'}</button>
-          <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">${'Remove'}</button>
-        </div>
-      </div>
-      <div class="trip-status">${statusHtml}</div>
-    `;
-    rowsEl.appendChild(row);
+  for(const trip of visible){
+    rowsEl.appendChild(buildTripRow(trip, classifyTrip(trip)));
   }
+
+  // Everything past the 4 most recent lives collapsed under one expandable group.
+  if(older.length){
+    const group = document.createElement('details');
+    group.className = 'card';
+    group.innerHTML = `
+      <summary class="qc-title-row">
+        <span class="qc-title-label"><span class="qc-title-black">Older trips (${older.length})</span></span>
+        <span class="qc-title-rule"></span>
+      </summary>
+    `;
+    const list = document.createElement('div');
+    list.className = 'stack';
+    list.style.marginTop = '10px';
+    older.forEach(trip => list.appendChild(buildTripRow(trip, classifyTrip(trip))));
+    group.appendChild(list);
+    rowsEl.appendChild(group);
+  }
+
   rowsEl.querySelectorAll('[data-action="remove"]').forEach(btn=>{
     btn.addEventListener('click', async (e)=>{
       await deleteTrip(e.currentTarget.getAttribute('data-id'));
