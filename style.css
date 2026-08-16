@@ -64,8 +64,8 @@
 
   --color-process-yellow:#edbb00;
 
-  --color-warn:#92400e;
-  --color-warn-tint:#fdecc8;
+  --color-warn:#ef4444;
+  --color-warn-tint:#fee2e2;
   --color-danger:#b91c1c;
   --color-danger-tint:#fce4e4;
   --color-safe:#15803d;
@@ -129,8 +129,8 @@
     --color-accent-2-700:#ff8bb9;
     --color-accent-2-800:#ffb1cf;
 
-    --color-warn:#f2b84d;
-    --color-warn-tint:#3a2a10;
+    --color-warn:#f87171;
+    --color-warn-tint:#3a1a18;
     --color-danger:#ff6b60;
     --color-danger-tint:#3a1512;
     --color-safe:#4ade80;
@@ -178,8 +178,8 @@
   --color-accent-2-700:#ff8bb9;
   --color-accent-2-800:#ffb1cf;
 
-  --color-warn:#f2b84d;
-  --color-warn-tint:#3a2a10;
+  --color-warn:#f87171;
+  --color-warn-tint:#3a1a18;
   --color-danger:#ff6b60;
   --color-danger-tint:#3a1512;
   --color-safe:#4ade80;
