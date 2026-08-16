@@ -90,7 +90,11 @@
           <div class="qc-explain" id="lastDayBody"></div>
         </div>
 
-        <button type="button" class="qc-link" id="homeBreakdownBtn">How is this calculated?</button>
+        <div class="qc-links-row">
+          <button type="button" class="qc-link" id="homeBreakdownBtn">How is this calculated?</button>
+          <span class="qc-links-sep">·</span>
+          <button type="button" class="qc-link" id="passportControlBtn">Passport control</button>
+        </div>
 
         <p class="disclaimer-footer">Not legal advice — verify with the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">official EU calculator</a></p>
       </div>
@@ -270,6 +274,39 @@
       <h1 style="font-size:22px; margin-top:10px;">Countries visited</h1>
       <div class="card-meta" id="countriesSubtitle" style="margin-top:2px;"></div>
       <div class="countries-grid" id="countriesGrid"></div>
+    </div>
+
+    <!-- PASSPORT CONTROL (secondary screen, reached from Home) -->
+    <div class="screen" id="tab-passportControl" style="display:none;">
+      <button type="button" class="countries-back" id="passportControlBackBtn">← Home</button>
+      <h1 style="font-size:22px; margin-top:10px;">Passport <span style="color:var(--color-accent);">control</span></h1>
+      <p class="note" style="margin-top:2px;">A per-trip view of the rolling 180-day window for a chosen date — handy to show a border official alongside your passport stamps.</p>
+
+      <div class="card" style="margin-top:14px;">
+        <label class="qc-field-row" for="pcDate">
+          <span class="qc-field-label">Date of control</span>
+          <span class="qc-field-input-group">
+            <span class="qc-today-pill" id="pcTodayPill">Today</span>
+            <input class="qc-field-input" type="date" id="pcDate">
+          </span>
+        </label>
+      </div>
+
+      <div class="card" style="margin-top:14px;">
+        <div class="pc-stats-grid">
+          <div>
+            <div class="card-meta">180-day window</div>
+            <div class="pc-stat-value" id="pcWindowRange">—</div>
+          </div>
+          <div>
+            <div class="card-meta">Total days in the Schengen Area</div>
+            <div class="pc-stat-value" id="pcTotalDays">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-kicker" style="margin-top:20px; margin-bottom:8px;">Trips included</div>
+      <div id="pcTripRows" style="display:flex; flex-direction:column; gap:12px;"></div>
     </div>
 
     <!-- PRIVACY & TERMS (secondary screen, reached from Settings) -->

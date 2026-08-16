@@ -735,6 +735,78 @@ function renderTripRows(){
   });
 }
 
+// --- Passport control (secondary screen, reached from Home) ---
+// Per-trip breakdown of a chosen 180-day window — meant to be shown to a border
+// official alongside the passport stamps, unlike the day-by-day breakdown modal.
+
+// A trip that started before the window, or (for a future control date) hasn't
+// finished by the control date, only partly counts — `clippedStart`/`clippedEnd`
+// mark the portion that actually falls inside the window.
+function passportControlRows(list, controlISO){
+  const windowStartISO = isoOf(addDays(toDate(controlISO), -179));
+  const rows = [];
+  for(const trip of list){
+    if(trip.end < windowStartISO || trip.start > controlISO) continue;
+    const clippedStart = trip.start < windowStartISO ? windowStartISO : trip.start;
+    const clippedEnd = trip.end > controlISO ? controlISO : trip.end;
+    let daysInWindow = 0;
+    let cur = toDate(clippedStart);
+    const end = toDate(clippedEnd);
+    while(cur <= end){
+      const iso = isoOf(cur);
+      if(!isExcludedDay(trip, iso)) daysInWindow++;
+      cur = addDays(cur, 1);
+    }
+    const fullDays = Math.round((toDate(trip.end) - toDate(trip.start)) / 86400000) + 1;
+    const isPartial = clippedStart !== trip.start || clippedEnd !== trip.end;
+    rows.push({ trip, fullDays, isPartial, clippedStart, clippedEnd, daysInWindow });
+  }
+  rows.sort((a,b)=> a.trip.start < b.trip.start ? -1 : a.trip.start > b.trip.start ? 1 : 0);
+  return { windowStartISO, rows };
+}
+
+function renderPassportControl(){
+  const controlISO = document.getElementById('pcDate').value || todayISO();
+  document.getElementById('pcTodayPill').style.display = (controlISO === todayISO()) ? '' : 'none';
+
+  const { windowStartISO, rows } = passportControlRows(trips, controlISO);
+  document.getElementById('pcWindowRange').textContent = `${fmt(windowStartISO)} to ${fmt(controlISO)}`;
+  document.getElementById('pcTotalDays').textContent = String(usedDaysInWindow(trips, controlISO));
+
+  const rowsEl = document.getElementById('pcTripRows');
+  rowsEl.innerHTML = '';
+  if(rows.length === 0){
+    rowsEl.innerHTML = `<div class="empty-note">No trips fall within this 180-day window.</div>`;
+    return;
+  }
+  for(const r of rows){
+    const row = document.createElement('div');
+    row.className = 'card elev-sm trip-row';
+    const country = `${r.trip.label ? flagIconHtml(r.trip.label) : ''}${r.trip.label ? escapeHtml(r.trip.label) : '—'}`;
+    const dates = `${fmt(r.trip.start)} – ${fmt(r.trip.end)}`;
+    const partialNote = r.isPartial
+      ? `<p class="note pc-trip-partial">Partially within 180-day window: ${fmt(r.clippedStart)} – ${fmt(r.clippedEnd)} · ${dayCount(r.daysInWindow)}</p>`
+      : '';
+    row.innerHTML = `
+      <div class="trip-days"><div class="n">${r.fullDays}</div><div class="lbl">days</div></div>
+      <div class="trip-info">
+        <div class="country">${country}</div>
+        <div class="dates">${dates}</div>
+        ${partialNote}
+      </div>
+    `;
+    rowsEl.appendChild(row);
+  }
+}
+
+document.getElementById('passportControlBtn').addEventListener('click', ()=>{
+  document.getElementById('pcDate').value = todayISO();
+  renderPassportControl();
+  switchTab('passportControl');
+});
+document.getElementById('passportControlBackBtn').addEventListener('click', ()=> switchTab('home'));
+document.getElementById('pcDate').addEventListener('change', renderPassportControl);
+
 // --- Safe Trip Checker (Trips tab) ---
 
 function updateChecker(){
