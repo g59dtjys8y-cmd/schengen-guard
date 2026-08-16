@@ -441,14 +441,14 @@ document.getElementById('privacyBackBtn').addEventListener('click', ()=> switchT
 function statusColorVar(used, remaining, exitIsoIsNull){
   if(used > 90 || exitIsoIsNull) return 'var(--color-accent-2-700)';
   if(remaining <= 20) return 'var(--color-accent-2-600)';
-  return 'var(--color-safe)';
+  return 'var(--color-accent)';
 }
 
-// Result-block background tint — healthy gets the safe tint, warning and danger
+// Result-block background tint — healthy gets the accent tint, warning and danger
 // (over limit / no valid exit) share the same accent-2 tint the eyebrow/big-date use.
 function statusTintVar(used, remaining, exitIsoIsNull){
   if(used > 90 || exitIsoIsNull || remaining <= 20) return 'var(--color-accent-2-100)';
-  return 'var(--color-safe-tint)';
+  return 'var(--color-accent-100)';
 }
 
 function updateRing(remaining, colorVar){
