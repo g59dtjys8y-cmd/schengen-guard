@@ -89,17 +89,6 @@
   --stamp-border:rgba(20,17,17,.55);
 }
 
-/* — CJK locales: Source Serif 4 has no CJK glyph coverage, so fall back to platform
-   system fonts rather than self-hosting a CJK web font (tens of MB, bad for a PWA). — */
-:root[data-lang="zh"]{
-  --font-heading:"PingFang SC","Microsoft YaHei",sans-serif;
-  --font-body:"PingFang SC","Microsoft YaHei",sans-serif;
-}
-:root[data-lang="ja"]{
-  --font-heading:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-  --font-body:"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-}
-
 /* — dark theme — follows system preference by default, overridable via [data-theme] */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
