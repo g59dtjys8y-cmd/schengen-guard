@@ -932,6 +932,7 @@ function updateEditStayCompliance(){
   breakdownBtn.style.display = 'none';
   suggestionsEl.style.display = 'none';
   suggestionsEl.innerHTML = '';
+  document.getElementById('clearPickBtn').style.display = (start || end) ? 'inline-flex' : 'none';
 
   if(!start || !end){
     msgEl.style.display = 'block';
@@ -1490,6 +1491,20 @@ function handlePick(iso){
   renderCalendar();
   renderExclusionSection();
 }
+
+// Resets just the picked dates (and anything derived from them: side trips, the
+// verdict, suggestions) without leaving edit mode or touching the country/note fields —
+// a narrower reset than Cancel edit, for "I want to try different dates."
+document.getElementById('clearPickBtn').addEventListener('click', ()=>{
+  pickStart = null; pickEnd = null;
+  pendingExcludedRanges = [];
+  document.getElementById('tripStart').value = '';
+  document.getElementById('tripEnd').value = '';
+  document.getElementById('pickStartLbl').textContent = 'Entry: —';
+  document.getElementById('pickEndLbl').textContent = 'Exit: —';
+  renderCalendar();
+  renderExclusionSection();
+});
 
 document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('tripLabel').value.trim();
