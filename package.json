@@ -8,6 +8,7 @@
     "check:js": "node --check script.js",
     "check:parity": "node scripts/check-parity.mjs",
     "smoke": "node scripts/smoke-test.mjs",
+    "test:plan": "node scripts/test-plan.mjs",
     "check": "npm run check:html && npm run check:js && npm run smoke"
   },
   "devDependencies": {
