@@ -610,8 +610,9 @@ function renderCompactNextTrip(trip){
 
 function renderFullNextTrip(trip){
   const days = Math.round((toDate(trip.end) - toDate(trip.start)) / 86400000) + 1;
-  document.getElementById('nextTripCountry').textContent = trip.label || '—';
-  document.getElementById('nextTripDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)} · ${dayCount(days)}`;
+  document.getElementById('nextTripDays').textContent = String(days);
+  document.getElementById('nextTripCountry').innerHTML = `${trip.label ? flagIconHtml(trip.label) : ''}${trip.label ? escapeHtml(trip.label) : '—'}`;
+  document.getElementById('nextTripDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)}`;
 
   const tagEl = document.getElementById('nextTripTag');
   const suggestionEl = document.getElementById('nextTripSuggestion');
