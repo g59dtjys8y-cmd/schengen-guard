@@ -86,7 +86,6 @@ let pendingExcludedRanges = [];
 let pickingExclusion = false;
 let exclPickStart = null, exclPickEnd = null;
 let editingExclusionIndex = null;
-let checkerMode = 'year'; // 'year' | 'history' — which view the Calendar card shows
 let checkerYearCursor = new Date().getFullYear();
 
 function newId(){
@@ -518,7 +517,8 @@ function render(){
   renderNextTrip();
   renderCountriesCard();
   renderCalendar();
-  renderCheckerMode();
+  renderYearView();
+  renderHistoryView();
   updateAppBadge();
   checkNotifications();
   renderBackupNudge();
@@ -718,27 +718,28 @@ function renderTripRows(){
     return a.start < b.start ? 1 : a.start > b.start ? -1 : 0;
   });
 
-  const visible = trips.slice(0, 4);
-  const older = trips.slice(4);
-
-  for(const trip of visible){
-    rowsEl.appendChild(buildTripRow(trip, classifyTrip(trip)));
+  const completedRows = [];
+  for(const trip of trips){
+    const status = classifyTrip(trip);
+    const row = buildTripRow(trip, status);
+    if(status === 'past') completedRows.push(row);
+    else rowsEl.appendChild(row);
   }
 
-  // Everything past the 4 most recent lives collapsed under one expandable group.
-  if(older.length){
+  // All done stays live collapsed under one expandable group, out of the way by default.
+  if(completedRows.length){
     const group = document.createElement('details');
     group.className = 'card';
     group.innerHTML = `
       <summary class="qc-title-row">
-        <span class="qc-title-label"><span class="qc-title-black">Older trips (${older.length})</span></span>
+        <span class="qc-title-label"><span class="qc-title-black">Completed trips (${completedRows.length})</span></span>
         <span class="qc-title-rule"></span>
       </summary>
     `;
     const list = document.createElement('div');
     list.className = 'stack';
     list.style.marginTop = '10px';
-    older.forEach(trip => list.appendChild(buildTripRow(trip, classifyTrip(trip))));
+    completedRows.forEach(row => list.appendChild(row));
     group.appendChild(list);
     rowsEl.appendChild(group);
   }
@@ -905,26 +906,6 @@ function updateEditStayCompliance(){
   saveBtn.disabled = false;
 }
 
-// --- Checker's own mini calendar + side-trip exclusion (tap-based, mirrors the Calendar tab) ---
-
-// --- Calendar card mode toggle: Year / History ---
-
-function renderCheckerMode(){
-  document.getElementById('checkerYearView').style.display = checkerMode === 'year' ? 'block' : 'none';
-  document.getElementById('checkerHistoryView').style.display = checkerMode === 'history' ? 'block' : 'none';
-  document.querySelectorAll('#checkerModeToggle button').forEach(btn=>{
-    btn.classList.toggle('active', btn.getAttribute('data-mode') === checkerMode);
-  });
-  if(checkerMode === 'year') renderYearView();
-  else if(checkerMode === 'history') renderHistoryView();
-}
-
-document.querySelectorAll('#checkerModeToggle button').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    checkerMode = btn.getAttribute('data-mode');
-    renderCheckerMode();
-  });
-});
 
 // Classifies a single day for the Year/History views — same priority the month
 // calendar's CSS applies (cal-day.overstay's !important wins over in-trip/excluded).

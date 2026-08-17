@@ -163,6 +163,32 @@
         <button type="button" class="btn btn-primary btn-icon" id="addTripShortcutBtn" aria-label="Add a trip">+</button>
       </div>
 
+      <div class="card" id="complianceCard" style="margin-bottom:14px;">
+        <div class="qc-title-row">
+          <span class="qc-title-label"><span class="qc-title-black">Compliance</span></span>
+          <span class="qc-title-rule"></span>
+        </div>
+        <div class="cal-head" style="margin:10px 0 8px;">
+          <button type="button" id="checkerHistoryPrev">← <span id="checkerHistoryPrevLabel"></span></button>
+          <div class="cal-month" id="checkerHistoryLabel"></div>
+          <button type="button" id="checkerHistoryNext"><span id="checkerHistoryNextLabel"></span> →</button>
+        </div>
+        <p class="note">Days used in the trailing 180 days, checked at the end of each month.</p>
+        <div class="chart-wrap" id="checkerHistoryChartWrap"></div>
+        <div class="chart-legend">
+          <span><i style="background:var(--color-safe);"></i><span>within limits</span></span>
+          <span><i style="background:var(--color-warn);"></i><span>14 days or fewer left</span></span>
+          <span><i style="background:var(--color-danger);"></i><span>7 or fewer / over limit</span></span>
+        </div>
+        <details id="checkerHistoryDetails" style="margin-top:10px;">
+          <summary class="qc-title-row">
+            <span class="qc-title-label"><span class="qc-title-black">Breakdown</span></span>
+            <span class="qc-title-rule"></span>
+          </summary>
+          <div class="period-list" id="checkerHistoryList" style="margin-top:10px;"></div>
+        </details>
+      </div>
+
       <div id="tripRows" style="margin-top:14px; display:flex; flex-direction:column; gap:12px;"></div>
     </div>
 
@@ -245,6 +271,34 @@
         </span>
         <span class="qc-title-rule"></span>
       </div>
+
+      <div class="card" id="yearOverviewCard" style="margin:12px 0;">
+        <div class="qc-title-row">
+          <span class="qc-title-label"><span class="qc-title-black">My Schengen Year</span></span>
+          <span class="qc-title-rule"></span>
+        </div>
+        <div class="cal-head" style="margin:10px 0 8px;">
+          <button type="button" id="checkerYearPrev">← <span id="checkerYearPrevLabel"></span></button>
+          <div class="cal-month" id="checkerYearLabel"></div>
+          <button type="button" id="checkerYearNext"><span id="checkerYearNextLabel"></span> →</button>
+        </div>
+        <div class="year-stat" id="checkerYearStat"></div>
+        <details id="checkerYearDetails">
+          <summary class="qc-title-row">
+            <span class="qc-title-label"><span class="qc-title-black">Year grid</span></span>
+            <span class="qc-title-rule"></span>
+          </summary>
+          <div class="year-grid" id="checkerYearGrid" style="margin-top:10px;"></div>
+          <div class="legend">
+            <span><i style="background:var(--color-accent);"></i><span>past / active stay</span></span>
+            <span><i style="background:var(--color-accent-2);"></i><span>planned stay</span></span>
+            <span><i style="background:var(--color-accent-2-700);"></i><span>overstay</span></span>
+            <span><i style="background:repeating-linear-gradient(45deg, var(--color-neutral-300), var(--color-neutral-300) 2px, var(--color-neutral-400) 2px, var(--color-neutral-400) 4px); border:1px dashed var(--color-neutral-600);"></i><span>outside Schengen (excluded)</span></span>
+          </div>
+          <button type="button" class="btn btn-secondary btn-block" id="checkerShareYearBtn" style="margin-top:14px;">Share your year</button>
+        </details>
+      </div>
+
       <details style="margin:2px 0 10px;">
         <summary style="cursor:pointer; font-size:12.5px; font-weight:600; color:var(--color-accent-700); list-style:none;">ⓘ How this works</summary>
         <p class="note" style="margin-top:4px;">Tap the entry date, then the exit date, right on the calendar. The small figure under each date shows days remaining of your 90 as of that day.</p>
@@ -332,66 +386,6 @@
 
       <button type="button" class="btn btn-primary btn-block" id="addTripBtn" style="margin-top:10px;" disabled>Log stay</button>
       <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:6px;">Cancel edit</button>
-
-      <div class="card safe-trip-checker" id="checkerCard" style="margin-top:14px;">
-        <div class="qc-title-row">
-          <span class="qc-title-label" style="white-space:normal;">
-            <span class="qc-title-black">My Schengen Year</span>
-            <span class="qc-title-blue">and Compliance Overview</span>
-          </span>
-          <span class="qc-title-rule"></span>
-        </div>
-
-        <div class="mode-toggle" id="checkerModeToggle">
-          <button type="button" class="active" data-mode="year">Year</button>
-          <button type="button" data-mode="history">Compliance</button>
-        </div>
-
-        <div id="checkerYearView" style="display:none;">
-          <div class="cal-head" style="margin-top:10px;">
-            <button type="button" id="checkerYearPrev">← <span id="checkerYearPrevLabel"></span></button>
-            <div class="cal-month" id="checkerYearLabel"></div>
-            <button type="button" id="checkerYearNext"><span id="checkerYearNextLabel"></span> →</button>
-          </div>
-          <div class="year-stat" id="checkerYearStat"></div>
-          <details id="checkerYearDetails">
-            <summary class="qc-title-row">
-              <span class="qc-title-label"><span class="qc-title-black">Year grid</span></span>
-              <span class="qc-title-rule"></span>
-            </summary>
-            <div class="year-grid" id="checkerYearGrid" style="margin-top:10px;"></div>
-            <div class="legend">
-              <span><i style="background:var(--color-accent);"></i><span>past / active stay</span></span>
-              <span><i style="background:var(--color-accent-2);"></i><span>planned stay</span></span>
-              <span><i style="background:var(--color-accent-2-700);"></i><span>overstay</span></span>
-              <span><i style="background:repeating-linear-gradient(45deg, var(--color-neutral-300), var(--color-neutral-300) 2px, var(--color-neutral-400) 2px, var(--color-neutral-400) 4px); border:1px dashed var(--color-neutral-600);"></i><span>outside Schengen (excluded)</span></span>
-            </div>
-            <button type="button" class="btn btn-secondary btn-block" id="checkerShareYearBtn" style="margin-top:14px;">Share your year</button>
-          </details>
-        </div>
-
-        <div id="checkerHistoryView" style="display:none;">
-          <div class="cal-head" style="margin-top:10px;">
-            <button type="button" id="checkerHistoryPrev">← <span id="checkerHistoryPrevLabel"></span></button>
-            <div class="cal-month" id="checkerHistoryLabel"></div>
-            <button type="button" id="checkerHistoryNext"><span id="checkerHistoryNextLabel"></span> →</button>
-          </div>
-          <p class="note">Days used in the trailing 180 days, checked at the end of each month.</p>
-          <div class="chart-wrap" id="checkerHistoryChartWrap"></div>
-          <div class="chart-legend">
-            <span><i style="background:var(--color-safe);"></i><span>within limits</span></span>
-            <span><i style="background:var(--color-warn);"></i><span>14 days or fewer left</span></span>
-            <span><i style="background:var(--color-danger);"></i><span>7 or fewer / over limit</span></span>
-          </div>
-          <details id="checkerHistoryDetails" style="margin-top:10px;">
-            <summary class="qc-title-row">
-              <span class="qc-title-label"><span class="qc-title-black">Breakdown</span></span>
-              <span class="qc-title-rule"></span>
-            </summary>
-            <div class="period-list" id="checkerHistoryList" style="margin-top:10px;"></div>
-          </details>
-        </div>
-      </div>
     </div>
 
     <!-- SETTINGS -->
