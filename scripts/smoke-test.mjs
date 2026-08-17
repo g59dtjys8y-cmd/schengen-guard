@@ -55,6 +55,13 @@ async function main() {
     page.on('pageerror', (exc) => errors.push(String(exc)));
 
     if (needsSupabaseMock) {
+      // Block the real Supabase CDN script so it can't load after this init script
+      // runs and clobber window.supabase — on a network-restricted sandbox this
+      // request already fails on its own, which is exactly what made this bug easy
+      // to miss locally; on a runner with real internet access the real library
+      // loads, overwrites the mock, and the app correctly (but unhelpfully, for
+      // this test) falls back to its real sign-in screen instead of home.
+      await page.route('**/supabase-js@*/**', (route) => route.abort());
       await page.addInitScript(() => {
         function chain() {
           const o = {
