@@ -1,0 +1,294 @@
+{
+  "schemaVersion": 1,
+  "trips": [
+    {
+      "id": "stress-overlap-a",
+      "start": "2022-01-10",
+      "end": "2022-01-19",
+      "label": "France",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-overlap-b",
+      "start": "2022-01-14",
+      "end": "2022-01-24",
+      "label": "Germany",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-exactly-90",
+      "start": "2022-02-05",
+      "end": "2022-05-05",
+      "label": "Spain",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-exactly-91",
+      "start": "2022-05-17",
+      "end": "2022-08-15",
+      "label": "Italy",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-long-overstay",
+      "start": "2022-08-27",
+      "end": "2023-03-12",
+      "label": "Netherlands",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-backtoback-1",
+      "start": "2023-03-24",
+      "end": "2023-04-02",
+      "label": "Austria",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-backtoback-2",
+      "start": "2023-04-02",
+      "end": "2023-04-12",
+      "label": "Austria",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-note-unicode",
+      "start": "2023-04-24",
+      "end": "2023-05-01",
+      "label": "Iceland",
+      "excludedRanges": [],
+      "note": "Björk concert 🇮🇸🎶 — cost was €480, booked via \"Nordic Escapes\". Görlitz layover, 5°C — brutal."
+    },
+    {
+      "id": "stress-note-xss",
+      "start": "2023-05-13",
+      "end": "2023-05-20",
+      "label": "Malta",
+      "excludedRanges": [],
+      "note": "Testing note rendering safety: <script>alert(1)</script> & <img src=x onerror=alert(2)> should render as plain text, not execute."
+    },
+    {
+      "id": "stress-note-long",
+      "start": "2023-06-01",
+      "end": "2023-06-06",
+      "label": "Luxembourg",
+      "excludedRanges": [],
+      "note": "This is a deliberately long note to check text wrapping, line-height, and card growth behaviour on the trip row and the breakdown views. This is a deliberately long note to check text wrapping, line-height, and card growth behaviour on the trip row and the breakdown views. This is a deliberately long note to check text wrapping, line-height, and card growth behaviour on the trip row and the breakdown views. This is a deliberately long note to check text wrapping, line-height, and card growth behaviour on the trip row and the breakdown views. "
+    },
+    {
+      "id": "stress-single-day",
+      "start": "2023-06-18",
+      "end": "2023-06-18",
+      "label": "Liechtenstein",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-empty-label",
+      "start": "2023-06-30",
+      "end": "2023-07-04",
+      "label": "",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-00",
+      "start": "2023-07-16",
+      "end": "2023-07-19",
+      "label": "Bulgaria",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-01",
+      "start": "2023-07-31",
+      "end": "2023-08-04",
+      "label": "Czechia",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-02",
+      "start": "2023-08-16",
+      "end": "2023-08-21",
+      "label": "Denmark",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-03",
+      "start": "2023-09-02",
+      "end": "2023-09-08",
+      "label": "Estonia",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-04",
+      "start": "2023-09-20",
+      "end": "2023-09-23",
+      "label": "Finland",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-05",
+      "start": "2023-10-05",
+      "end": "2023-10-09",
+      "label": "Hungary",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-06",
+      "start": "2023-10-21",
+      "end": "2023-10-26",
+      "label": "Latvia",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-07",
+      "start": "2023-11-07",
+      "end": "2023-11-13",
+      "label": "Lithuania",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-08",
+      "start": "2023-11-25",
+      "end": "2023-11-28",
+      "label": "Poland",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-09",
+      "start": "2023-12-10",
+      "end": "2023-12-14",
+      "label": "Romania",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-10",
+      "start": "2023-12-26",
+      "end": "2023-12-31",
+      "label": "Slovakia",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-11",
+      "start": "2024-01-12",
+      "end": "2024-01-18",
+      "label": "Slovenia",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-12",
+      "start": "2024-01-30",
+      "end": "2024-02-02",
+      "label": "Sweden",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-fill-13",
+      "start": "2024-02-14",
+      "end": "2024-02-18",
+      "label": "Switzerland",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-extra-00",
+      "start": "2024-03-01",
+      "end": "2024-03-02",
+      "label": "France",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-extra-01",
+      "start": "2024-03-14",
+      "end": "2024-03-16",
+      "label": "Spain",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-extra-02",
+      "start": "2024-03-28",
+      "end": "2024-03-31",
+      "label": "Italy",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-extra-03",
+      "start": "2024-04-12",
+      "end": "2024-04-13",
+      "label": "Germany",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-extra-04",
+      "start": "2024-04-25",
+      "end": "2024-04-27",
+      "label": "Portugal",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-extra-05",
+      "start": "2024-05-09",
+      "end": "2024-05-12",
+      "label": "Netherlands",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-extra-06",
+      "start": "2024-05-24",
+      "end": "2024-05-25",
+      "label": "Greece",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-exclusion-middle",
+      "start": "2026-02-01",
+      "end": "2026-02-20",
+      "label": "Croatia",
+      "excludedRanges": [
+        {
+          "start": "2026-02-08",
+          "end": "2026-02-10"
+        }
+      ],
+      "note": "3-day side trip to the UK in the middle, excluded from the 90-day count."
+    },
+    {
+      "id": "stress-exclusion-edge",
+      "start": "2026-03-01",
+      "end": "2026-03-15",
+      "label": "Greece",
+      "excludedRanges": [
+        {
+          "start": "2026-03-01",
+          "end": "2026-03-02"
+        }
+      ]
+    },
+    {
+      "id": "stress-active",
+      "start": "2026-08-10",
+      "end": "2026-08-25",
+      "label": "Spain",
+      "excludedRanges": [],
+      "note": "Currently here — should show as the Active trip card on Home."
+    },
+    {
+      "id": "stress-planned-soon",
+      "start": "2026-09-05",
+      "end": "2026-09-15",
+      "label": "Portugal",
+      "excludedRanges": [],
+      "note": "Should show as the Next trip card on Home right now."
+    },
+    {
+      "id": "stress-newyear",
+      "start": "2026-12-20",
+      "end": "2027-01-10",
+      "label": "Belgium",
+      "excludedRanges": []
+    },
+    {
+      "id": "stress-planned-far",
+      "start": "2028-06-01",
+      "end": "2028-06-20",
+      "label": "Norway",
+      "excludedRanges": []
+    }
+  ]
+}
