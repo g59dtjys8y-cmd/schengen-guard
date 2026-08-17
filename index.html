@@ -256,35 +256,37 @@
 
     <!-- CALENDAR -->
     <div class="screen" id="tab-calendar" style="display:none;">
-      <div class="qc-title-row" id="yearOverviewHeading" style="padding-top:4px;">
-        <span class="qc-title-label">
-          <span class="qc-title-black">Full</span>
-          <span class="qc-title-blue">Calendar View</span>
-        </span>
-        <span class="qc-title-rule"></span>
-      </div>
-      <div class="card" id="yearOverviewCard" style="margin:6px 0 10px;">
-        <div class="cal-head" style="margin:4px 0 4px;">
-          <button type="button" id="checkerYearPrev">← <span id="checkerYearPrevLabel"></span></button>
-          <div class="cal-month" id="checkerYearLabel"></div>
-          <button type="button" id="checkerYearNext"><span id="checkerYearNextLabel"></span> →</button>
-        </div>
-        <div class="year-stat" id="checkerYearStat" style="margin-top:4px;"></div>
-        <details id="checkerYearDetails" style="margin-top:6px;">
-          <summary class="qc-title-row" style="margin-bottom:0;">
-            <span class="qc-title-label"><span class="qc-title-black">Year grid</span></span>
-            <span class="qc-title-rule"></span>
-          </summary>
-          <div class="year-grid" id="checkerYearGrid" style="margin-top:10px;"></div>
-          <div class="legend">
-            <span><i style="background:var(--color-accent);"></i><span>Active/Past</span></span>
-            <span><i style="background:var(--color-accent-2);"></i><span>Planned</span></span>
-            <span><i style="background:var(--color-accent-2-700);"></i><span>Overstay</span></span>
-            <span><i style="background:repeating-linear-gradient(45deg, var(--color-neutral-300), var(--color-neutral-300) 2px, var(--color-neutral-400) 2px, var(--color-neutral-400) 4px); border:1px dashed var(--color-neutral-600);"></i><span>outside Schengen (excluded)</span></span>
+      <details id="yearOverviewCard" style="margin:0 0 10px;">
+        <summary class="qc-title-row" id="yearOverviewHeading" style="padding-top:4px;">
+          <span class="qc-title-label">
+            <span class="qc-title-black">Full</span>
+            <span class="qc-title-blue">Calendar View</span>
+          </span>
+          <span class="qc-title-rule"></span>
+        </summary>
+        <div class="card" style="margin-top:6px;">
+          <div class="cal-head" style="margin:4px 0 4px;">
+            <button type="button" id="checkerYearPrev">← <span id="checkerYearPrevLabel"></span></button>
+            <div class="cal-month" id="checkerYearLabel"></div>
+            <button type="button" id="checkerYearNext"><span id="checkerYearNextLabel"></span> →</button>
           </div>
-          <button type="button" class="btn btn-secondary btn-block" id="checkerShareYearBtn" style="margin-top:14px;">Share your year</button>
-        </details>
-      </div>
+          <div class="year-stat" id="checkerYearStat" style="margin-top:4px;"></div>
+          <details id="checkerYearDetails" style="margin-top:6px;">
+            <summary class="qc-title-row" style="margin-bottom:0;">
+              <span class="qc-title-label"><span class="qc-title-black">Year grid</span></span>
+              <span class="qc-title-rule"></span>
+            </summary>
+            <div class="year-grid" id="checkerYearGrid" style="margin-top:10px;"></div>
+            <div class="legend">
+              <span><i style="background:var(--color-accent);"></i><span>Active/Past</span></span>
+              <span><i style="background:var(--color-accent-2);"></i><span>Planned</span></span>
+              <span><i style="background:var(--color-accent-2-700);"></i><span>Overstay</span></span>
+              <span><i style="background:repeating-linear-gradient(45deg, var(--color-neutral-300), var(--color-neutral-300) 2px, var(--color-neutral-400) 2px, var(--color-neutral-400) 4px); border:1px dashed var(--color-neutral-600);"></i><span>outside Schengen (excluded)</span></span>
+            </div>
+            <button type="button" class="btn btn-secondary btn-block" id="checkerShareYearBtn" style="margin-top:14px;">Share your year</button>
+          </details>
+        </div>
+      </details>
 
       <div class="qc-title-row" id="calendarHeading" style="padding-top:4px;">
         <span class="qc-title-label">
