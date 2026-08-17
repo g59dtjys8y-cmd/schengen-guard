@@ -1564,9 +1564,13 @@ function checkNotifications(){
   const lastFired = Number(localStorage.getItem(NOTIF_LAST_FIRED_KEY) || Infinity);
   for(const threshold of thresholds){
     if(realRemaining <= threshold && threshold < lastFired){
+      // Same red/amber split as the Home ring, baked into the icon since the OS draws
+      // the rest of the notification card and won't let the app recolour it directly.
+      const icon = realRemaining <= 7 ? 'icon-192-danger.png' : 'icon-192-warn.png';
       try{
         new Notification("Schengen Guard", {
-          body: `${dayCount(realRemaining)} left of your 90-day allowance.`
+          body: `${dayCount(realRemaining)} left of your 90-day allowance.`,
+          icon
         });
       }catch(e){}
       localStorage.setItem(NOTIF_LAST_FIRED_KEY, String(threshold));
