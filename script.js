@@ -348,16 +348,16 @@ async function loadTrips(){
   trips = rows.map(t => ({ ...t, excludedRanges: t.excludedRanges || [] }));
 }
 
-async function insertTrip(start, end, label, excludedRanges){
-  const trip = { id: newId(), start, end, label, excludedRanges: excludedRanges || [] };
+async function insertTrip(start, end, label, excludedRanges, note){
+  const trip = { id: newId(), start, end, label, excludedRanges: excludedRanges || [], note: note || '' };
   await dbPut(trip);
   await loadTrips();
   markTripsChanged();
 }
 
-async function updateTrip(id, start, end, label, excludedRanges){
+async function updateTrip(id, start, end, label, excludedRanges, note){
   const existing = trips.find(t => t.id === id);
-  const trip = { id, start, end, label, excludedRanges: excludedRanges || (existing && existing.excludedRanges) || [] };
+  const trip = { id, start, end, label, excludedRanges: excludedRanges || (existing && existing.excludedRanges) || [], note: note !== undefined ? note : ((existing && existing.note) || '') };
   await dbPut(trip);
   await loadTrips();
   markTripsChanged();
@@ -685,6 +685,9 @@ function buildTripRow(trip, status){
   const exclNote = exclDays > 0
     ? `<div style="margin-top:4px;"><span class="tag tag-excluded">Side trip: ${dayCount(exclDays)}</span></div>`
     : '';
+  const noteHtml = trip.note
+    ? `<p class="note trip-note">${escapeHtml(trip.note)}</p>`
+    : '';
 
   const row = document.createElement('div');
   row.className = 'card elev-sm trip-row';
@@ -694,6 +697,7 @@ function buildTripRow(trip, status){
       <div class="country">${trip.label ? flagIconHtml(trip.label) : ''}${trip.label ? escapeHtml(trip.label) : '—'}${warnIcon}</div>
       <div class="dates">${fmt(trip.start)} – ${fmt(trip.end)}</div>
       ${exclNote}
+      ${noteHtml}
       <div class="row-actions">
         <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
         <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Remove</button>
@@ -1214,6 +1218,7 @@ function startEditTrip(id){
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
+  document.getElementById('tripNote').value = trip.note || '';
   document.getElementById('pickStartLbl').textContent = `Entry: ${fmt(trip.start)}`;
   document.getElementById('pickEndLbl').textContent = `Exit: ${fmt(trip.end)}`;
   document.getElementById('formError').style.display = 'none';
@@ -1234,6 +1239,7 @@ function stopEditTrip(){
   document.getElementById('tripLabel').value = 'Spain';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
+  document.getElementById('tripNote').value = '';
   document.getElementById('pickStartLbl').textContent = 'Entry: —';
   document.getElementById('pickEndLbl').textContent = 'Exit: —';
   document.getElementById('formError').style.display = 'none';
@@ -1408,6 +1414,7 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('tripLabel').value.trim();
   const start = document.getElementById('tripStart').value;
   const end = document.getElementById('tripEnd').value;
+  const note = document.getElementById('tripNote').value.trim();
   const errEl = document.getElementById('formError');
   errEl.style.display = 'none';
   if(!start || !end){
@@ -1429,9 +1436,9 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   const wasEditing = editingTripId !== null;
   try{
     if(wasEditing){
-      await updateTrip(editingTripId, start, end, label, pendingExcludedRanges);
+      await updateTrip(editingTripId, start, end, label, pendingExcludedRanges, note);
     } else {
-      await insertTrip(start, end, label, pendingExcludedRanges);
+      await insertTrip(start, end, label, pendingExcludedRanges, note);
     }
   }catch(e){
     errEl.textContent = 'Could not save that stay — please try again.';
