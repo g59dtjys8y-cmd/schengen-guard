@@ -989,8 +989,7 @@ function renderHistoryView(){
     const used = usedDaysInWindow(trips, endIso);
     const remaining = Math.max(0, 90 - used);
     let status = 'safe';
-    if(used > 90 || remaining <= 7) status = 'danger';
-    else if(remaining <= 14) status = 'warn';
+    if(used > 90 || remaining <= 14) status = 'warn';
     months.push({ m, endIso, startIso, used, remaining, status });
   }
 
@@ -999,7 +998,7 @@ function renderHistoryView(){
   const yMax = Math.max(100, Math.ceil((Math.max(...months.map(d=>d.used), 90) + 5) / 10) * 10);
   const xAt = i => padL + (i / (months.length - 1)) * plotW;
   const yAt = v => padT + plotH - (v / yMax) * plotH;
-  const statusColor = s => s === 'danger' ? 'var(--color-danger)' : s === 'warn' ? 'var(--color-warn)' : 'var(--color-safe)';
+  const statusColor = s => s === 'warn' ? 'var(--color-warn)' : 'var(--color-safe)';
 
   const linePoints = months.map((d,i)=> `${xAt(i).toFixed(1)},${yAt(d.used).toFixed(1)}`).join(' ');
   const areaPoints = `${xAt(0).toFixed(1)},${yAt(0).toFixed(1)} ` + linePoints + ` ${xAt(months.length-1).toFixed(1)},${yAt(0).toFixed(1)}`;
