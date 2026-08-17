@@ -551,7 +551,7 @@ function renderNextTrip(){
 
   activePanel.style.display = active ? 'flex' : 'none';
   compactPanel.style.display = (active && next) ? 'block' : 'none';
-  fullPanel.style.display = (!active && next) ? 'flex' : 'none';
+  fullPanel.style.display = (!active && next) ? 'block' : 'none';
   empty.style.display = !next ? 'block' : 'none';
 
   if(active) renderActiveTrip(active);
@@ -609,28 +609,15 @@ function renderCompactNextTrip(trip){
 }
 
 function renderFullNextTrip(trip){
-  const days = Math.round((toDate(trip.end) - toDate(trip.start)) / 86400000) + 1;
-  document.getElementById('nextTripDays').textContent = String(days);
-  document.getElementById('nextTripCountry').innerHTML = `${trip.label ? flagIconHtml(trip.label) : ''}${trip.label ? escapeHtml(trip.label) : '—'}`;
-  document.getElementById('nextTripDates').textContent = `${fmt(trip.start)} → ${fmt(trip.end)}`;
-
-  const tagEl = document.getElementById('nextTripTag');
-  const suggestionEl = document.getElementById('nextTripSuggestion');
-  const otherTrips = trips.filter(t => t.id !== trip.id);
-  const suggestion = computeTripSuggestion(trips, otherTrips, trip.start, trip.end, 90);
-  if(suggestion.overstay){
-    tagEl.textContent = 'Overstay risk';
-    tagEl.className = 'tag tag-accent-2';
-    suggestionEl.innerHTML = suggestion.suggestions[0] ? suggestion.suggestions[0].label : '';
-  } else {
-    tagEl.textContent = 'Within limits';
-    tagEl.className = 'tag tag-safe';
-    suggestionEl.innerHTML = suggestion.extendable
-      ? `You could extend this stay by <strong>${suggestion.extra} more day${suggestion.extra === 1 ? '' : 's'}</strong> — until ${fmt(suggestion.lastExit)} — and stay compliant.`
-      : '';
-  }
-
-  document.getElementById('nextTripPanel').onclick = () => switchTab('trips');
+  const panel = document.getElementById('nextTripPanel');
+  panel.innerHTML = '';
+  const row = buildTripRow(trip, 'planned');
+  panel.appendChild(row);
+  row.querySelector('[data-action="edit"]').addEventListener('click', (e)=> startEditTrip(e.currentTarget.getAttribute('data-id')));
+  row.querySelector('[data-action="remove"]').addEventListener('click', async (e)=>{
+    await deleteTrip(e.currentTarget.getAttribute('data-id'));
+    render();
+  });
 }
 
 // Countries with a trip that's already started (active or past) count as "visited" —
