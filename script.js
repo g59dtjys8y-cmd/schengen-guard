@@ -826,6 +826,21 @@ document.getElementById('passportControlBtn').addEventListener('click', ()=>{
 document.getElementById('passportControlBackBtn').addEventListener('click', ()=> switchTab('home'));
 document.getElementById('pcDate').addEventListener('change', renderPassportControl);
 
+document.getElementById('pcPrintBtn').addEventListener('click', ()=>{
+  const controlISO = document.getElementById('pcDate').value || todayISO();
+  const { windowStartISO, rows } = passportControlRows(trips, controlISO);
+  const totalDays = usedDaysInWindow(trips, controlISO);
+  let html = `<h1>Schengen Guard — passport control</h1><p>Control date ${fmt(controlISO)} · 180-day window ${fmt(windowStartISO)} to ${fmt(controlISO)} · ${dayCount(totalDays)} in the Schengen Area</p>`;
+  html += '<table><thead><tr><th>Country</th><th>Entry</th><th>Exit</th><th>Days</th><th>Days in window</th></tr></thead><tbody>';
+  for(const r of rows){
+    const windowNote = r.isPartial ? ` (${fmt(r.clippedStart)} – ${fmt(r.clippedEnd)})` : '';
+    html += `<tr><td>${escapeHtml(r.trip.label || '')}</td><td>${fmt(r.trip.start)}</td><td>${fmt(r.trip.end)}</td><td>${r.fullDays}</td><td>${r.daysInWindow}${windowNote}</td></tr>`;
+  }
+  html += '</tbody></table>';
+  document.getElementById('printArea').innerHTML = html;
+  window.print();
+});
+
 // --- Safe Trip Checker (Trips tab) ---
 
 function updateEditStayCompliance(){
