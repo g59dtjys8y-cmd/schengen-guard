@@ -99,22 +99,14 @@
         <p class="disclaimer-footer">Not legal advice — verify with the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">official EU calculator</a></p>
       </div>
 
-      <div class="card elev-sm" id="activeTripPanel" style="display:none; cursor:pointer;">
-        <div class="qc-title-row" style="margin-bottom:2px;">
-          <span class="qc-title-label">
-            <span class="qc-title-black">Trip</span>
-            <span class="qc-title-blue">in progress</span>
-          </span>
-          <span class="qc-title-rule"></span>
+      <div class="card elev-sm trip-row" id="activeTripPanel" style="display:none; cursor:pointer;">
+        <div class="trip-days" id="activeTripDaysWrap"><div class="n" id="activeTripBig"></div><div class="lbl" id="activeTripBigLabel"></div></div>
+        <div class="trip-info">
+          <div class="country" id="activeTripCountry"></div>
+          <div class="dates" id="activeTripDatesLine"></div>
+          <p class="card-body" id="activeTripBody" style="margin-top:6px;"></p>
         </div>
-        <div class="card-title" style="font-size:19px;" id="activeTripCountry"></div>
-        <div class="card-row" id="activeTripTagRow" style="display:none;">
-          <span class="tag" id="activeTripTag"></span>
-        </div>
-        <div class="qc-big-date" id="activeTripBig" style="margin:2px 0 0;"></div>
-        <div class="card-meta" id="activeTripBigLabel"></div>
-        <div class="card-divider" id="activeTripDivider" style="display:none;"></div>
-        <p class="card-body" id="activeTripBody" style="margin-top:0;"></p>
+        <div class="trip-status"><span class="tag" id="activeTripTag"></span></div>
       </div>
       <div class="compact-row" id="nextTripCompact" style="display:none; margin-top:14px;">
         <div class="qc-title-row" style="margin-bottom:0;">

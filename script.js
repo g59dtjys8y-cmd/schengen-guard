@@ -561,14 +561,14 @@ function renderNextTrip(){
 
 function renderActiveTrip(trip){
   const panel = document.getElementById('activeTripPanel');
-  const tagRow = document.getElementById('activeTripTagRow');
+  const daysWrap = document.getElementById('activeTripDaysWrap');
   const tagEl = document.getElementById('activeTripTag');
   const bigEl = document.getElementById('activeTripBig');
   const bigLabelEl = document.getElementById('activeTripBigLabel');
-  const dividerEl = document.getElementById('activeTripDivider');
+  const datesEl = document.getElementById('activeTripDatesLine');
   const bodyEl = document.getElementById('activeTripBody');
 
-  document.getElementById('activeTripCountry').textContent = trip.label || '—';
+  document.getElementById('activeTripCountry').innerHTML = `${trip.label ? flagIconHtml(trip.label) : ''}${trip.label ? escapeHtml(trip.label) : '—'}`;
 
   // A trip already in progress can't shift its start or trim its already-lived days, so
   // the overstay case is framed as "you're over" (reusing the same copy as the Quick check
@@ -577,24 +577,22 @@ function renderActiveTrip(trip){
   const overstay = tripOverstayInfo(trips, trip, 90);
   if(overstay){
     const overBy = overstay.used - 90;
-    tagRow.style.display = 'flex';
+    daysWrap.style.display = 'none';
     tagEl.textContent = 'Overstay risk';
     tagEl.className = 'tag tag-accent-2';
-    bigEl.style.display = 'none';
-    bigLabelEl.style.display = 'none';
-    dividerEl.style.display = 'none';
+    datesEl.textContent = `Entered ${fmt(trip.start)}`;
     bodyEl.innerHTML = overLimitBody(overBy, overstay.used, boldDate(overstay.date));
   } else {
     const maxDays = maxConsecutiveFrom(trips, trip.start, 90);
     const lastExit = isoOf(addDays(toDate(trip.start), maxDays - 1));
     const daysLeft = Math.round((toDate(lastExit) - toDate(todayISO())) / 86400000) + 1;
 
-    tagRow.style.display = 'none';
-    bigEl.style.display = 'block';
+    daysWrap.style.display = 'block';
     bigEl.textContent = String(daysLeft);
-    bigLabelEl.style.display = 'block';
-    bigLabelEl.textContent = daysLeft === 1 ? 'day left before you reach the 90-day limit' : 'days left before you reach the 90-day limit';
-    dividerEl.style.display = 'block';
+    bigLabelEl.textContent = daysLeft === 1 ? 'day left' : 'days left';
+    tagEl.textContent = 'Active';
+    tagEl.className = 'tag tag-accent';
+    datesEl.textContent = `${fmt(trip.start)} → ${fmt(trip.end)}`;
     bodyEl.innerHTML = `Entered ${fmt(trip.start)} · planned exit ${fmt(trip.end)} · could stay until ${boldDate(lastExit)}`;
   }
 
