@@ -129,15 +129,22 @@ function supabaseMockScript() {
       };
       return o;
     }
-    window.supabase = {
-      createClient: () => ({
-        auth: {
-          getSession: async () => ({ data: { session: { user: { id: 'test-plan', email: 'test-plan@test.local' } } } }),
-          signOut: async () => ({ error: null })
-        },
-        from: () => chain()
-      })
-    };
+    // Defined non-writable: a real CDN-loaded supabase-js UMD bundle assigning
+    // `global.supabase = factory()` later (e.g. if route interception loses a
+    // race on a real network) silently no-ops instead of clobbering the mock.
+    Object.defineProperty(window, 'supabase', {
+      value: {
+        createClient: () => ({
+          auth: {
+            getSession: async () => ({ data: { session: { user: { id: 'test-plan', email: 'test-plan@test.local' } } } }),
+            signOut: async () => ({ error: null })
+          },
+          from: () => chain()
+        })
+      },
+      writable: false,
+      configurable: false
+    });
   };
 }
 
@@ -168,19 +175,20 @@ async function openPage(trips = []) {
   page.on('pageerror', (exc) => errs.push(String(exc)));
   page.on('dialog', async (dialog) => { await dialog.accept(); }); // auto-accept confirm()s (e.g. overlap warning)
 
-  await page.goto(`http://localhost:${PORT}/index.html`);
-  await page.evaluate(async () => {
-    localStorage.clear();
-    if (window.indexedDB && indexedDB.databases) {
-      const dbs = await indexedDB.databases();
-      await Promise.all(dbs.map((d) => new Promise((res) => {
-        const req = indexedDB.deleteDatabase(d.name);
-        req.onsuccess = req.onerror = req.onblocked = res;
-      })));
-    }
-  });
-
   if (needsSupabaseMock) {
+    // Register the mock (and the CDN-blocking route) *before* the first
+    // navigation, not goto-then-reload — an earlier version let the app's
+    // first, unmocked load run script.js's top-level `window.supabase.
+    // createClient(...)`, which throws in this sandbox (no route reachable
+    // yet, window.supabase genuinely undefined). That pageerror got captured
+    // into this group's console-error log and never cleared, even though the
+    // later reload() with the mock active made every functional check pass —
+    // it only ever showed up in the O-final cross-cutting error sweep.
+    // localStorage still needs clearing before the app's own init IIFE reads
+    // it (stale theme/notif/first-run prefs from a prior group sharing this
+    // context) — addInitScript runs before any page script on every
+    // navigation, so it's safe to clear synchronously right here too.
+    await page.addInitScript(() => { localStorage.clear(); });
     // Fulfill with an empty script rather than aborting — on a real network (CI
     // runners, unlike this sandbox) abort() still let the real Supabase client
     // load moments later and clobber the mock. See scripts/smoke-test.mjs for
@@ -189,8 +197,19 @@ async function openPage(trips = []) {
       status: 200, contentType: 'application/javascript', body: '/* blocked in test */'
     }));
     await page.addInitScript(supabaseMockScript(), toSupabaseRows(trips));
-    await page.reload();
+    await page.goto(`http://localhost:${PORT}/index.html`);
   } else {
+    await page.goto(`http://localhost:${PORT}/index.html`);
+    await page.evaluate(async () => {
+      localStorage.clear();
+      if (window.indexedDB && indexedDB.databases) {
+        const dbs = await indexedDB.databases();
+        await Promise.all(dbs.map((d) => new Promise((res) => {
+          const req = indexedDB.deleteDatabase(d.name);
+          req.onsuccess = req.onerror = req.onblocked = res;
+        })));
+      }
+    });
     await page.reload();
     // Wait for the app's own startup IIFE (which does its own loadTrips()+render()
     // against the empty DB) to fully settle before writing seed data underneath

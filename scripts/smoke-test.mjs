@@ -80,15 +80,22 @@ async function main() {
           };
           return o;
         }
-        window.supabase = {
-          createClient: () => ({
-            auth: {
-              getSession: async () => ({ data: { session: { user: { id: 'smoke-test', email: 'smoke@test.local' } } } }),
-              signOut: async () => ({ error: null })
-            },
-            from: () => chain()
-          })
-        };
+        // Defined non-writable: a real CDN-loaded supabase-js UMD bundle assigning
+        // `global.supabase = factory()` later (e.g. if route interception loses a
+        // race on a real network) silently no-ops instead of clobbering the mock.
+        Object.defineProperty(window, 'supabase', {
+          value: {
+            createClient: () => ({
+              auth: {
+                getSession: async () => ({ data: { session: { user: { id: 'smoke-test', email: 'smoke@test.local' } } } }),
+                signOut: async () => ({ error: null })
+              },
+              from: () => chain()
+            })
+          },
+          writable: false,
+          configurable: false
+        });
       });
     }
 
