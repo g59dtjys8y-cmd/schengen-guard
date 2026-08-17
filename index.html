@@ -184,7 +184,7 @@
           <span><i style="background:var(--color-danger);"></i><span>7 or fewer / over limit</span></span>
         </div>
         <details id="checkerHistoryDetails" style="margin-top:10px;">
-          <summary class="qc-title-row">
+          <summary class="qc-title-row" style="margin-bottom:0;">
             <span class="qc-title-label"><span class="qc-title-black">Breakdown</span></span>
             <span class="qc-title-rule"></span>
           </summary>
@@ -357,9 +357,9 @@
       <div class="form-error" id="formError" style="display:none;"></div>
 
       <div class="cal-head" style="margin:12px 0 8px;">
-        <button type="button" id="prevMonth">← Prev</button>
+        <button type="button" id="prevMonth"></button>
         <div class="cal-month" id="calMonthLabel"></div>
-        <button type="button" id="nextMonth">Next →</button>
+        <button type="button" id="nextMonth"></button>
       </div>
       <div class="cal-grid" id="calGrid"></div>
       <div class="legend" style="margin-top:10px;">
@@ -491,17 +491,6 @@
         <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn">Clear all logged stays</button>
       </details>
 
-      <div class="card elev-sm card-row" id="privacyCard" style="cursor:pointer;">
-        <div>
-          <div class="qc-title-row" style="margin-bottom:2px;">
-            <span class="qc-title-label"><span class="qc-title-black">Help</span></span>
-            <span class="qc-title-rule"></span>
-          </div>
-          <div class="card-title" style="font-size:18px;">Privacy &amp; Terms</div>
-        </div>
-        <span class="tag tag-neutral">View →</span>
-      </div>
-
       <div class="card elev-sm card-row" id="faqCard" style="cursor:pointer;">
         <div>
           <div class="qc-title-row" style="margin-bottom:2px;">
@@ -509,6 +498,17 @@
             <span class="qc-title-rule"></span>
           </div>
           <div class="card-title" style="font-size:18px;">FAQ &amp; terms</div>
+        </div>
+        <span class="tag tag-neutral">View →</span>
+      </div>
+
+      <div class="card elev-sm card-row" id="privacyCard" style="cursor:pointer;">
+        <div>
+          <div class="qc-title-row" style="margin-bottom:2px;">
+            <span class="qc-title-label"><span class="qc-title-black">Help</span></span>
+            <span class="qc-title-rule"></span>
+          </div>
+          <div class="card-title" style="font-size:18px;">Privacy &amp; Terms</div>
         </div>
         <span class="tag tag-neutral">View →</span>
       </div>

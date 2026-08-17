@@ -102,6 +102,10 @@ function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; 
 function isoOf(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function fmt(iso){ const d=toDate(iso); return new Intl.DateTimeFormat('en-GB', {day:'2-digit',month:'short',year:'numeric'}).format(d); }
 function fmtShort(iso){ const d=toDate(iso); return new Intl.DateTimeFormat('en-GB', {day:'2-digit',month:'short'}).format(d); }
+function adjacentMonthLabel(cursor, offset){
+  const d = new Date(cursor.getFullYear(), cursor.getMonth() + offset, 1);
+  return new Intl.DateTimeFormat('en-GB', {month:'short'}).format(d);
+}
 // Wraps a formatted date in a bold span for use inside the Quick check result's innerHTML —
 // day-count phrases (margins, overages) stay plain text and are never passed through this.
 function boldDate(iso){ return `<b class="qc-date">${fmt(iso)}</b>`; }
@@ -1154,6 +1158,8 @@ document.getElementById('yearRecapModal').addEventListener('click', (e)=>{
 function renderCalendar(){
   const label = document.getElementById('calMonthLabel');
   label.textContent = calCursor.toLocaleDateString('en-GB',{month:'long', year:'numeric'});
+  document.getElementById('prevMonth').textContent = '← ' + adjacentMonthLabel(calCursor, -1);
+  document.getElementById('nextMonth').textContent = adjacentMonthLabel(calCursor, 1) + ' →';
   const grid = document.getElementById('calGrid');
   grid.innerHTML = '';
   ['Mo','Tu','We','Th','Fr','Sa','Su'].forEach(d=>{
