@@ -268,9 +268,10 @@
         <span class="qc-title-rule"></span>
       </div>
 
-      <details style="margin:2px 0 10px;">
+      <details id="calendarHint" style="margin:2px 0 10px;">
         <summary style="cursor:pointer; font-size:12.5px; font-weight:600; color:var(--color-accent-700); list-style:none;">ⓘ How this works</summary>
         <p class="note" style="margin-top:4px;">Tap the entry date, then the exit date, right on the calendar. The small figure under each date shows days remaining of your 90 as of that day.</p>
+        <button type="button" class="link-btn" id="calendarFaqLink" style="font-size:12.5px; margin-top:2px;">New to the 90/180 rule? See the FAQ</button>
       </details>
       <p class="card-body" id="editStayMsg" style="margin-top:2px;">Pick an entry and exit date to check compliance before you save it.</p>
 
@@ -356,6 +357,7 @@
         <textarea class="input" id="tripNote" rows="2" placeholder="Add a note (optional)" aria-label="Note"></textarea>
       </div>
 
+      <p class="note" id="logStayCue" style="display:none; margin-top:10px; text-align:center;">Ready when you are — tap below to save this trip.</p>
       <button type="button" class="btn btn-primary btn-block" id="addTripBtn" style="margin-top:10px;" disabled>Log stay</button>
       <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:6px;">Cancel edit</button>
 
@@ -605,6 +607,8 @@
       <span>Settings</span>
     </button>
   </nav>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <div id="printArea" class="print-only"></div>
 

@@ -8,6 +8,7 @@ const NOTIF_LAST_FIRED_KEY = 'schengenGuardNotifLastFired';
 const LAST_BACKUP_KEY = 'schengenGuardLastBackupAt';
 const BACKUP_NUDGE_DISMISSED_KEY = 'schengenGuardBackupNudgeDismissedAt';
 const DISCLAIMER_ACK_KEY = 'schengenGuardDisclaimerAcknowledged';
+const CALENDAR_HINT_SEEN_KEY = 'schengenGuardCalendarHintSeen';
 const RING_RADIUS = 99;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -411,6 +412,24 @@ function switchTab(name){
     btn.classList.toggle('active', btn.getAttribute('data-tab') === name);
   });
   document.getElementById('tabbar').style.display = PRIMARY_TABS.includes(name) ? 'flex' : 'none';
+
+  // First time a user reaches the add-trip screen, open the "how this works" hint
+  // unprompted — the tap-two-dates interaction isn't self-evident, and leaving the
+  // explanation collapsed by default meant most people never saw it. Stays open just
+  // once; later visits default to collapsed like any other <details>.
+  if(name === 'calendar' && localStorage.getItem(CALENDAR_HINT_SEEN_KEY) !== 'true'){
+    document.getElementById('calendarHint').open = true;
+    localStorage.setItem(CALENDAR_HINT_SEEN_KEY, 'true');
+  }
+}
+
+let toastTimer = null;
+function showToast(message){
+  const el = document.getElementById('toast');
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove('show'), 2200);
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn=>{
@@ -430,6 +449,7 @@ document.getElementById('homeAddTripBtn').addEventListener('click', ()=>{
   switchTab('calendar');
 });
 document.getElementById('faqCard').addEventListener('click', ()=> switchTab('faq'));
+document.getElementById('calendarFaqLink').addEventListener('click', ()=> switchTab('faq'));
 document.getElementById('faqBackBtn').addEventListener('click', ()=> switchTab('settings'));
 document.getElementById('privacyCard').addEventListener('click', ()=> switchTab('privacy'));
 document.getElementById('privacyBackBtn').addEventListener('click', ()=> switchTab('settings'));
@@ -867,6 +887,7 @@ function updateEditStayCompliance(){
   if(!start || !end){
     msgEl.textContent = 'Pick an entry and exit date to check compliance before you save it.';
     saveBtn.disabled = true;
+    document.getElementById('logStayCue').style.display = 'none';
     return;
   }
   if(end < start){
@@ -874,6 +895,7 @@ function updateEditStayCompliance(){
     errEl.textContent = 'Exit date must be on or after the entry date.';
     errEl.style.display = 'block';
     saveBtn.disabled = true;
+    document.getElementById('logStayCue').style.display = 'none';
     return;
   }
 
@@ -911,6 +933,7 @@ function updateEditStayCompliance(){
     msgEl.innerHTML = `${days}-day stay — <strong style="color:var(--color-safe)">safe, within limits</strong>. ${dayCount(margin)} of margin left on ${fmt(end)}.`;
   }
   saveBtn.disabled = false;
+  document.getElementById('logStayCue').style.display = 'block';
 }
 
 
@@ -1452,6 +1475,7 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   stopEditTrip();
   render();
   switchTab('trips');
+  showToast(wasEditing ? 'Trip updated' : 'Trip saved');
 });
 
 document.getElementById('refDate').addEventListener('change', render);
