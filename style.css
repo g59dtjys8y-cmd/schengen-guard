@@ -635,9 +635,9 @@ details[open] > summary.qc-title-row::after{content:'−';}
 .myd.today{outline:1px solid var(--color-text);outline-offset:-1px;font-weight:700;}
 
 /* — History view: 180-day rolling window trend + monthly checkpoint list — */
-.chart-wrap{margin-top:14px;background:var(--color-bg);border-radius:10px;padding:10px 8px 6px;}
+.chart-wrap{margin-top:4px;background:var(--color-bg);border-radius:10px;padding:10px 8px 6px;}
 .chart-wrap svg{width:100%;height:auto;display:block;overflow:visible;}
-.chart-legend{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:12px;margin-top:10px;font-size:10.5px;color:var(--color-neutral-700);-webkit-overflow-scrolling:touch;}
+.chart-legend{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:12px;margin-top:4px;font-size:10.5px;color:var(--color-neutral-700);-webkit-overflow-scrolling:touch;}
 .chart-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
 .chart-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0;}
 .period-list{display:flex;flex-direction:column;margin-top:14px;}
