@@ -544,18 +544,14 @@ function renderNextTrip(){
   const active = activeTrip();
   const next = upcomingTrip();
 
-  const activeHeading = document.getElementById('activeTripHeading');
-  const activePanel = document.getElementById('activeTripPanel');
+  const activeCard = document.getElementById('activeTripCard');
   const compactPanel = document.getElementById('nextTripCompact');
-  const nextHeading = document.getElementById('nextTripHeading');
-  const fullPanel = document.getElementById('nextTripPanel');
+  const nextCard = document.getElementById('nextTripCard');
   const empty = document.getElementById('nextTripEmpty');
 
-  activeHeading.style.display = active ? 'flex' : 'none';
-  activePanel.style.display = active ? 'flex' : 'none';
+  activeCard.style.display = active ? 'flex' : 'none';
   compactPanel.style.display = (active && next) ? 'block' : 'none';
-  nextHeading.style.display = (!active && next) ? 'flex' : 'none';
-  fullPanel.style.display = (!active && next) ? 'block' : 'none';
+  nextCard.style.display = (!active && next) ? 'flex' : 'none';
   empty.style.display = !next ? 'block' : 'none';
 
   if(active) renderActiveTrip(active);
@@ -564,7 +560,7 @@ function renderNextTrip(){
 }
 
 function renderActiveTrip(trip){
-  const panel = document.getElementById('activeTripPanel');
+  const card = document.getElementById('activeTripCard');
   const daysWrap = document.getElementById('activeTripDaysWrap');
   const tagEl = document.getElementById('activeTripTag');
   const bigEl = document.getElementById('activeTripBig');
@@ -600,7 +596,7 @@ function renderActiveTrip(trip){
     bodyEl.innerHTML = `Entered ${fmt(trip.start)} · planned exit ${fmt(trip.end)} · could stay until ${boldDate(lastExit)}`;
   }
 
-  panel.onclick = () => switchTab('trips');
+  card.onclick = () => switchTab('trips');
 }
 
 function renderCompactNextTrip(trip){

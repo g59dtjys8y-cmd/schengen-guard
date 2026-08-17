@@ -434,6 +434,16 @@ details[open] > summary.qc-title-row::after{content:'−';}
 .trip-row{
   display:flex;flex-direction:row;align-items:center;gap:14px;padding:14px 16px;text-align:left;
 }
+/* Active/next trip on Home nest a .trip-row inside their own heading card (to
+   match the Quick check card's header-inside-the-box layout) — the row's own
+   card background/shadow/padding would otherwise double up with the outer
+   card's. #activeTripPanel is a bare .trip-row already; #nextTripPanel still
+   gets the shared, boxed buildTripRow() markup (reused by the Trips list),
+   so its box needs neutralizing here instead of stripped classes in JS. */
+#activeTripCard .trip-row,
+#nextTripCard .trip-row{
+  padding:0;background:transparent;box-shadow:none;border-radius:0;
+}
 .trip-days{flex-shrink:0;text-align:center;width:44px;}
 .trip-days .n{font-size:20px;font-weight:700;line-height:1;}
 .trip-days .lbl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:2px;}
