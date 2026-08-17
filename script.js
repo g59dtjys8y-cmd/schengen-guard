@@ -612,12 +612,9 @@ function renderFullNextTrip(trip){
   const panel = document.getElementById('nextTripPanel');
   panel.innerHTML = '';
   const row = buildTripRow(trip, 'planned');
+  const actions = row.querySelector('.row-actions');
+  if(actions) actions.remove();
   panel.appendChild(row);
-  row.querySelector('[data-action="edit"]').addEventListener('click', (e)=> startEditTrip(e.currentTarget.getAttribute('data-id')));
-  row.querySelector('[data-action="remove"]').addEventListener('click', async (e)=>{
-    await deleteTrip(e.currentTarget.getAttribute('data-id'));
-    render();
-  });
 }
 
 // Countries with a trip that's already started (active or past) count as "visited" —
