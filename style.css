@@ -596,8 +596,8 @@ details[open] > summary.qc-title-row::after{content:'−';}
   #printArea table{border-collapse:collapse;width:100%;}
   #printArea th,#printArea td{border:1px solid #999;padding:6px 8px;text-align:left;font-size:12px;}
 }
-.legend{display:flex;gap:12px;flex-wrap:nowrap;overflow-x:auto;margin-top:14px;font-size:11px;color:var(--color-neutral-700);-webkit-overflow-scrolling:touch;}
-.legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
+.legend{display:flex;flex-wrap:wrap;row-gap:6px;column-gap:14px;margin-top:14px;font-size:11px;color:var(--color-neutral-700);}
+.legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
 .legend i{width:10px;height:10px;border-radius:3px;display:inline-block;flex-shrink:0;}
 
 /* — Calendar card mode toggle (Month / Year / History) — */
