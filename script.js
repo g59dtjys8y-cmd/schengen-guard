@@ -84,8 +84,7 @@ let pickStart = null, pickEnd = null;
 let editingTripId = null;
 let pendingImportTrips = null;
 let pendingExcludedRanges = [];
-let pickingExclusion = false;
-let exclPickStart = null, exclPickEnd = null;
+let exclusionFormOpen = false;
 let editingExclusionIndex = null;
 let checkerYearCursor = new Date().getFullYear();
 
@@ -1219,13 +1218,6 @@ function renderCalendar(){
     if(pickStart && iso === pickStart) el.classList.add('pick-start');
     if(pickEnd && iso === pickEnd) el.classList.add('pick-end');
     if(pickStart && pickEnd && iso > pickStart && iso < pickEnd) el.classList.add('pick-range');
-    if(pickingExclusion){
-      if(!pickStart || !pickEnd || iso < pickStart || iso > pickEnd){
-        el.classList.add('excl-disabled');
-      } else if(exclPickStart && (iso === exclPickStart || (exclPickEnd && iso >= exclPickStart && iso <= exclPickEnd))){
-        el.classList.add('selecting');
-      }
-    }
     el.innerHTML = `<span class="daynum">${day}</span><span class="rem">${used>90 ? '−'+(used-90) : remaining}</span>`;
     el.addEventListener('click', ()=>handlePick(iso));
     grid.appendChild(el);
@@ -1241,7 +1233,7 @@ function startEditTrip(id){
   pickStart = trip.start;
   pickEnd = trip.end;
   pendingExcludedRanges = (trip.excludedRanges || []).map(r => ({ ...r }));
-  pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+  exclusionFormOpen = false; editingExclusionIndex = null;
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
@@ -1262,7 +1254,7 @@ function stopEditTrip(){
   editingTripId = null;
   pickStart = null; pickEnd = null;
   pendingExcludedRanges = [];
-  pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+  exclusionFormOpen = false; editingExclusionIndex = null;
   document.getElementById('tripLabel').value = 'Spain';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
@@ -1282,7 +1274,7 @@ function renderExclusionSection(){
   const section = document.getElementById('exclusionSection');
   if(!pickStart || !pickEnd){
     section.style.display = 'none';
-    pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+    exclusionFormOpen = false; editingExclusionIndex = null;
     updateEditStayCompliance();
     return;
   }
@@ -1291,20 +1283,20 @@ function renderExclusionSection(){
 
   const tooShort = pickStart === pickEnd;
   if(tooShort){
-    pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+    exclusionFormOpen = false; editingExclusionIndex = null;
   }
   document.getElementById('markSideTripBtn').style.display = !tooShort ? 'block' : 'none';
   document.getElementById('exclusionTooShort').style.display = tooShort ? 'block' : 'none';
-  document.getElementById('exclusionPicker').style.display = (!tooShort && pickingExclusion) ? 'block' : 'none';
+  document.getElementById('exclusionPicker').style.display = (!tooShort && exclusionFormOpen) ? 'block' : 'none';
+
+  const startInput = document.getElementById('exclStartInput');
+  const endInput = document.getElementById('exclEndInput');
+  startInput.min = pickStart; startInput.max = pickEnd;
+  endInput.min = pickStart; endInput.max = pickEnd;
+
   document.getElementById('addExclusionBtn').textContent = editingExclusionIndex !== null ? 'Save changes' : 'Add side trip';
-  updateExclusionPickLabels();
   renderExclusionList();
   updateEditStayCompliance();
-}
-
-function updateExclusionPickLabels(){
-  document.getElementById('exclPickStartLbl').textContent = `From: ${exclPickStart ? fmt(exclPickStart) : '—'}`;
-  document.getElementById('exclPickEndLbl').textContent = `To: ${exclPickEnd ? fmt(exclPickEnd) : '—'}`;
 }
 
 function renderExclusionList(){
@@ -1321,11 +1313,11 @@ function renderExclusionList(){
     editBtn.textContent = 'Edit';
     editBtn.addEventListener('click', ()=>{
       editingExclusionIndex = idx;
-      pickingExclusion = true;
-      exclPickStart = r.start; exclPickEnd = r.end;
+      exclusionFormOpen = true;
+      document.getElementById('exclStartInput').value = r.start;
+      document.getElementById('exclEndInput').value = r.end;
       document.getElementById('exclusionError').style.display = 'none';
       renderExclusionSection();
-      renderCalendar();
     });
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
@@ -1334,7 +1326,7 @@ function renderExclusionList(){
     removeBtn.addEventListener('click', ()=>{
       pendingExcludedRanges.splice(idx, 1);
       if(editingExclusionIndex === idx){
-        pickingExclusion = false; exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+        exclusionFormOpen = false; editingExclusionIndex = null;
       }
       renderExclusionSection();
       renderCalendar();
@@ -1349,43 +1341,55 @@ function renderExclusionList(){
 }
 
 document.getElementById('markSideTripBtn').addEventListener('click', ()=>{
-  pickingExclusion = true;
-  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+  exclusionFormOpen = true;
+  editingExclusionIndex = null;
+  document.getElementById('exclStartInput').value = '';
+  document.getElementById('exclEndInput').value = '';
   document.getElementById('exclusionError').style.display = 'none';
   renderExclusionSection();
-  renderCalendar();
 });
 
 document.getElementById('cancelExclusionBtn').addEventListener('click', ()=>{
-  pickingExclusion = false;
-  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+  exclusionFormOpen = false;
+  editingExclusionIndex = null;
   document.getElementById('exclusionError').style.display = 'none';
   renderExclusionSection();
-  renderCalendar();
 });
 
 document.getElementById('addExclusionBtn').addEventListener('click', ()=>{
   const errEl = document.getElementById('exclusionError');
   errEl.style.display = 'none';
-  if(!exclPickStart || !exclPickEnd){
-    errEl.textContent = 'Tap the first and last day of the side trip on the calendar.';
+  const exclStart = document.getElementById('exclStartInput').value;
+  const exclEnd = document.getElementById('exclEndInput').value;
+  if(!exclStart || !exclEnd){
+    errEl.textContent = 'Pick the day you left and the day you returned.';
     errEl.style.display = 'block';
     return;
   }
-  const overlaps = pendingExcludedRanges.some((r, idx) => idx !== editingExclusionIndex && exclPickStart <= r.end && exclPickEnd >= r.start);
+  if(exclEnd < exclStart){
+    errEl.textContent = 'The return date must be on or after the day you left.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(exclStart < pickStart || exclEnd > pickEnd){
+    errEl.textContent = `Both dates must fall within your trip (${fmt(pickStart)}–${fmt(pickEnd)}).`;
+    errEl.style.display = 'block';
+    return;
+  }
+  const overlaps = pendingExcludedRanges.some((r, idx) => idx !== editingExclusionIndex && exclStart <= r.end && exclEnd >= r.start);
   if(overlaps){
     errEl.textContent = 'That range overlaps a side trip you already added.';
     errEl.style.display = 'block';
     return;
   }
   if(editingExclusionIndex !== null){
-    pendingExcludedRanges[editingExclusionIndex] = { start: exclPickStart, end: exclPickEnd };
+    pendingExcludedRanges[editingExclusionIndex] = { start: exclStart, end: exclEnd };
   } else {
-    pendingExcludedRanges.push({ start: exclPickStart, end: exclPickEnd });
+    pendingExcludedRanges.push({ start: exclStart, end: exclEnd });
   }
   pendingExcludedRanges.sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
-  pickingExclusion = false;
-  exclPickStart = null; exclPickEnd = null; editingExclusionIndex = null;
+  exclusionFormOpen = false;
+  editingExclusionIndex = null;
   renderExclusionSection();
   renderCalendar();
 });
@@ -1405,10 +1409,6 @@ document.getElementById('nextMonth').addEventListener('click', ()=>{
 });
 
 function handlePick(iso){
-  if(pickingExclusion){
-    handleExclusionPick(iso);
-    return;
-  }
   if(!pickStart || (pickStart && pickEnd)){
     pickStart = iso; pickEnd = null;
     pendingExcludedRanges = []; // range is changing — old exclusions may no longer make sense
@@ -1422,19 +1422,6 @@ function handlePick(iso){
   document.getElementById('pickEndLbl').textContent = `Exit: ${pickEnd ? fmt(pickEnd) : '—'}`;
   renderCalendar();
   renderExclusionSection();
-}
-
-function handleExclusionPick(iso){
-  if(!pickStart || !pickEnd || iso < pickStart || iso > pickEnd) return;
-  if(!exclPickStart || (exclPickStart && exclPickEnd)){
-    exclPickStart = iso; exclPickEnd = null;
-  } else {
-    if(iso >= exclPickStart) exclPickEnd = iso;
-    else { exclPickEnd = exclPickStart; exclPickStart = iso; }
-  }
-  document.getElementById('exclusionError').style.display = 'none';
-  updateExclusionPickLabels();
-  renderCalendar();
 }
 
 document.getElementById('addTripBtn').addEventListener('click', async ()=>{

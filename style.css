@@ -587,8 +587,6 @@ details[open] > summary.qc-title-row::after{content:'−';}
   border:1px dashed var(--color-neutral-600);color:var(--color-neutral-800);
 }
 .cal-day.excluded .rem{opacity:.7;}
-.cal-day.selecting{outline:2px dashed var(--color-text);outline-offset:-2px;font-weight:700;}
-.cal-day.excl-disabled{opacity:.35;pointer-events:none;}
 
 /* — side-trip exclusions (Calendar log form) — */
 .exclusion-item{
