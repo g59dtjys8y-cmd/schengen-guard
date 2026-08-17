@@ -245,7 +245,10 @@
         </span>
         <span class="qc-title-rule"></span>
       </div>
-      <p class="card-body" style="margin:6px 0 16px;">Tap the entry date, then the exit date, right on the calendar. Each date also shows your days remaining as of that day.</p>
+      <details style="margin:2px 0 10px;">
+        <summary style="cursor:pointer; font-size:12.5px; font-weight:600; color:var(--color-accent-700); list-style:none;">ⓘ How this works</summary>
+        <p class="note" style="margin-top:4px;">Tap the entry date, then the exit date, right on the calendar. The small figure under each date shows days remaining of your 90 as of that day.</p>
+      </details>
 
       <div class="form-row" style="align-items:flex-end;">
         <div class="field" style="flex:1; min-width:0;">
@@ -288,27 +291,26 @@
       <input type="hidden" id="tripStart">
       <input type="hidden" id="tripEnd">
 
-      <p class="card-body" id="editStayMsg" style="margin-top:10px;">Pick an entry and exit date to check compliance before you save it.</p>
+      <p class="card-body" id="editStayMsg" style="margin-top:8px;">Pick an entry and exit date to check compliance before you save it.</p>
       <button type="button" class="link-btn" id="editStayBreakdownBtn" style="display:none; font-size:12.5px;">How is this calculated?</button>
       <div id="editStaySuggestions" class="stack" style="display:none;"></div>
       <div class="form-error" id="formError" style="display:none;"></div>
 
-      <div class="cal-head">
+      <div class="cal-head" style="margin:12px 0 8px;">
         <button type="button" id="prevMonth">← Prev</button>
         <div class="cal-month" id="calMonthLabel"></div>
         <button type="button" id="nextMonth">Next →</button>
       </div>
       <div class="cal-grid" id="calGrid"></div>
-      <div class="legend">
+      <div class="legend" style="margin-top:10px;">
         <span><i style="background:var(--color-accent);"></i><span>past / active stay</span></span>
         <span><i style="background:var(--color-accent-2);"></i><span>planned stay</span></span>
         <span><i style="background:var(--color-accent-2-700);"></i><span>overstay</span></span>
         <span><i style="background:repeating-linear-gradient(45deg, var(--color-neutral-300), var(--color-neutral-300) 2px, var(--color-neutral-400) 2px, var(--color-neutral-400) 4px); border:1px dashed var(--color-neutral-600);"></i><span>outside Schengen (excluded)</span></span>
         <span><i style="background:transparent;border:2px dashed var(--color-text);"></i><span>selecting</span></span>
       </div>
-      <p class="note" style="margin-top:6px;">Small figure under each date is days remaining of your 90 as of that day.</p>
 
-      <div id="exclusionSection" style="display:none; margin-top:14px;">
+      <div id="exclusionSection" style="display:none; margin-top:10px;">
         <div class="card-kicker">Time within this trip outside Schengen (optional)</div>
         <p class="note" id="exclusionNote">Left and came back during this stay — like a UK leg? Add the dates below and they won't count toward your 90-day limit.</p>
 
@@ -328,10 +330,10 @@
         <div id="exclusionList" class="stack" style="margin-top:6px;"></div>
       </div>
 
-      <button type="button" class="btn btn-primary btn-block" id="addTripBtn" style="margin-top:14px;" disabled>Log stay</button>
-      <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:8px;">Cancel edit</button>
+      <button type="button" class="btn btn-primary btn-block" id="addTripBtn" style="margin-top:10px;" disabled>Log stay</button>
+      <button type="button" class="link-btn" id="cancelEditBtn" style="display:none; margin-top:6px;">Cancel edit</button>
 
-      <div class="card safe-trip-checker" id="checkerCard" style="margin-top:20px;">
+      <div class="card safe-trip-checker" id="checkerCard" style="margin-top:14px;">
         <div class="qc-title-row">
           <span class="qc-title-label" style="white-space:normal;">
             <span class="qc-title-black">My Schengen Year</span>
