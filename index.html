@@ -99,6 +99,13 @@
         <p class="disclaimer-footer">Not legal advice — verify with the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">official EU calculator</a></p>
       </div>
 
+      <div class="qc-title-row" id="activeTripHeading" style="display:none; margin-top:14px; margin-bottom:6px;">
+        <span class="qc-title-label">
+          <span class="qc-title-black">Active</span>
+          <span class="qc-title-blue">trip</span>
+        </span>
+        <span class="qc-title-rule"></span>
+      </div>
       <div class="card elev-sm trip-row" id="activeTripPanel" style="display:none; cursor:pointer;">
         <div class="trip-days" id="activeTripDaysWrap"><div class="n" id="activeTripBig"></div><div class="lbl" id="activeTripBigLabel"></div></div>
         <div class="trip-info">
@@ -125,8 +132,15 @@
         </div>
       </div>
 
-      <div id="nextTripPanel" style="display:none; margin-top:14px;"></div>
-      <div class="card elev-sm" id="nextTripEmpty" style="display:none;">
+      <div class="qc-title-row" id="nextTripHeading" style="display:none; margin-top:14px; margin-bottom:6px;">
+        <span class="qc-title-label">
+          <span class="qc-title-black">Next</span>
+          <span class="qc-title-blue">trip</span>
+        </span>
+        <span class="qc-title-rule"></span>
+      </div>
+      <div id="nextTripPanel" style="display:none;"></div>
+      <div class="card elev-sm" id="nextTripEmpty" style="display:none; margin-top:14px;">
         <p class="card-body" style="margin:0;">No upcoming trips logged yet.</p>
       </div>
 

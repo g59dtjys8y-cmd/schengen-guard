@@ -544,13 +544,17 @@ function renderNextTrip(){
   const active = activeTrip();
   const next = upcomingTrip();
 
+  const activeHeading = document.getElementById('activeTripHeading');
   const activePanel = document.getElementById('activeTripPanel');
   const compactPanel = document.getElementById('nextTripCompact');
+  const nextHeading = document.getElementById('nextTripHeading');
   const fullPanel = document.getElementById('nextTripPanel');
   const empty = document.getElementById('nextTripEmpty');
 
+  activeHeading.style.display = active ? 'flex' : 'none';
   activePanel.style.display = active ? 'flex' : 'none';
   compactPanel.style.display = (active && next) ? 'block' : 'none';
+  nextHeading.style.display = (!active && next) ? 'flex' : 'none';
   fullPanel.style.display = (!active && next) ? 'block' : 'none';
   empty.style.display = !next ? 'block' : 'none';
 
@@ -612,6 +616,22 @@ function renderFullNextTrip(trip){
   const row = buildTripRow(trip, 'planned');
   const actions = row.querySelector('.row-actions');
   if(actions) actions.remove();
+
+  const otherTrips = trips.filter(t => t.id !== trip.id);
+  const suggestion = computeTripSuggestion(trips, otherTrips, trip.start, trip.end, 90);
+  const suggestionText = suggestion.overstay
+    ? (suggestion.suggestions[0] ? suggestion.suggestions[0].label : '')
+    : (suggestion.extendable
+        ? `Could extend by <strong>${suggestion.extra} more day${suggestion.extra === 1 ? '' : 's'}</strong> — max stay until ${fmt(suggestion.lastExit)}.`
+        : '');
+  if(suggestionText){
+    const p = document.createElement('p');
+    p.className = 'card-body';
+    p.style.marginTop = '6px';
+    p.innerHTML = suggestionText;
+    row.querySelector('.trip-info').appendChild(p);
+  }
+
   panel.appendChild(row);
 }
 
