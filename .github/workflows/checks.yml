@@ -1,0 +1,49 @@
+name: checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout schengen-guard
+        uses: actions/checkout@v4
+        with:
+          path: self
+
+      - name: Checkout sibling repo (schengen-guard-anywhere)
+        uses: actions/checkout@v4
+        with:
+          repository: g59dtjys8y-cmd/schengen-guard-anywhere
+          path: sibling
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dev tooling
+        working-directory: self
+        run: npm install
+
+      - name: Install Chromium for Playwright
+        working-directory: self
+        run: npx playwright install --with-deps chromium
+
+      - name: HTML tag balance
+        working-directory: self
+        run: npm run check:html
+
+      - name: JS syntax
+        working-directory: self
+        run: npm run check:js
+
+      - name: Cross-repo parity
+        working-directory: self
+        run: npm run check:parity -- ../sibling
+
+      - name: Smoke test
+        working-directory: self
+        run: npm run smoke

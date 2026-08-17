@@ -421,7 +421,7 @@ document.getElementById('countriesCard').addEventListener('click', ()=>{
   switchTab('countries');
 });
 document.getElementById('countriesBackBtn').addEventListener('click', ()=> switchTab('settings'));
-document.getElementById('addTripShortcutBtn').addEventListener('click', ()=>{
+document.getElementById('tripListAddBtn').addEventListener('click', ()=>{
   stopEditTrip();
   switchTab('calendar');
 });

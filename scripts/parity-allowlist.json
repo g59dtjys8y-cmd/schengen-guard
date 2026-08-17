@@ -1,0 +1,14 @@
+{
+  "selfOnly": {},
+  "siblingOnly": {
+    "authPanel": "Sign-in/create-account screen — cloud sync requires an account, this local-only app doesn't have one",
+    "signedOutView": "Part of the sign-in screen above",
+    "authEmail": "Part of the sign-in screen above",
+    "authPassword": "Part of the sign-in screen above",
+    "signInBtn": "Part of the sign-in screen above",
+    "signUpBtn": "Part of the sign-in screen above",
+    "authError": "Part of the sign-in screen above",
+    "signedInAs": "Settings → Account row, shows the signed-in email",
+    "signOutBtn": "Settings → Account row, signs out of the synced account"
+  }
+}

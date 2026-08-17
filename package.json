@@ -1,0 +1,16 @@
+{
+  "name": "schengen-guard",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only tooling (no build step for the app itself — index.html/style.css/script.js ship as-is).",
+  "scripts": {
+    "check:html": "node scripts/check-html-balance.mjs index.html",
+    "check:js": "node --check script.js",
+    "check:parity": "node scripts/check-parity.mjs",
+    "smoke": "node scripts/smoke-test.mjs",
+    "check": "npm run check:html && npm run check:js && npm run smoke"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}
