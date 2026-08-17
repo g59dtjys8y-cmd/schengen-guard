@@ -8,7 +8,6 @@ const NOTIF_LAST_FIRED_KEY = 'schengenGuardNotifLastFired';
 const LAST_BACKUP_KEY = 'schengenGuardLastBackupAt';
 const BACKUP_NUDGE_DISMISSED_KEY = 'schengenGuardBackupNudgeDismissedAt';
 const DISCLAIMER_ACK_KEY = 'schengenGuardDisclaimerAcknowledged';
-const CALENDAR_HINT_SEEN_KEY = 'schengenGuardCalendarHintSeen';
 const RING_RADIUS = 99;
 const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
@@ -470,15 +469,6 @@ function switchTab(name){
     btn.classList.toggle('active', btn.getAttribute('data-tab') === name);
   });
   document.getElementById('tabbar').style.display = PRIMARY_TABS.includes(name) ? 'flex' : 'none';
-
-  // First time a user reaches the add-trip screen, open the "how this works" hint
-  // unprompted — the tap-two-dates interaction isn't self-evident, and leaving the
-  // explanation collapsed by default meant most people never saw it. Stays open just
-  // once; later visits default to collapsed like any other <details>.
-  if(name === 'calendar' && localStorage.getItem(CALENDAR_HINT_SEEN_KEY) !== 'true'){
-    document.getElementById('calendarHint').open = true;
-    localStorage.setItem(CALENDAR_HINT_SEEN_KEY, 'true');
-  }
 }
 
 let toastTimer = null;
