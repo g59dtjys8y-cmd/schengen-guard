@@ -589,11 +589,50 @@ details[open] > summary.qc-title-row::after{content:'−';}
 .cal-day.excluded .rem{opacity:.7;}
 
 /* — side-trip exclusions (Calendar log form) — */
+.exclusion-block{margin-top:10px;}
+.exclusion-block summary{
+  display:flex;align-items:center;gap:8px;min-height:44px;padding:10px 2px;
+  cursor:pointer;list-style:none;font-weight:600;font-size:14px;color:var(--color-text);
+}
+.exclusion-block summary::-webkit-details-marker{display:none;}
+.exclusion-summary-label{flex:1;}
+.exclusion-summary-hint{
+  font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--color-neutral-600);
+}
+.exclusion-block summary::after{
+  content:'';width:8px;height:8px;flex-shrink:0;margin-left:2px;
+  border-right:2px solid var(--color-neutral-600);border-bottom:2px solid var(--color-neutral-600);
+  transform:rotate(-45deg);transition:transform 150ms ease;
+}
+.exclusion-block[open] summary::after{transform:rotate(45deg);margin-top:-4px;}
+.exclusion-body{padding-top:6px;}
 .exclusion-item{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:8px 10px;background:var(--color-neutral-100);border-radius:var(--radius-sm);font-size:13px;
 }
 .exclusion-item-actions{display:flex;align-items:center;gap:12px;flex-shrink:0;}
+
+/* — shared compliance verdict banner (Log a Stay form + Calendar view) — */
+.verdict-banner{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:14px 16px;border-radius:var(--radius-lg);margin:10px 0 14px;
+}
+.verdict-banner[hidden]{display:none;}
+.verdict-ok{background:var(--color-safe-tint);}
+.verdict-fail{background:var(--color-danger-tint);}
+.verdict-icon{width:24px;height:24px;flex-shrink:0;margin-top:2px;}
+.verdict-ok .verdict-icon{color:var(--color-safe);}
+.verdict-fail .verdict-icon{color:var(--color-danger);}
+.verdict-body{flex:1;min-width:0;}
+.verdict-headline{font-family:var(--font-heading);font-weight:700;font-size:19px;line-height:1.25;}
+.verdict-ok .verdict-headline{color:var(--color-safe);}
+.verdict-fail .verdict-headline{color:var(--color-danger);}
+.verdict-days{
+  display:flex;align-items:baseline;gap:7px;margin:4px 0 2px;
+  font-family:var(--font-heading);font-weight:700;font-size:36px;line-height:1;color:var(--color-safe);
+}
+.verdict-days-lbl{font-size:12px;font-weight:600;color:var(--color-neutral-700);text-transform:uppercase;letter-spacing:.04em;}
+.verdict-detail{font-size:13.5px;color:var(--color-neutral-800);margin-top:2px;}
 
 /* — print / PDF export (Settings → Export trip history) — */
 .print-only{display:none;}

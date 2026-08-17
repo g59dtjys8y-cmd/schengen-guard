@@ -396,8 +396,8 @@ async function runGroups() {
     });
 
     await check('C2', 'compliance preview shows a "safe" message for a short stay', async () => {
-      const msg = await page.$eval('#editStayMsg', el => el.textContent);
-      assert(/safe|within limits/i.test(msg), `expected a safe/within-limits message, got: ${msg}`);
+      const headline = await page.$eval('#verdictBanner .verdict-headline', el => el.textContent);
+      assert(/fine/i.test(headline), `expected an "ok" verdict headline, got: ${headline}`);
     });
 
     await check('C3', '"How is this calculated?" breakdown modal opens and closes', async () => {

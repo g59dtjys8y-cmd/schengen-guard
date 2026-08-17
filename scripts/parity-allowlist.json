@@ -1,5 +1,7 @@
 {
-  "selfOnly": {},
+  "selfOnly": {
+    "verdictBanner": "Shared 90/180 compliance verdict banner on the Log a Stay screen — added to this app only per an explicit guard-scoped change request, not yet ported to Schengen Guard Anywhere"
+  },
   "siblingOnly": {
     "authPanel": "Sign-in/create-account screen — cloud sync requires an account, this local-only app doesn't have one",
     "signedOutView": "Part of the sign-in screen above",

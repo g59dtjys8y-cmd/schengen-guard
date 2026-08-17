@@ -288,6 +288,65 @@ function computeTripSuggestion(listIncluding, listExcluding, start, end, capDays
   return { overstay: false, extendable: false };
 }
 
+// Shared 90/180 verdict for a single trip — one source of wording/logic for both the
+// Log a Stay form and the calendar view (see renderVerdict()). Only two states, by
+// design: a trip either fits or it doesn't, no intermediate "warning" state.
+// `allTrips` must already include `trip` itself, matching how tripOverstayInfo() and
+// usedDaysInWindow() are used everywhere else in this file — pass the same list you'd
+// hand to those functions directly.
+function computeVerdict(trip, allTrips){
+  if(!trip || !trip.start || !trip.end) return null;
+
+  const overstay = tripOverstayInfo(allTrips, trip, 90);
+  if(overstay){
+    const lastSafeDate = isoOf(addDays(toDate(overstay.date), -1));
+    return {
+      status: 'fail',
+      headline: 'This trip goes over the limit',
+      detail: `You'd reach 90 days on ${fmt(overstay.date)} — leave by ${fmt(lastSafeDate)}.`,
+      breakDate: overstay.date
+    };
+  }
+
+  const daysLeft = 90 - usedDaysInWindow(allTrips, trip.end);
+  return {
+    status: 'ok',
+    headline: 'This trip is fine',
+    detail: `${dayCount(daysLeft)} left when you leave on ${fmt(trip.end)}.`,
+    breakDate: null,
+    daysLeft
+  };
+}
+
+// Renders a computeVerdict() result into a banner container. Pass null to clear/hide it
+// (e.g. no trip selected yet). All text is escaped — verdict wording is currently always
+// machine-generated, but this stays safe if that ever changes.
+function renderVerdict(el, verdict){
+  if(!el) return;
+  if(!verdict){
+    el.hidden = true;
+    el.className = 'verdict-banner';
+    el.innerHTML = '';
+    return;
+  }
+  el.hidden = false;
+  el.className = `verdict-banner verdict-${verdict.status}`;
+  const iconPath = verdict.status === 'ok'
+    ? '<path d="M4 12l5 5L20 6" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>'
+    : '<path d="M12 9v4M12 16.5h.01M10.6 4.6L2.9 18a1.8 1.8 0 0 0 1.55 2.7h15.1A1.8 1.8 0 0 0 21.1 18L13.4 4.6a1.8 1.8 0 0 0-2.8 0Z" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  const daysHtml = (verdict.status === 'ok' && verdict.daysLeft != null)
+    ? `<div class="verdict-days">${verdict.daysLeft}<span class="verdict-days-lbl">${verdict.daysLeft === 1 ? 'day' : 'days'} left</span></div>`
+    : '';
+  el.innerHTML = `
+    <svg class="verdict-icon" viewBox="0 0 24 24" aria-hidden="true">${iconPath}</svg>
+    <div class="verdict-body">
+      <div class="verdict-headline">${escapeHtml(verdict.headline)}</div>
+      ${daysHtml}
+      <div class="verdict-detail">${escapeHtml(verdict.detail)}</div>
+    </div>
+  `;
+}
+
 function classifyTrip(t){
   const today = todayISO();
   if(t.end < today) return 'past';
@@ -876,6 +935,7 @@ function updateEditStayCompliance(){
   const saveBtn = document.getElementById('addTripBtn');
   const breakdownBtn = document.getElementById('editStayBreakdownBtn');
   const suggestionsEl = document.getElementById('editStaySuggestions');
+  const bannerEl = document.getElementById('verdictBanner');
   const start = pickStart;
   const end = pickEnd;
   errEl.style.display = 'none';
@@ -884,27 +944,32 @@ function updateEditStayCompliance(){
   suggestionsEl.innerHTML = '';
 
   if(!start || !end){
+    msgEl.style.display = 'block';
     msgEl.textContent = 'Pick an entry and exit date to check compliance before you save it.';
+    renderVerdict(bannerEl, null);
     saveBtn.disabled = true;
     document.getElementById('logStayCue').style.display = 'none';
     return;
   }
   if(end < start){
+    msgEl.style.display = 'none';
     msgEl.textContent = '';
     errEl.textContent = 'Exit date must be on or after the entry date.';
     errEl.style.display = 'block';
+    renderVerdict(bannerEl, null);
     saveBtn.disabled = true;
     document.getElementById('logStayCue').style.display = 'none';
     return;
   }
 
-  const days = Math.round((toDate(end) - toDate(start)) / 86400000) + 1;
+  msgEl.style.display = 'none';
   const baseline = trips.filter(t => t.id !== editingTripId);
-  const hypothetical = baseline.concat([{ start, end, label: '__editStay__', excludedRanges: pendingExcludedRanges }]);
-  const overstay = tripOverstayInfo(hypothetical, { start, end }, 90);
+  const candidate = { start, end, label: '__editStay__', excludedRanges: pendingExcludedRanges };
+  const hypothetical = baseline.concat([candidate]);
+  const overstay = tripOverstayInfo(hypothetical, candidate, 90);
   breakdownBtn.style.display = 'inline-flex';
+  renderVerdict(bannerEl, computeVerdict(candidate, hypothetical));
   if(overstay){
-    msgEl.innerHTML = `${days}-day stay — <strong style="color:var(--color-accent-2-700)">would breach your limit</strong> on ${fmt(overstay.date)} (${overstay.used} of 90 used).`;
     const suggestion = computeTripSuggestion(hypothetical, baseline, start, end, 90);
     if(suggestion.suggestions.length){
       suggestionsEl.style.display = 'grid';
@@ -927,9 +992,6 @@ function updateEditStayCompliance(){
         suggestionsEl.appendChild(btn);
       }
     }
-  } else {
-    const margin = 90 - usedDaysInWindow(hypothetical, end);
-    msgEl.innerHTML = `${days}-day stay — <strong style="color:var(--color-safe)">safe, within limits</strong>. ${dayCount(margin)} of margin left on ${fmt(end)}.`;
   }
   saveBtn.disabled = false;
   document.getElementById('logStayCue').style.display = 'block';
@@ -1234,6 +1296,7 @@ function startEditTrip(id){
   pickEnd = trip.end;
   pendingExcludedRanges = (trip.excludedRanges || []).map(r => ({ ...r }));
   exclusionFormOpen = false; editingExclusionIndex = null;
+  document.getElementById('exclusionSection').open = pendingExcludedRanges.length > 0;
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
@@ -1255,6 +1318,7 @@ function stopEditTrip(){
   pickStart = null; pickEnd = null;
   pendingExcludedRanges = [];
   exclusionFormOpen = false; editingExclusionIndex = null;
+  document.getElementById('exclusionSection').open = false;
   document.getElementById('tripLabel').value = 'Spain';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
@@ -1393,6 +1457,19 @@ document.getElementById('addExclusionBtn').addEventListener('click', ()=>{
   renderExclusionSection();
   renderCalendar();
 });
+
+// The exclusion date fields don't need a page reload or a click to see their effect —
+// re-check compliance (debounced, since these are free-typed date inputs) as soon as
+// either changes, same as entry/exit dates already do via handlePick().
+let verdictDebounceTimer = null;
+function scheduleVerdictUpdate(){
+  clearTimeout(verdictDebounceTimer);
+  verdictDebounceTimer = setTimeout(updateEditStayCompliance, 150);
+}
+document.getElementById('exclStartInput').addEventListener('input', scheduleVerdictUpdate);
+document.getElementById('exclStartInput').addEventListener('change', scheduleVerdictUpdate);
+document.getElementById('exclEndInput').addEventListener('input', scheduleVerdictUpdate);
+document.getElementById('exclEndInput').addEventListener('change', scheduleVerdictUpdate);
 
 document.getElementById('cancelEditBtn').addEventListener('click', ()=>{
   stopEditTrip();
