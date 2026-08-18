@@ -28,7 +28,7 @@ real test run.
 | `stress-note-xss` | `<script>`/`<img onerror>` in the note | Confirms notes are HTML-escaped, not executed |
 | `stress-note-long` | A ~600-character note | Text wrapping and card growth on the trip row |
 | `stress-single-day` | Same start and end date | Minimum possible trip duration |
-| `stress-fill-*` / `stress-extra-*` | Short trips filling in the remaining countries + extra volume | List length, "Completed trips" collapse group, Year grid density, History chart |
+| `stress-fill-*` / `stress-extra-*` | Short trips filling in the remaining countries + extra volume | List length, "Earlier trips" collapse group (beyond the 4 most-recently-completed), Year grid density, History chart |
 
 Regenerate or tweak it with `gen_stress_data.py` (not checked in — ask for it again
 if you need to regenerate with different parameters).
