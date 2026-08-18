@@ -832,8 +832,16 @@ function buildTripRow(trip, status){
       <div class="dates">${fmt(trip.start)} – ${fmt(trip.end)}</div>
       ${exclNote}
       ${noteHtml}
+      <div class="note-editor" id="noteEditor-${trip.id}" style="display:none; margin-top:6px;">
+        <textarea class="input" rows="2" placeholder="Add a note (optional)" aria-label="Note">${escapeHtml(trip.note || '')}</textarea>
+        <div class="row-actions">
+          <button type="button" class="link-btn" data-action="save-note" data-id="${trip.id}">Save note</button>
+          <button type="button" class="link-btn" data-action="cancel-note" data-id="${trip.id}">Cancel</button>
+        </div>
+      </div>
       <div class="row-actions">
         <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
+        <button type="button" class="link-btn" data-action="note" data-id="${trip.id}">Add note</button>
         <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Remove</button>
       </div>
     </div>
@@ -899,6 +907,30 @@ function renderTripRows(){
   });
   rowsEl.querySelectorAll('[data-action="edit"]').forEach(btn=>{
     btn.addEventListener('click', (e)=> startEditTrip(e.currentTarget.getAttribute('data-id')));
+  });
+  rowsEl.querySelectorAll('[data-action="note"]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      const editor = document.getElementById(`noteEditor-${e.currentTarget.getAttribute('data-id')}`);
+      if(!editor) return;
+      const opening = editor.style.display === 'none';
+      editor.style.display = opening ? '' : 'none';
+      if(opening) editor.querySelector('textarea').focus();
+    });
+  });
+  rowsEl.querySelectorAll('[data-action="cancel-note"]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      document.getElementById(`noteEditor-${e.currentTarget.getAttribute('data-id')}`).style.display = 'none';
+    });
+  });
+  rowsEl.querySelectorAll('[data-action="save-note"]').forEach(btn=>{
+    btn.addEventListener('click', async (e)=>{
+      const id = e.currentTarget.getAttribute('data-id');
+      const trip = trips.find(t => String(t.id) === String(id));
+      if(!trip) return;
+      const note = document.getElementById(`noteEditor-${id}`).querySelector('textarea').value.trim();
+      await updateTrip(trip.id, trip.start, trip.end, trip.label, trip.excludedRanges, note);
+      render();
+    });
   });
 }
 
@@ -1363,7 +1395,6 @@ function startEditTrip(id){
   document.getElementById('tripLabel').value = trip.label;
   document.getElementById('tripStart').value = trip.start;
   document.getElementById('tripEnd').value = trip.end;
-  document.getElementById('tripNote').value = trip.note || '';
   document.getElementById('pickStartLbl').textContent = `Entry: ${fmt(trip.start)}`;
   document.getElementById('pickEndLbl').textContent = `Exit: ${fmt(trip.end)}`;
   document.getElementById('formError').style.display = 'none';
@@ -1385,7 +1416,6 @@ function stopEditTrip(){
   document.getElementById('tripLabel').value = 'Spain';
   document.getElementById('tripStart').value = '';
   document.getElementById('tripEnd').value = '';
-  document.getElementById('tripNote').value = '';
   document.getElementById('pickStartLbl').textContent = 'Entry: —';
   document.getElementById('pickEndLbl').textContent = 'Exit: —';
   document.getElementById('formError').style.display = 'none';
@@ -1582,7 +1612,6 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   const label = document.getElementById('tripLabel').value.trim();
   const start = document.getElementById('tripStart').value;
   const end = document.getElementById('tripEnd').value;
-  const note = document.getElementById('tripNote').value.trim();
   const errEl = document.getElementById('formError');
   errEl.style.display = 'none';
   if(!start || !end){
@@ -1604,9 +1633,12 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   const wasEditing = editingTripId !== null;
   try{
     if(wasEditing){
-      await updateTrip(editingTripId, start, end, label, pendingExcludedRanges, note);
+      // Note intentionally omitted — the Calendar form no longer edits it, and
+      // updateTrip() falls back to the existing note when none is passed, so a
+      // plain date/country edit here never clobbers a note added from the trip row.
+      await updateTrip(editingTripId, start, end, label, pendingExcludedRanges);
     } else {
-      await insertTrip(start, end, label, pendingExcludedRanges, note);
+      await insertTrip(start, end, label, pendingExcludedRanges);
     }
   }catch(e){
     errEl.textContent = 'Could not save that stay — please try again.';
