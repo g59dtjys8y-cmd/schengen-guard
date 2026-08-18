@@ -111,6 +111,11 @@ function boldDate(iso){ return `<b class="qc-date">${fmt(iso)}</b>`; }
 
 function dayCount(n){ return `${n} day${n === 1 ? '' : 's'}`; }
 
+// Line-icon bin, matching the stroke style of the bottom-nav icons — used in place
+// of the word "Delete" on danger-link buttons, which stay screen-reader-labelled
+// via aria-label on the button itself.
+const BIN_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><path d="M10 11v6M14 11v6"/></svg>`;
+
 function overLimitBody(overBy, used, dateHtml){
   return `${used} of 90 days used in the 180 days ending ${dateHtml}. You are ${overBy} day${overBy === 1 ? '' : 's'} over.`;
 }
@@ -847,7 +852,7 @@ function buildTripRow(trip, status){
       <div class="row-actions">
         <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
         <button type="button" class="link-btn" data-action="note" data-id="${trip.id}">Add note</button>
-        <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Delete</button>
+        <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}" aria-label="Delete trip">${BIN_ICON_SVG}</button>
       </div>
     </div>
     <div class="trip-status">${statusHtml}</div>
@@ -1491,7 +1496,8 @@ function renderExclusionList(){
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'link-btn danger-link';
-    removeBtn.textContent = 'Delete';
+    removeBtn.innerHTML = BIN_ICON_SVG;
+    removeBtn.setAttribute('aria-label', 'Delete side trip');
     removeBtn.addEventListener('click', ()=>{
       pendingExcludedRanges.splice(idx, 1);
       if(editingExclusionIndex === idx){
