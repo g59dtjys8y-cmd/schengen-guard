@@ -820,18 +820,22 @@ function renderTripRows(){
   });
 
   const completedRows = [];
+  let inlineCount = 0;
   for(const trip of trips){
     const status = classifyTrip(trip);
     const row = buildTripRow(trip, status);
     if(status === 'past') completedRows.push(row);
-    else rowsEl.appendChild(row);
+    else { rowsEl.appendChild(row); inlineCount++; }
   }
 
-  // The 4 most-recently-completed stays stay visible inline; anything older than
-  // that collapses into one expandable group, out of the way by default.
-  const RECENT_COMPLETED_COUNT = 4;
-  completedRows.slice(0, RECENT_COMPLETED_COUNT).forEach(row => rowsEl.appendChild(row));
-  const olderCompletedRows = completedRows.slice(RECENT_COMPLETED_COUNT);
+  // At most 4 trips stay visible inline in total. Active/planned trips always show
+  // (they're current or upcoming, not history), and the most-recently-completed
+  // stays fill any remaining slots up to that cap; anything past the cap collapses
+  // into one expandable group, out of the way by default.
+  const VISIBLE_TRIP_CAP = 4;
+  const recentCompletedCount = Math.max(0, VISIBLE_TRIP_CAP - inlineCount);
+  completedRows.slice(0, recentCompletedCount).forEach(row => rowsEl.appendChild(row));
+  const olderCompletedRows = completedRows.slice(recentCompletedCount);
 
   if(olderCompletedRows.length){
     const group = document.createElement('details');
