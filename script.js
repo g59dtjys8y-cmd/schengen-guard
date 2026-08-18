@@ -115,6 +115,16 @@ function dayCount(n){ return `${n} day${n === 1 ? '' : 's'}`; }
 // of the word "Delete" on danger-link buttons, which stay screen-reader-labelled
 // via aria-label on the button itself.
 const BIN_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><path d="M10 11v6M14 11v6"/></svg>`;
+const PEN_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+
+// Outline when a trip has no note yet; filled (with the card's own background
+// color cutting through the two "lines of text") once it does, so the icon alone
+// signals note state without needing "Add note" vs "Edit note" wording.
+function noteIconSvg(hasNote){
+  return hasNote
+    ? `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h5" stroke="var(--color-surface)" stroke-width="1.8" stroke-linecap="round"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg>`;
+}
 
 function overLimitBody(overBy, used, dateHtml){
   return `${used} of 90 days used in the 180 days ending ${dateHtml}. You are ${overBy} day${overBy === 1 ? '' : 's'} over.`;
@@ -849,9 +859,9 @@ function buildTripRow(trip, status){
           <button type="button" class="link-btn" data-action="cancel-note" data-id="${trip.id}">Cancel</button>
         </div>
       </div>
-      <div class="row-actions">
-        <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
-        <button type="button" class="link-btn" data-action="note" data-id="${trip.id}">Add note</button>
+      <div class="row-actions row-actions-icons">
+        <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}" aria-label="Edit trip">${PEN_ICON_SVG}</button>
+        <button type="button" class="link-btn" data-action="note" data-id="${trip.id}" aria-label="${trip.note ? 'Edit note' : 'Add note'}">${noteIconSvg(!!trip.note)}</button>
         <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}" aria-label="Delete trip">${BIN_ICON_SVG}</button>
       </div>
     </div>
