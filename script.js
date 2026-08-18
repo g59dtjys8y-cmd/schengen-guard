@@ -487,7 +487,7 @@ document.getElementById('countriesCard').addEventListener('click', ()=>{
   renderCountries();
   switchTab('countries');
 });
-document.getElementById('countriesBackBtn').addEventListener('click', ()=> switchTab('settings'));
+document.getElementById('countriesBackBtn').addEventListener('click', ()=> switchTab('trips'));
 document.getElementById('tripListAddBtn').addEventListener('click', ()=>{
   stopEditTrip();
   switchTab('calendar');
