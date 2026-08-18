@@ -110,7 +110,6 @@ function adjacentMonthLabel(cursor, offset){
 function boldDate(iso){ return `<b class="qc-date">${fmt(iso)}</b>`; }
 
 function dayCount(n){ return `${n} day${n === 1 ? '' : 's'}`; }
-function tripCount(n){ return `${n} trip${n === 1 ? '' : 's'}`; }
 
 function overLimitBody(overBy, used, dateHtml){
   return `${used} of 90 days used in the 180 days ending ${dateHtml}. You are ${overBy} day${overBy === 1 ? '' : 's'} over.`;
@@ -727,21 +726,6 @@ function topVisitedCountry(){
   return top;
 }
 
-// The country you've stayed in on the most separate occasions, regardless of
-// how long any one of those stays was.
-function mostTripsCountry(){
-  const counts = new Map();
-  for(const t of trips){
-    if(classifyTrip(t) === 'planned' || !t.label) continue;
-    counts.set(t.label, (counts.get(t.label) || 0) + 1);
-  }
-  let top = null;
-  for(const [label, count] of counts){
-    if(!top || count > top.count) top = { label, count };
-  }
-  return top;
-}
-
 function renderCountriesCard(){
   const visited = visitedCountries();
   document.getElementById('countriesCount').textContent = `${visited.size} of ${ALL_COUNTRIES.length}`;
@@ -775,14 +759,9 @@ function renderCountriesCard(){
   preview.innerHTML = `${chipsHtml}<span class="countries-preview-caption">Last stamped: ${escapeHtml(byRecency[0])}</span>`;
 
   const topCountry = topVisitedCountry();
-  const mostTrips = mostTripsCountry();
-  const topHtml = topCountry
-    ? `<span class="countries-top-stat">${flagIconHtml(topCountry.label)}<span class="countries-top-caption">Top country: <b>${escapeHtml(topCountry.label)}</b> · ${dayCount(topCountry.days)}</span></span>`
+  top.innerHTML = topCountry
+    ? `${flagIconHtml(topCountry.label)}<span class="countries-top-caption">Top country: <b>${escapeHtml(topCountry.label)}</b> · ${dayCount(topCountry.days)}</span>`
     : '';
-  const tripsHtml = mostTrips
-    ? `<span class="countries-top-stat"><span class="countries-top-sep" aria-hidden="true">·</span>${flagIconHtml(mostTrips.label)}<span class="countries-top-caption">Most trips: <b>${escapeHtml(mostTrips.label)}</b> · ${tripCount(mostTrips.count)}</span></span>`
-    : '';
-  top.innerHTML = topHtml + tripsHtml;
 }
 
 function renderCountries(){
