@@ -678,8 +678,10 @@ function renderFullNextTrip(trip){
   const panel = document.getElementById('nextTripPanel');
   panel.innerHTML = '';
   const row = buildTripRow(trip, 'planned');
-  const actions = row.querySelector('.row-actions');
-  if(actions) actions.remove();
+  const tripInfo = row.querySelector('.trip-info');
+  // The direct-child row-actions (Edit/Add note/Delete) — not the one nested inside
+  // .note-editor, which is that editor's own Save/Cancel row.
+  const actions = tripInfo.querySelector(':scope > .row-actions');
 
   const otherTrips = trips.filter(t => t.id !== trip.id);
   const suggestion = computeTripSuggestion(trips, otherTrips, trip.start, trip.end, 90);
@@ -693,10 +695,13 @@ function renderFullNextTrip(trip){
     p.className = 'card-body';
     p.style.marginTop = '6px';
     p.innerHTML = suggestionText;
-    row.querySelector('.trip-info').appendChild(p);
+    tripInfo.appendChild(p);
   }
+  // Move Edit/Add note/Delete below the suggestion text instead of above it.
+  if(actions) tripInfo.appendChild(actions);
 
   panel.appendChild(row);
+  wireTripRowActions(panel);
 }
 
 // Countries with a trip that's already started (active or past) count as "visited" —
@@ -842,7 +847,7 @@ function buildTripRow(trip, status){
       <div class="row-actions">
         <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
         <button type="button" class="link-btn" data-action="note" data-id="${trip.id}">Add note</button>
-        <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Remove</button>
+        <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Delete</button>
       </div>
     </div>
     <div class="trip-status">${statusHtml}</div>
@@ -899,16 +904,23 @@ function renderTripRows(){
     rowsEl.appendChild(group);
   }
 
-  rowsEl.querySelectorAll('[data-action="remove"]').forEach(btn=>{
+  wireTripRowActions(rowsEl);
+}
+
+// Wires up Edit/Add note/Delete and the inline note editor's Save/Cancel for every
+// trip row inside a container — shared by the Trips tab's full list and Home's
+// single-trip "Next trip" preview, so both are equally interactive.
+function wireTripRowActions(container){
+  container.querySelectorAll('[data-action="remove"]').forEach(btn=>{
     btn.addEventListener('click', async (e)=>{
       await deleteTrip(e.currentTarget.getAttribute('data-id'));
       render();
     });
   });
-  rowsEl.querySelectorAll('[data-action="edit"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="edit"]').forEach(btn=>{
     btn.addEventListener('click', (e)=> startEditTrip(e.currentTarget.getAttribute('data-id')));
   });
-  rowsEl.querySelectorAll('[data-action="note"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="note"]').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       const editor = document.getElementById(`noteEditor-${e.currentTarget.getAttribute('data-id')}`);
       if(!editor) return;
@@ -917,12 +929,12 @@ function renderTripRows(){
       if(opening) editor.querySelector('textarea').focus();
     });
   });
-  rowsEl.querySelectorAll('[data-action="cancel-note"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="cancel-note"]').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       document.getElementById(`noteEditor-${e.currentTarget.getAttribute('data-id')}`).style.display = 'none';
     });
   });
-  rowsEl.querySelectorAll('[data-action="save-note"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="save-note"]').forEach(btn=>{
     btn.addEventListener('click', async (e)=>{
       const id = e.currentTarget.getAttribute('data-id');
       const trip = trips.find(t => String(t.id) === String(id));
@@ -1479,7 +1491,7 @@ function renderExclusionList(){
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'link-btn danger-link';
-    removeBtn.textContent = 'Remove';
+    removeBtn.textContent = 'Delete';
     removeBtn.addEventListener('click', ()=>{
       pendingExcludedRanges.splice(idx, 1);
       if(editingExclusionIndex === idx){
