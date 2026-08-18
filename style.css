@@ -291,6 +291,7 @@ a:hover{text-decoration:underline;}
   color:var(--color-accent-700);padding:0;min-height:44px;display:inline-flex;align-items:center;
 }
 .link-btn:hover{text-decoration:underline;}
+.link-btn svg{width:15px;height:15px;display:block;}
 .danger-link{color:var(--color-accent-2-700);}
 
 /* — forms — */

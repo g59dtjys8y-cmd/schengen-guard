@@ -111,6 +111,11 @@ function boldDate(iso){ return `<b class="qc-date">${fmt(iso)}</b>`; }
 
 function dayCount(n){ return `${n} day${n === 1 ? '' : 's'}`; }
 
+// Line-icon bin, matching the stroke style of the bottom-nav icons — used in place
+// of the word "Delete" on danger-link buttons, which stay screen-reader-labelled
+// via aria-label on the button itself.
+const BIN_ICON_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><path d="M10 11v6M14 11v6"/></svg>`;
+
 function overLimitBody(overBy, used, dateHtml){
   return `${used} of 90 days used in the 180 days ending ${dateHtml}. You are ${overBy} day${overBy === 1 ? '' : 's'} over.`;
 }
@@ -678,8 +683,10 @@ function renderFullNextTrip(trip){
   const panel = document.getElementById('nextTripPanel');
   panel.innerHTML = '';
   const row = buildTripRow(trip, 'planned');
-  const actions = row.querySelector('.row-actions');
-  if(actions) actions.remove();
+  const tripInfo = row.querySelector('.trip-info');
+  // The direct-child row-actions (Edit/Add note/Delete) — not the one nested inside
+  // .note-editor, which is that editor's own Save/Cancel row.
+  const actions = tripInfo.querySelector(':scope > .row-actions');
 
   const otherTrips = trips.filter(t => t.id !== trip.id);
   const suggestion = computeTripSuggestion(trips, otherTrips, trip.start, trip.end, 90);
@@ -693,10 +700,13 @@ function renderFullNextTrip(trip){
     p.className = 'card-body';
     p.style.marginTop = '6px';
     p.innerHTML = suggestionText;
-    row.querySelector('.trip-info').appendChild(p);
+    tripInfo.appendChild(p);
   }
+  // Move Edit/Add note/Delete below the suggestion text instead of above it.
+  if(actions) tripInfo.appendChild(actions);
 
   panel.appendChild(row);
+  wireTripRowActions(panel);
 }
 
 // Countries with a trip that's already started (active or past) count as "visited" —
@@ -842,7 +852,7 @@ function buildTripRow(trip, status){
       <div class="row-actions">
         <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
         <button type="button" class="link-btn" data-action="note" data-id="${trip.id}">Add note</button>
-        <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Remove</button>
+        <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}" aria-label="Delete trip">${BIN_ICON_SVG}</button>
       </div>
     </div>
     <div class="trip-status">${statusHtml}</div>
@@ -899,16 +909,23 @@ function renderTripRows(){
     rowsEl.appendChild(group);
   }
 
-  rowsEl.querySelectorAll('[data-action="remove"]').forEach(btn=>{
+  wireTripRowActions(rowsEl);
+}
+
+// Wires up Edit/Add note/Delete and the inline note editor's Save/Cancel for every
+// trip row inside a container — shared by the Trips tab's full list and Home's
+// single-trip "Next trip" preview, so both are equally interactive.
+function wireTripRowActions(container){
+  container.querySelectorAll('[data-action="remove"]').forEach(btn=>{
     btn.addEventListener('click', async (e)=>{
       await deleteTrip(e.currentTarget.getAttribute('data-id'));
       render();
     });
   });
-  rowsEl.querySelectorAll('[data-action="edit"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="edit"]').forEach(btn=>{
     btn.addEventListener('click', (e)=> startEditTrip(e.currentTarget.getAttribute('data-id')));
   });
-  rowsEl.querySelectorAll('[data-action="note"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="note"]').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       const editor = document.getElementById(`noteEditor-${e.currentTarget.getAttribute('data-id')}`);
       if(!editor) return;
@@ -917,12 +934,12 @@ function renderTripRows(){
       if(opening) editor.querySelector('textarea').focus();
     });
   });
-  rowsEl.querySelectorAll('[data-action="cancel-note"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="cancel-note"]').forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       document.getElementById(`noteEditor-${e.currentTarget.getAttribute('data-id')}`).style.display = 'none';
     });
   });
-  rowsEl.querySelectorAll('[data-action="save-note"]').forEach(btn=>{
+  container.querySelectorAll('[data-action="save-note"]').forEach(btn=>{
     btn.addEventListener('click', async (e)=>{
       const id = e.currentTarget.getAttribute('data-id');
       const trip = trips.find(t => String(t.id) === String(id));
@@ -1479,7 +1496,8 @@ function renderExclusionList(){
     const removeBtn = document.createElement('button');
     removeBtn.type = 'button';
     removeBtn.className = 'link-btn danger-link';
-    removeBtn.textContent = 'Remove';
+    removeBtn.innerHTML = BIN_ICON_SVG;
+    removeBtn.setAttribute('aria-label', 'Delete side trip');
     removeBtn.addEventListener('click', ()=>{
       pendingExcludedRanges.splice(idx, 1);
       if(editingExclusionIndex === idx){
