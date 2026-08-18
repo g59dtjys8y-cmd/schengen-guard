@@ -841,7 +841,7 @@ function buildTripRow(trip, status){
       </div>
       <div class="row-actions">
         <button type="button" class="link-btn" data-action="edit" data-id="${trip.id}">Edit</button>
-        <button type="button" class="link-btn" data-action="note" data-id="${trip.id}">${trip.note ? 'Edit note' : 'Add note'}</button>
+        <button type="button" class="link-btn" data-action="note" data-id="${trip.id}">Add note</button>
         <button type="button" class="link-btn danger-link" data-action="remove" data-id="${trip.id}">Remove</button>
       </div>
     </div>
