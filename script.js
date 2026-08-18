@@ -709,6 +709,23 @@ function visitedCountries(){
   return set;
 }
 
+// The country you've actually spent the most days in — side-trip days excluded,
+// since those days weren't spent in that country's Schengen territory at all.
+function topVisitedCountry(){
+  const dayTotals = new Map();
+  for(const t of trips){
+    if(classifyTrip(t) === 'planned' || !t.label) continue;
+    const span = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
+    const days = span - excludedDayCount(t);
+    dayTotals.set(t.label, (dayTotals.get(t.label) || 0) + days);
+  }
+  let top = null;
+  for(const [label, days] of dayTotals){
+    if(!top || days > top.days) top = { label, days };
+  }
+  return top;
+}
+
 function renderCountriesCard(){
   const visited = visitedCountries();
   document.getElementById('countriesCount').textContent = `${visited.size} of ${ALL_COUNTRIES.length}`;
@@ -716,8 +733,10 @@ function renderCountriesCard(){
     `${(visited.size / ALL_COUNTRIES.length) * 100}%`;
 
   const preview = document.getElementById('countriesPreview');
+  const top = document.getElementById('countriesTop');
   if(visited.size === 0){
     preview.innerHTML = `<span class="countries-preview-caption">Log your first trip to start stamping</span>`;
+    top.innerHTML = '';
     return;
   }
 
@@ -738,25 +757,43 @@ function renderCountriesCard(){
   ).join('') + (overflow > 0 ? `<span class="countries-preview-chip more">+${overflow}</span>` : '');
 
   preview.innerHTML = `${chipsHtml}<span class="countries-preview-caption">Last stamped: ${escapeHtml(byRecency[0])}</span>`;
+
+  const topCountry = topVisitedCountry();
+  top.innerHTML = topCountry
+    ? `${flagIconHtml(topCountry.label)}<span class="countries-top-caption">Top country: <b>${escapeHtml(topCountry.label)}</b> · ${dayCount(topCountry.days)}</span>`
+    : '';
 }
 
 function renderCountries(){
   const visited = visitedCountries();
   document.getElementById('countriesSubtitle').textContent =
     `${visited.size} of ${ALL_COUNTRIES.length} Schengen countries stamped`;
+
   const grid = document.getElementById('countriesGrid');
   grid.innerHTML = '';
   for(const name of ALL_COUNTRIES){
+    if(!visited.has(name)) continue;
     const tile = document.createElement('div');
-    if(visited.has(name)){
-      tile.className = 'country-tile visited';
-      tile.innerHTML = `${stampHtml(name)}<div class="name">${name}</div>`;
-    } else {
-      tile.className = 'country-tile pending';
-      tile.innerHTML = `<div class="name">${name}</div>`;
-    }
+    tile.className = 'country-tile visited';
+    tile.innerHTML = `${stampHtml(name)}<div class="name">${name}</div>`;
     grid.appendChild(tile);
   }
+  if(!grid.children.length) grid.innerHTML = `<div class="empty-note">Log your first trip to start stamping.</div>`;
+
+  // Countries with no stamp yet stay out of the way, collapsed by default.
+  const pendingGrid = document.getElementById('countriesGridPending');
+  pendingGrid.innerHTML = '';
+  let pendingCount = 0;
+  for(const name of ALL_COUNTRIES){
+    if(visited.has(name)) continue;
+    const tile = document.createElement('div');
+    tile.className = 'country-tile pending';
+    tile.innerHTML = `<div class="name">${name}</div>`;
+    pendingGrid.appendChild(tile);
+    pendingCount++;
+  }
+  document.getElementById('countriesPendingDetails').style.display = pendingCount ? '' : 'none';
+  document.getElementById('countriesPendingLabel').textContent = `Not yet visited (${pendingCount})`;
 }
 
 // --- Trips list ---

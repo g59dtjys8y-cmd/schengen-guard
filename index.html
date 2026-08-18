@@ -158,21 +158,18 @@
       </div>
 
       <div class="card elev-sm" id="countriesCard" style="cursor:pointer;">
-        <div class="card-row">
-          <div>
-            <div class="qc-title-row" style="margin-bottom:2px;">
-              <span class="qc-title-label">
-                <span class="qc-title-black">Countries Visited</span>
-                <span class="qc-title-blue">– Stamp Collection</span>
-              </span>
-              <span class="qc-title-rule"></span>
-            </div>
-            <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
-          </div>
-          <span class="tag tag-neutral">View →</span>
+        <div class="qc-title-row" style="margin-bottom:2px;">
+          <span class="qc-title-label">
+            <span class="qc-title-black">Countries Visited</span>
+            <span class="qc-title-blue">– Stamp Collection</span>
+          </span>
+          <span class="qc-title-rule"></span>
+          <span class="qc-title-plus" aria-hidden="true">+</span>
         </div>
+        <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
         <div class="countries-progress"><div class="countries-progress-fill" id="countriesProgressFill" style="width:0%;"></div></div>
         <div class="countries-preview" id="countriesPreview"></div>
+        <div class="countries-top" id="countriesTop"></div>
       </div>
 
       <details class="card" id="complianceCard" style="margin-bottom:14px;">
@@ -212,6 +209,14 @@
       <h1 style="font-size:22px; margin-top:10px;">Countries visited</h1>
       <div class="card-meta" id="countriesSubtitle" style="margin-top:2px;"></div>
       <div class="countries-grid" id="countriesGrid"></div>
+
+      <details id="countriesPendingDetails" style="margin-top:18px;">
+        <summary class="qc-title-row">
+          <span class="qc-title-label"><span class="qc-title-black" id="countriesPendingLabel">Not yet visited</span></span>
+          <span class="qc-title-rule"></span>
+        </summary>
+        <div class="countries-grid" id="countriesGridPending" style="margin-top:10px;"></div>
+      </details>
     </div>
 
     <!-- PASSPORT CONTROL (secondary screen, reached from Home) -->
