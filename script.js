@@ -827,20 +827,25 @@ function renderTripRows(){
     else rowsEl.appendChild(row);
   }
 
-  // All done stays live collapsed under one expandable group, out of the way by default.
-  if(completedRows.length){
+  // The 4 most-recently-completed stays stay visible inline; anything older than
+  // that collapses into one expandable group, out of the way by default.
+  const RECENT_COMPLETED_COUNT = 4;
+  completedRows.slice(0, RECENT_COMPLETED_COUNT).forEach(row => rowsEl.appendChild(row));
+  const olderCompletedRows = completedRows.slice(RECENT_COMPLETED_COUNT);
+
+  if(olderCompletedRows.length){
     const group = document.createElement('details');
     group.className = 'card';
     group.innerHTML = `
       <summary class="qc-title-row">
-        <span class="qc-title-label"><span class="qc-title-black">Completed trips (${completedRows.length})</span></span>
+        <span class="qc-title-label"><span class="qc-title-black">Earlier trips (${olderCompletedRows.length})</span></span>
         <span class="qc-title-rule"></span>
       </summary>
     `;
     const list = document.createElement('div');
     list.className = 'stack';
     list.style.marginTop = '10px';
-    completedRows.forEach(row => list.appendChild(row));
+    olderCompletedRows.forEach(row => list.appendChild(row));
     group.appendChild(list);
     rowsEl.appendChild(group);
   }
