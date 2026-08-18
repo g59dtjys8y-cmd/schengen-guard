@@ -487,7 +487,7 @@ document.getElementById('countriesCard').addEventListener('click', ()=>{
   renderCountries();
   switchTab('countries');
 });
-document.getElementById('countriesBackBtn').addEventListener('click', ()=> switchTab('settings'));
+document.getElementById('countriesBackBtn').addEventListener('click', ()=> switchTab('trips'));
 document.getElementById('tripListAddBtn').addEventListener('click', ()=>{
   stopEditTrip();
   switchTab('calendar');
@@ -712,6 +712,32 @@ function visitedCountries(){
 function renderCountriesCard(){
   const visited = visitedCountries();
   document.getElementById('countriesCount').textContent = `${visited.size} of ${ALL_COUNTRIES.length}`;
+  document.getElementById('countriesProgressFill').style.width =
+    `${(visited.size / ALL_COUNTRIES.length) * 100}%`;
+
+  const preview = document.getElementById('countriesPreview');
+  if(visited.size === 0){
+    preview.innerHTML = `<span class="countries-preview-caption">Log your first trip to start stamping</span>`;
+    return;
+  }
+
+  // Most-recently-stamped country per label wins, then sorted newest first, so the
+  // preview mirrors "what would I see if I opened the grid right now."
+  const lastVisit = new Map();
+  for(const t of trips){
+    if(classifyTrip(t) === 'planned' || !t.label) continue;
+    if(!lastVisit.has(t.label) || t.end > lastVisit.get(t.label)) lastVisit.set(t.label, t.end);
+  }
+  const byRecency = [...lastVisit.entries()].sort((a, b) => b[1].localeCompare(a[1])).map(([label]) => label);
+
+  const MAX_CHIPS = 4;
+  const shown = byRecency.slice(0, MAX_CHIPS);
+  const overflow = byRecency.length - shown.length;
+  const chipsHtml = shown.map(name =>
+    `<span class="countries-preview-chip" title="${escapeHtml(name)}">${flagIconHtml(name)}</span>`
+  ).join('') + (overflow > 0 ? `<span class="countries-preview-chip more">+${overflow}</span>` : '');
+
+  preview.innerHTML = `${chipsHtml}<span class="countries-preview-caption">Last stamped: ${escapeHtml(byRecency[0])}</span>`;
 }
 
 function renderCountries(){

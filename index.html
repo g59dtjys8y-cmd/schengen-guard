@@ -157,6 +157,24 @@
         <button type="button" class="btn btn-primary btn-icon" id="tripListAddBtn" aria-label="Add a trip">+</button>
       </div>
 
+      <div class="card elev-sm" id="countriesCard" style="cursor:pointer;">
+        <div class="card-row">
+          <div>
+            <div class="qc-title-row" style="margin-bottom:2px;">
+              <span class="qc-title-label">
+                <span class="qc-title-black">Countries</span>
+                <span class="qc-title-blue">Visited – Stamp Collection</span>
+              </span>
+              <span class="qc-title-rule"></span>
+            </div>
+            <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
+          </div>
+          <span class="tag tag-neutral">View →</span>
+        </div>
+        <div class="countries-progress"><div class="countries-progress-fill" id="countriesProgressFill" style="width:0%;"></div></div>
+        <div class="countries-preview" id="countriesPreview"></div>
+      </div>
+
       <div class="card" id="complianceCard" style="margin-bottom:14px;">
         <div class="qc-title-row" style="margin-bottom:0;">
           <span class="qc-title-label">
@@ -190,7 +208,7 @@
 
     <!-- COUNTRIES (secondary screen, reached from Home) -->
     <div class="screen" id="tab-countries" style="display:none;">
-      <button type="button" class="countries-back" id="countriesBackBtn">← Settings</button>
+      <button type="button" class="countries-back" id="countriesBackBtn">← Trips</button>
       <h1 style="font-size:22px; margin-top:10px;">Countries visited</h1>
       <div class="card-meta" id="countriesSubtitle" style="margin-top:2px;"></div>
       <div class="countries-grid" id="countriesGrid"></div>
@@ -442,20 +460,6 @@
           <label class="radio"><input type="checkbox" id="notif3"><span class="dot"></span><span>3 days left</span></label>
         </div>
         <p class="note">Fires once per threshold per rolling window, based on your logged and planned trips. Requires notification permission and the app open in a tab.</p>
-      </div>
-
-      <div class="card elev-sm card-row" id="countriesCard" style="cursor:pointer;">
-        <div>
-          <div class="qc-title-row" style="margin-bottom:2px;">
-            <span class="qc-title-label">
-              <span class="qc-title-black">Countries</span>
-              <span class="qc-title-blue">Visited – Stamp Collection</span>
-            </span>
-            <span class="qc-title-rule"></span>
-          </div>
-          <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
-        </div>
-        <span class="tag tag-neutral">View →</span>
       </div>
 
       <div class="card" id="backupCard">
