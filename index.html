@@ -444,18 +444,22 @@
         <p class="note">Fires once per threshold per rolling window, based on your logged and planned trips. Requires notification permission and the app open in a tab.</p>
       </div>
 
-      <div class="card elev-sm card-row" id="countriesCard" style="cursor:pointer;">
-        <div>
-          <div class="qc-title-row" style="margin-bottom:2px;">
-            <span class="qc-title-label">
-              <span class="qc-title-black">Countries</span>
-              <span class="qc-title-blue">Visited – Stamp Collection</span>
-            </span>
-            <span class="qc-title-rule"></span>
+      <div class="card elev-sm" id="countriesCard" style="cursor:pointer;">
+        <div class="card-row">
+          <div>
+            <div class="qc-title-row" style="margin-bottom:2px;">
+              <span class="qc-title-label">
+                <span class="qc-title-black">Countries</span>
+                <span class="qc-title-blue">Visited – Stamp Collection</span>
+              </span>
+              <span class="qc-title-rule"></span>
+            </div>
+            <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
           </div>
-          <div class="card-title" style="font-size:21px;" id="countriesCount">0 of 29</div>
+          <span class="tag tag-neutral">View →</span>
         </div>
-        <span class="tag tag-neutral">View →</span>
+        <div class="countries-progress"><div class="countries-progress-fill" id="countriesProgressFill" style="width:0%;"></div></div>
+        <div class="countries-preview" id="countriesPreview"></div>
       </div>
 
       <div class="card" id="backupCard">
