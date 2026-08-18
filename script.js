@@ -744,19 +744,32 @@ function renderCountries(){
   const visited = visitedCountries();
   document.getElementById('countriesSubtitle').textContent =
     `${visited.size} of ${ALL_COUNTRIES.length} Schengen countries stamped`;
+
   const grid = document.getElementById('countriesGrid');
   grid.innerHTML = '';
   for(const name of ALL_COUNTRIES){
+    if(!visited.has(name)) continue;
     const tile = document.createElement('div');
-    if(visited.has(name)){
-      tile.className = 'country-tile visited';
-      tile.innerHTML = `${stampHtml(name)}<div class="name">${name}</div>`;
-    } else {
-      tile.className = 'country-tile pending';
-      tile.innerHTML = `<div class="name">${name}</div>`;
-    }
+    tile.className = 'country-tile visited';
+    tile.innerHTML = `${stampHtml(name)}<div class="name">${name}</div>`;
     grid.appendChild(tile);
   }
+  if(!grid.children.length) grid.innerHTML = `<div class="empty-note">Log your first trip to start stamping.</div>`;
+
+  // Countries with no stamp yet stay out of the way, collapsed by default.
+  const pendingGrid = document.getElementById('countriesGridPending');
+  pendingGrid.innerHTML = '';
+  let pendingCount = 0;
+  for(const name of ALL_COUNTRIES){
+    if(visited.has(name)) continue;
+    const tile = document.createElement('div');
+    tile.className = 'country-tile pending';
+    tile.innerHTML = `<div class="name">${name}</div>`;
+    pendingGrid.appendChild(tile);
+    pendingCount++;
+  }
+  document.getElementById('countriesPendingDetails').style.display = pendingCount ? '' : 'none';
+  document.getElementById('countriesPendingLabel').textContent = `Not yet visited (${pendingCount})`;
 }
 
 // --- Trips list ---
