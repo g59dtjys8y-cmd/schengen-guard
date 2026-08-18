@@ -498,12 +498,12 @@ details[open] > summary.qc-title-row::after{content:'−';}
 .countries-preview-chip .flag-icon.fi{width:16px;height:12px;border-radius:1px;}
 .countries-preview-chip.more{background:var(--color-neutral-200);color:var(--color-neutral-700);font-size:10px;font-weight:700;}
 .countries-preview-caption{font-size:12px;color:var(--color-neutral-700);margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.countries-top{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--color-neutral-700);}
+.countries-top{display:flex;gap:6px;font-size:12px;color:var(--color-neutral-700);}
 .countries-top .flag-icon.fi{width:16px;height:12px;flex-shrink:0;border-radius:1px;}
-.countries-top-stat{display:inline-flex;align-items:center;gap:6px;}
-.countries-top-caption{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.countries-top-stat{display:inline-flex;align-items:center;gap:6px;min-width:0;flex-shrink:1;}
+.countries-top-caption{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;}
 .countries-top-caption b{color:var(--color-text);font-weight:600;}
-.countries-top-sep{opacity:.5;}
+.countries-top-sep{opacity:.5;flex-shrink:0;}
 #countriesSubtitle{color:var(--color-accent-700);font-weight:600;}
 
 /* — flag icons (flag-icons CDN) — decorative, sized to sit inline with country names — */
