@@ -457,9 +457,10 @@ async function deleteAllTrips(){
 // ending today. Independent of whatever date the "Check as of" field is scrubbed to,
 // and naturally changes day to day as old covered days age out of that window.
 function updateAppBadge(){
-  if(!('setAppBadge' in navigator)) return;
   const used = usedDaysInWindow(trips, todayISO());
   const daysLeft = Math.max(0, 90 - used);
+  if(daysLeft <= 0){ clearAppBadge(); return; }
+  if(!('setAppBadge' in navigator)) return;
   try{ navigator.setAppBadge(daysLeft).catch(()=>{}); }catch(e){}
 }
 function clearAppBadge(){
