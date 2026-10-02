@@ -19,6 +19,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { chromium } from 'playwright';
+import { supabaseMockScript } from './supabase-mock.mjs';
 
 const ROOT = process.cwd();
 const PORT = 8914;
@@ -94,60 +95,6 @@ function assert(cond, msg) {
 let browser;
 let needsSupabaseMock;
 
-// A *stateful* fake `trips` table — not just a canned response. insertTrip,
-// updateTrip, deleteTrip, and the backup-import flow all write via
-// insert/update/delete and then immediately re-read via select().order() to
-// refresh the in-memory `trips` array; a mock that always returns the original
-// seed data (as a plain canned-response mock would) makes every write silently
-// vanish on the next read, which looks exactly like an app bug but isn't one.
-function supabaseMockScript() {
-  return (tripsData) => {
-    let table = tripsData.slice();
-    let nextId = 1;
-    function chain() {
-      let mode = null;
-      let pendingUpdate = null;
-      const o = {
-        select() { mode = 'select'; return o; },
-        order() { return Promise.resolve({ data: table.slice(), error: null }); },
-        insert(rows) {
-          for (const r of (Array.isArray(rows) ? rows : [rows])) {
-            table.push({ id: r.id || `mock-${nextId++}`, ...r });
-          }
-          return Promise.resolve({ error: null });
-        },
-        update(fields) { mode = 'update'; pendingUpdate = fields; return o; },
-        delete() { mode = 'delete'; return o; },
-        eq(col, val) {
-          if (mode === 'update') {
-            table = table.map((r) => (r.id === val ? { ...r, ...pendingUpdate } : r));
-          } else if (mode === 'delete') {
-            table = col === 'user_id' ? [] : table.filter((r) => r[col] !== val);
-          }
-          return Promise.resolve({ error: null });
-        }
-      };
-      return o;
-    }
-    // Defined non-writable: a real CDN-loaded supabase-js UMD bundle assigning
-    // `global.supabase = factory()` later (e.g. if route interception loses a
-    // race on a real network) silently no-ops instead of clobbering the mock.
-    Object.defineProperty(window, 'supabase', {
-      value: {
-        createClient: () => ({
-          auth: {
-            getSession: async () => ({ data: { session: { user: { id: 'test-plan', email: 'test-plan@test.local' } } } }),
-            signOut: async () => ({ error: null })
-          },
-          from: () => chain()
-        })
-      },
-      writable: false,
-      configurable: false
-    });
-  };
-}
-
 // trips use the local schema { id, start, end, label, excludedRanges, note } —
 // converted to the anywhere/Supabase row shape when mocking that app.
 function toSupabaseRows(trips) {
@@ -196,7 +143,7 @@ async function openPage(trips = []) {
     await page.route('**/supabase-js@*/**', (route) => route.fulfill({
       status: 200, contentType: 'application/javascript', body: '/* blocked in test */'
     }));
-    await page.addInitScript(supabaseMockScript(), toSupabaseRows(trips));
+    await page.addInitScript(supabaseMockScript(), { tables: { trips: toSupabaseRows(trips) }, user: { id: 'test-plan', email: 'test-plan@test.local' } });
     await page.goto(`http://localhost:${PORT}/index.html`);
   } else {
     await page.goto(`http://localhost:${PORT}/index.html`);
@@ -219,6 +166,9 @@ async function openPage(trips = []) {
     if (trips.length) {
       await page.evaluate(async (tripsData) => {
         await dbPutAll(tripsData.map(t => ({ ...t, note: t.note || '' })));
+        // Seeded trips have no owner — run the same first-load migration the app uses,
+        // which hands them to the default person.
+        if (typeof ensurePeople === 'function') await ensurePeople();
         await loadTrips();
         render();
       }, trips);

@@ -40,7 +40,19 @@
 
     <!-- HOME -->
     <div class="screen" id="tab-home">
-      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+      <div class="home-top-row">
+        <div class="person-switcher" id="personSwitcher">
+          <button type="button" class="person-chip" id="personSwitcherBtn" aria-haspopup="true" aria-expanded="false" aria-controls="personSwitcherMenu"></button>
+          <div class="card elev-sm person-menu" id="personSwitcherMenu" hidden>
+            <div class="person-menu-list" id="personSwitcherList"></div>
+            <form class="person-add-row" id="personSwitcherAddForm">
+              <input class="input" type="text" id="personSwitcherAddName" maxlength="20" autocomplete="off" data-i18n-placeholder="personNameLabel" data-i18n-aria="personNameLabel">
+              <button type="submit" class="btn btn-secondary" id="personSwitcherAddBtn" data-i18n="addPerson">Add person</button>
+            </form>
+            <p class="note" id="personSwitcherCapNote" style="display:none;" data-i18n="peopleCap">You can add up to 8 people.</p>
+            <div class="form-error" id="personSwitcherError" style="display:none;"></div>
+          </div>
+        </div>
         <button type="button" class="btn btn-primary btn-icon" id="homeAddTripBtn" aria-label="Add a trip">+</button>
       </div>
       <div class="card backup-nudge" id="backupNudge" style="display:none;">
@@ -98,6 +110,8 @@
 
         <p class="disclaimer-footer">Not legal advice — verify with the <a href="https://ec.europa.eu/assets/home/visa-calculator/calculator.htm" target="_blank" rel="noopener">official EU calculator</a></p>
       </div>
+
+      <div class="people-overview" id="peopleOverview" hidden></div>
 
       <div class="card elev-sm" id="activeTripCard" style="display:none; margin-top:14px; cursor:pointer;">
         <div class="qc-title-row" style="margin-bottom:10px;">
@@ -200,6 +214,10 @@
         </details>
       </details>
 
+      <div class="seg-toggle" id="tripScopeToggle" role="group" aria-label="Whose trips to show" hidden>
+        <button type="button" class="seg-btn" id="tripScopePersonBtn" aria-pressed="true"></button>
+        <button type="button" class="seg-btn" id="tripScopeEveryoneBtn" aria-pressed="false" data-i18n="everyone">Everyone</button>
+      </div>
       <div id="tripRows" style="margin-top:14px; display:flex; flex-direction:column; gap:12px;"></div>
     </div>
 
@@ -264,6 +282,7 @@
           <li>No account, no sign-in, no server, no network calls of any kind.</li>
           <li>Trip data, notification preferences, and theme choice are stored only in this browser's local storage on this device.</li>
           <li>Nothing is transmitted to the developer or any third party. There is no analytics, tracking, or advertising in this app.</li>
+          <li>Names you enter for other people are stored on this device only, like your trips.</li>
           <li>Local storage is used solely to run the app's own features (saving trips, remembering your theme and notification settings) — never for tracking.</li>
           <li>Export, Import, and "Clear all logged stays" (Settings → Data) are the only ways your data moves off, into, or out of this device.</li>
         </ul>
@@ -276,6 +295,7 @@
           <li>Schengen Guard is provided "as is," for informational and personal record-keeping purposes only.</li>
           <li>It is not immigration, legal, or professional advice, and no warranty is made as to the accuracy, completeness, or fitness of its calculations for any particular purpose.</li>
           <li>You are responsible for independently verifying your compliance with the 90/180-day rule (or any other entry requirement) using official sources — the European Commission's short-stay calculator, the border authority of the country you're visiting, or a qualified immigration professional — particularly for any borderline case.</li>
+          <li>You are responsible for the accuracy of the dates you enter for other people, and for checking their position before they travel.</li>
           <li>To the fullest extent permitted by law, the developer disclaims liability for any loss or damage arising from reliance on the app's output, including missed flights, denied entry, fines, or other immigration consequences.</li>
         </ul>
       </div>
@@ -291,9 +311,11 @@
         <span class="qc-title-rule"></span>
       </div>
 
+      <div class="calendar-person" id="calendarPersonTag" hidden></div>
       <button type="button" class="qc-link" id="calendarFaqLink" style="margin-top:2px;">New to the 90/180 rule? See the FAQ</button>
 
       <div id="verdictBanner" class="verdict-banner" role="status" aria-live="polite" hidden></div>
+      <div id="verdictPeople" class="verdict-people" hidden></div>
       <button type="button" class="qc-link" id="editStayBreakdownBtn" style="display:none; margin-bottom:8px;">How is this calculated?</button>
 
       <p class="card-body" id="editStayMsg" style="margin-top:2px;">Pick an entry and exit date on the calendar to check compliance before you save it.</p>
@@ -331,6 +353,11 @@
           <option>Sweden</option>
           <option>Switzerland</option>
         </select>
+      </div>
+
+      <div class="field who-for" id="whoForField" hidden>
+        <span class="who-for-label" id="whoForLabel" data-i18n="whoFor">Who is it for?</span>
+        <div class="chip-row" id="whoForChips" role="group" aria-labelledby="whoForLabel"></div>
       </div>
       <div class="form-row" style="margin-top:8px; align-items:center;">
         <span class="tag tag-outline" id="pickStartLbl">Entry: —</span>
@@ -463,6 +490,22 @@
         <p class="note">Fires once per threshold per rolling window, based on your logged and planned trips. Requires notification permission and the app open in a tab.</p>
       </div>
 
+      <div class="card" id="peopleCard">
+        <div class="qc-title-row">
+          <span class="qc-title-label"><span class="qc-title-black" data-i18n="peopleTitle">People</span></span>
+          <span class="qc-title-rule"></span>
+        </div>
+        <div class="people-list" id="peopleList"></div>
+        <p class="note" id="peopleLastNote" style="display:none;" data-i18n="lastPersonNote">You need at least one person, so the last one can't be deleted.</p>
+        <form class="person-add-row" id="addPersonForm" style="margin-top:8px;">
+          <input class="input" type="text" id="addPersonName" maxlength="20" autocomplete="off" data-i18n-placeholder="personNameLabel" data-i18n-aria="personNameLabel">
+          <button type="submit" class="btn btn-secondary" id="addPersonBtn" data-i18n="addPerson">Add person</button>
+        </form>
+        <p class="note" id="peopleCapNote" style="display:none;" data-i18n="peopleCap">You can add up to 8 people.</p>
+        <div class="form-error" id="peopleError" style="display:none;"></div>
+        <p class="note" style="margin-top:6px;" data-i18n="peopleNamesNote">Names are only used to label trips on this device.</p>
+      </div>
+
       <div class="card" id="backupCard">
         <div class="qc-title-row">
           <span class="qc-title-label">
@@ -488,6 +531,10 @@
           <span class="qc-title-rule"></span>
         </div>
         <p class="card-body">For handing to a border official or visa office — a human-readable copy, not for re-importing (use Backup for that).</p>
+        <div class="seg-toggle" id="exportScopeToggle" role="group" aria-label="Whose trips to export" hidden>
+          <button type="button" class="seg-btn" id="exportScopePersonBtn" aria-pressed="true"></button>
+          <button type="button" class="seg-btn" id="exportScopeEveryoneBtn" aria-pressed="false" data-i18n="everyone">Everyone</button>
+        </div>
         <button type="button" class="btn btn-secondary btn-block" id="exportCsvBtn">Export as CSV</button>
         <button type="button" class="btn btn-secondary btn-block" id="printTripsBtn">Print / save as PDF</button>
       </div>
@@ -501,6 +548,7 @@
         <p class="card-body">This app works fully offline and never sends your trip data anywhere. If you lose this device, uninstall the app, or clear browser data without a backup, your trips can't be recovered.</p>
         <p class="card-body">Your data lives only on this device and browser — it won't sync anywhere on its own. On iPhone/iPad, if you don't open the app for about a week or more, iOS may clear it automatically. Export a backup now and then if you want to keep your history safe.</p>
         <button type="button" class="btn btn-secondary btn-block danger-link" id="resetBtn">Clear all logged stays</button>
+        <button type="button" class="btn btn-secondary btn-block danger-link" id="resetAllBtn" style="display:none;" data-i18n="clearEveryoneStays">Clear everyone's stays</button>
       </details>
 
       <div class="card elev-sm card-row" id="faqCard" style="cursor:pointer;">
@@ -644,6 +692,24 @@
       <button type="button" class="btn btn-primary btn-block" id="importMergeBtn">Merge with current trips</button>
       <button type="button" class="btn btn-secondary btn-block" id="importReplaceBtn">Replace current trips</button>
       <button type="button" class="link-btn" id="importCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="importPersonModal" style="display:none;">
+    <div class="card modal-card">
+      <div class="card-kicker">Restore from backup</div>
+      <p class="card-body" id="importPersonMsg"></p>
+      <div class="stack" id="importPersonList"></div>
+      <button type="button" class="link-btn" id="importPersonCancelBtn">Cancel</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="groupModal" style="display:none;">
+    <div class="card modal-card" role="dialog" aria-modal="true" aria-labelledby="groupModalMsg">
+      <p class="card-body" id="groupModalMsg"></p>
+      <button type="button" class="btn btn-primary btn-block" id="groupAllBtn"></button>
+      <button type="button" class="btn btn-secondary btn-block" id="groupOneBtn"></button>
+      <button type="button" class="link-btn" id="groupCancelBtn">Cancel</button>
     </div>
   </div>
 
