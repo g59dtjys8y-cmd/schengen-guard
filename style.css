@@ -942,6 +942,7 @@ details[open] > summary.qc-title-row::after{content:'−';}
 .who-chip[aria-pressed="true"]{background:var(--color-accent-100);border-color:var(--color-accent);color:var(--color-accent-800);font-weight:700;}
 .who-chip[aria-pressed="true"] .who-chip-tick{color:var(--color-accent-700);}
 .who-chip:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;}
+.who-chip[aria-disabled="true"]{cursor:default;}
 
 /* Checker: one row per selected person */
 .verdict-people{display:flex;flex-direction:column;gap:6px;margin:-4px 0 10px;}

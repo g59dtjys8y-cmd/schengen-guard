@@ -92,6 +92,8 @@ const STRINGS = {
   groupDeleteOne: 'This stay is shared with 1 other person.',
   groupDeleteMany: 'This stay is shared with {count} other people.',
   applyToEveryone: 'Apply to everyone',
+  ownerChipAria: '{name} (this trip belongs to them)',
+  removeFromTripConfirm: 'Remove this stay for {names}? Their copy will be deleted.',
   removeForEveryone: 'Remove for everyone',
   onlyName: 'Only {name}',
   clearPersonStays: "Clear {name}'s stays",
@@ -677,10 +679,12 @@ async function insertTrip(personId, start, end, label, excludedRanges, note, gro
   markTripsChanged();
 }
 
-// One identical stay for several people, saved together and sharing a new groupId.
-async function insertTripForPeople(personIds, start, end, label, excludedRanges){
-  if(personIds.length === 1) return insertTrip(personIds[0], start, end, label, excludedRanges);
-  const groupId = newId();
+// One identical stay for several people, saved together and sharing a groupId — a new one,
+// or `groupId` when adding people to an existing trip.
+async function insertTripForPeople(personIds, start, end, label, excludedRanges, groupId){
+  if(!personIds.length) return;
+  if(personIds.length === 1 && !groupId) return insertTrip(personIds[0], start, end, label, excludedRanges);
+  groupId = groupId || newId();
   await dbPutAll(personIds.map(pid => buildTrip(pid, start, end, label, excludedRanges, '', groupId)));
   await loadTrips();
   markTripsChanged();
@@ -1167,8 +1171,10 @@ function renderWhoForChips(){
   if(people.length < 2){
     selectedPersonIds = new Set(people.length ? [activePerson().id] : []);
   }
-  // Editing keeps the trip's owner — changing who a trip is for is delete-and-re-add.
-  if(people.length < 2 || editingTripId !== null){ field.hidden = true; return; }
+  if(people.length < 2){ field.hidden = true; return; }
+  // While editing, the trip's owner stays selected; others can be added or removed.
+  const owner = editingOwnerId();
+  if(owner) selectedPersonIds.add(owner);
   field.hidden = false;
   const chips = document.getElementById('whoForChips');
   chips.innerHTML = '';
@@ -1177,6 +1183,10 @@ function renderWhoForChips(){
     b.type = 'button';
     b.className = 'who-chip';
     b.setAttribute('aria-pressed', String(pressed));
+    if(person && person.id === owner){
+      b.setAttribute('aria-disabled', 'true');
+      b.setAttribute('aria-label', i18n('ownerChipAria', { name: person.name }));
+    }
     b.innerHTML = `<span class="who-chip-tick" aria-hidden="true">${pressed ? '✓' : ''}</span>${person ? personDotHtml(person) : ''}<span class="who-chip-name">${escapeHtml(label)}</span>`;
     b.addEventListener('click', onClick);
     chips.appendChild(b);
@@ -1184,13 +1194,14 @@ function renderWhoForChips(){
   if(people.length >= 3){
     const allSelected = people.every(p => selectedPersonIds.has(p.id));
     chip(i18n('everyone'), allSelected, ()=>{
-      selectedPersonIds = allSelected ? new Set([activePersonId]) : new Set(people.map(p => p.id));
+      selectedPersonIds = allSelected ? new Set([owner || activePersonId]) : new Set(people.map(p => p.id));
       renderWhoForChips();
       updateEditStayCompliance();
     });
   }
   for(const p of people){
     chip(p.name, selectedPersonIds.has(p.id), ()=>{
+      if(p.id === owner) return;
       if(selectedPersonIds.has(p.id)) selectedPersonIds.delete(p.id);
       else selectedPersonIds.add(p.id);
       renderWhoForChips();
@@ -1675,21 +1686,32 @@ document.getElementById('pcPrintBtn').addEventListener('click', ()=>{
 
 // --- Safe Trip Checker (Trips tab) ---
 
-// The person (or people) the checker is running for: the trip's owner while editing,
-// otherwise whoever is selected in "Who is it for?".
+// The person whose trip is being edited, or null when logging a new stay.
+function editingOwnerId(){
+  if(editingTripId === null) return null;
+  const trip = allTrips.find(t => t.id === editingTripId);
+  return trip ? trip.personId : null;
+}
+
+// Ids of the trip being edited and its group mates — each person's own copy is left out
+// of their baseline so it isn't double-counted against the edited dates.
+function editingGroupTripIds(){
+  if(editingTripId === null) return new Set();
+  const trip = allTrips.find(t => t.id === editingTripId);
+  return new Set([editingTripId, ...groupMates(trip).map(t => t.id)]);
+}
+
+// The people the checker is running for: whoever is selected in "Who is it for?"
+// (while editing, that always includes the trip's owner).
 function checkerPeople(){
-  if(editingTripId !== null){
-    const trip = allTrips.find(t => t.id === editingTripId);
-    const owner = trip && personById(trip.personId);
-    return owner ? [owner] : [];
-  }
   return selectedPeople();
 }
 
 // One person's view of the candidate stay: their own trips plus the candidate, never
 // anyone else's. `baseline` excludes the trip being edited so it isn't double-counted.
 function checkCandidateFor(person, candidate){
-  const baseline = tripsFor(person.id).filter(t => t.id !== editingTripId);
+  const skip = editingGroupTripIds();
+  const baseline = tripsFor(person.id).filter(t => !skip.has(t.id));
   const hypothetical = baseline.concat([candidate]);
   const overstay = tripOverstayInfo(hypothetical, candidate, 90);
   return {
@@ -2209,7 +2231,7 @@ function startEditTrip(id){
   document.getElementById('formError').style.display = 'none';
   document.getElementById('addTripBtn').textContent = 'Update stay';
   document.getElementById('cancelEditBtn').style.display = 'block';
-  selectedPersonIds = new Set([trip.personId]);
+  selectedPersonIds = new Set([trip.personId, ...groupMates(trip).map(t => t.personId)]);
   renderWhoForChips();
 
   calCursor = new Date(toDate(trip.start)); calCursor.setDate(1);
@@ -2482,9 +2504,21 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
   // Which trips this save touches, per person.
   let targets; // [{ personId, tripId|null }]
   let detach = false;
+  let addedIds = [];    // people newly added to the trip being edited
+  let removedTrips = []; // group mates' copies to delete
   if(wasEditing){
     targets = [{ personId: editing.personId, tripId: editing.id }];
-    const mates = groupMates(editing);
+    const allMates = groupMates(editing);
+    const chosen = new Set(selectedPeople().map(p => p.id));
+    chosen.add(editing.personId);
+    const mates = allMates.filter(m => chosen.has(m.personId));
+    removedTrips = allMates.filter(m => !chosen.has(m.personId));
+    const matePeople = new Set(allMates.map(m => m.personId));
+    addedIds = [...chosen].filter(id => id !== editing.personId && !matePeople.has(id));
+    if(removedTrips.length){
+      const names = formatNames(removedTrips.map(m => (personById(m.personId) || {}).name || ''));
+      if(!confirm(i18n('removeFromTripConfirm', { names }))) return;
+    }
     const changed = editing.start !== start || editing.end !== end || editing.label !== label || !sameRanges(editing.excludedRanges, pendingExcludedRanges);
     if(mates.length && changed){
       const owner = personById(editing.personId);
@@ -2508,7 +2542,8 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
 
   // Overlap check per person; one confirm covers everyone affected.
   const ignore = targets.map(x => x.tripId).filter(Boolean);
-  const overlaps = targets.map(x => ({ x, trip: overlappingTrip(x.personId, start, end, ignore) })).filter(o => o.trip);
+  const overlapTargets = targets.concat(addedIds.map(id => ({ personId: id, tripId: null })));
+  const overlaps = overlapTargets.map(x => ({ x, trip: overlappingTrip(x.personId, start, end, ignore) })).filter(o => o.trip);
   if(overlaps.length){
     let message;
     if(people.length < 2){
@@ -2526,9 +2561,15 @@ document.getElementById('addTripBtn').addEventListener('click', async ()=>{
       // Note intentionally omitted — the Calendar form no longer edits it, and
       // updateTrip() falls back to the existing note when none is passed, so a
       // plain date/country edit here never clobbers a note added from the trip row.
+      // People added while editing join the owner's group (a new one if needed). After
+      // "Only [name]" the owner leaves the old group, so added people start a fresh one.
+      let ownerGroup = detach ? null : undefined;
+      if(addedIds.length) ownerGroup = (!detach && editing.groupId) ? editing.groupId : newId();
       for(const x of targets){
-        await updateTrip(x.tripId, start, end, label, pendingExcludedRanges, undefined, detach ? null : undefined);
+        await updateTrip(x.tripId, start, end, label, pendingExcludedRanges, undefined, x.tripId === editing.id ? ownerGroup : undefined);
       }
+      if(addedIds.length) await insertTripForPeople(addedIds, start, end, label, pendingExcludedRanges, ownerGroup);
+      if(removedTrips.length) await deleteTrips(removedTrips.map(m => m.id));
     } else {
       await insertTripForPeople(targets.map(x => x.personId), start, end, label, pendingExcludedRanges);
     }
@@ -2765,7 +2806,8 @@ document.getElementById('editStayBreakdownBtn').addEventListener('click', ()=>{
   const label = document.getElementById('tripLabel').value;
   const person = checkerPeople()[0];
   if(!person) return;
-  const baseline = tripsFor(person.id).filter(t => t.id !== editingTripId);
+  const skip = editingGroupTripIds();
+  const baseline = tripsFor(person.id).filter(t => !skip.has(t.id));
   openBreakdown(baseline.concat([{ start: pickStart, end: pickEnd, label, excludedRanges: pendingExcludedRanges }]), pickEnd, person);
 });
 document.getElementById('breakdownCloseBtn').addEventListener('click', ()=>{
