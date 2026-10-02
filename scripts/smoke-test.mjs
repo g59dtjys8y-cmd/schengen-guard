@@ -10,6 +10,7 @@ import { createServer } from 'node:http';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join, extname } from 'node:path';
 import { chromium } from 'playwright';
+import { supabaseMockScript } from './supabase-mock.mjs';
 
 const ROOT = process.cwd();
 const PORT = 8913;
@@ -68,35 +69,7 @@ async function main() {
       await page.route('**/supabase-js@*/**', (route) => route.fulfill({
         status: 200, contentType: 'application/javascript', body: '/* blocked in test */'
       }));
-      await page.addInitScript(() => {
-        function chain() {
-          const o = {
-            select() { return o; },
-            order() { return Promise.resolve({ data: [], error: null }); },
-            insert() { return Promise.resolve({ error: null }); },
-            update() { return o; },
-            delete() { return o; },
-            eq() { return Promise.resolve({ error: null }); }
-          };
-          return o;
-        }
-        // Defined non-writable: a real CDN-loaded supabase-js UMD bundle assigning
-        // `global.supabase = factory()` later (e.g. if route interception loses a
-        // race on a real network) silently no-ops instead of clobbering the mock.
-        Object.defineProperty(window, 'supabase', {
-          value: {
-            createClient: () => ({
-              auth: {
-                getSession: async () => ({ data: { session: { user: { id: 'smoke-test', email: 'smoke@test.local' } } } }),
-                signOut: async () => ({ error: null })
-              },
-              from: () => chain()
-            })
-          },
-          writable: false,
-          configurable: false
-        });
-      });
+      await page.addInitScript(supabaseMockScript(), { tables: {}, user: { id: 'smoke-test', email: 'smoke@test.local' } });
     }
 
     await page.goto(`http://localhost:${PORT}/index.html`);
