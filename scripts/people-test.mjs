@@ -316,6 +316,33 @@ async function main() {
         await page.click('#tripScopePersonBtn');
       });
 
+      await check('5d', 'adding Tom while editing Anna\'s trip gives him a copy in the same group', async () => {
+        await page.evaluate(async ({ s, e }) => { await insertTrip(people.find(p => p.name === 'Anna').id, s, e, 'Malta', []); render(); }, { s: iso(150), e: iso(152) });
+        const id = await page.evaluate(({ s }) => allTrips.find(t => t.start === s).id, { s: iso(150) });
+        await page.evaluate((id) => startEditTrip(id), id);
+        const chips = await page.$$eval('#whoForChips .who-chip', els => els.map(e => [e.textContent.trim(), e.getAttribute('aria-pressed'), e.getAttribute('aria-disabled')]));
+        assert(chips.length === 2 && chips[0][2] === 'true' && chips[1][1] === 'false', JSON.stringify(chips));
+        await page.click('#whoForChips .who-chip:nth-child(2)');
+        await page.click('#whoForChips .who-chip:nth-child(1)', { force: true }); // owner chip ignores taps
+        const rows = await page.$$eval('#verdictPeople .verdict-person', els => els.length);
+        assert(rows === 2, `checker rows ${rows}`);
+        await page.click('#addTripBtn');
+        await page.waitForTimeout(400);
+        const s = await page.evaluate(({ s }) => allTrips.filter(t => t.start === s).map(t => ({ who: people.find(p => p.id === t.personId).name, g: t.groupId })), { s: iso(150) });
+        assert(s.length === 2 && s[0].g && s[0].g === s[1].g && s.map(x => x.who).sort().join() === 'Anna,Tom', JSON.stringify(s));
+      });
+      await check('5e', 'removing Tom while editing deletes only his copy', async () => {
+        page.__dialogs.length = 0;
+        const id = await page.evaluate(({ s }) => allTrips.find(t => t.start === s && people.find(p => p.id === t.personId).name === 'Anna').id, { s: iso(150) });
+        await page.evaluate((id) => startEditTrip(id), id);
+        await page.click('#whoForChips .who-chip:nth-child(2)');
+        await page.click('#addTripBtn');
+        await page.waitForTimeout(400);
+        const s = await page.evaluate(({ s }) => allTrips.filter(t => t.start === s).map(t => people.find(p => p.id === t.personId).name), { s: iso(150) });
+        assert(s.join() === 'Anna' && /Remove this stay for Tom\?/.test(page.__dialogs[0] || ''), JSON.stringify([s, page.__dialogs]));
+        await page.evaluate(async ({ s }) => { await deleteTrips(allTrips.filter(t => t.start === s).map(t => t.id)); render(); }, { s: iso(150) });
+      });
+
       console.log('\n6/7 — Notifications and badge');
       await check('6a', 'each person is notified once, by name, and never twice', async () => {
         const s = await page.evaluate(async (KEY) => {
