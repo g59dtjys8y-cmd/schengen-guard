@@ -111,7 +111,11 @@ const STRINGS = {
   importReplacePerson: "Replace {name}'s trips",
   trip: 'trip',
   tripsWord: 'trips',
-  exportScopePerson: '{name} only',
+  exportOnePerFile: 'One file per person',
+  csvSideTrips: 'Side trips (outside Schengen)',
+  printUsed: '{used} of 90 days used in the 180 days ending {date}. {remaining} remaining.',
+  printOver: '{used} of 90 days used in the 180 days ending {date}. {over} over the limit.',
+  printNoStays: 'No stays logged.',
   csvPerson: 'Person',
   passportFor: 'Traveller: {name}'
 };
@@ -181,7 +185,9 @@ let people = []; // {id, name, colour, createdAt}
 let activePersonId = null;
 let selectedPersonIds = new Set(); // "Who is it for?" chips on the Calendar form
 let tripListScope = 'person'; // 'person' | 'everyone' — Trips tab toggle
-let exportScope = 'person'; // 'person' | 'everyone' — CSV/print export
+let exportSelectedIds = new Set(); // "Who is it for?" on the Export card
+let exportDefaultFor = null; // the active person the export selection was last defaulted to
+let exportOnePerFile = false;
 let pendingImportPeople = null;
 let pendingImportPersonId = null; // v1 backups: which existing person receives the trips
 let calCursor = new Date(); calCursor.setDate(1);
@@ -923,7 +929,7 @@ function renderPeopleUI(){
   renderPeopleOverview();
   renderPeopleCard();
   renderTripScopeToggle();
-  renderExportScopeToggle();
+  renderExportChips();
   renderResetButtons();
   renderCalendarPersonTag();
 }
@@ -1134,14 +1140,28 @@ function renderTripScopeToggle(){
   if(people.length < 2) tripListScope = 'person';
   renderScopeToggle('tripScopeToggle', 'tripScopePersonBtn', 'tripScopeEveryoneBtn', tripListScope);
 }
-function renderExportScopeToggle(){
-  if(people.length < 2) exportScope = 'person';
-  renderScopeToggle('exportScopeToggle', 'exportScopePersonBtn', 'exportScopeEveryoneBtn', exportScope);
+// "Who is it for?" on the Export card — defaults to the active person, hidden with one person.
+function renderExportChips(){
+  const field = document.getElementById('exportWhoField');
+  const multi = people.length > 1;
+  if(exportDefaultFor !== activePersonId){
+    exportDefaultFor = activePersonId;
+    exportSelectedIds = new Set(activePersonId ? [activePersonId] : []);
+  }
+  exportSelectedIds = new Set([...exportSelectedIds].filter(id => personById(id)));
+  field.hidden = !multi;
+  const none = multi && exportSelectedIds.size === 0;
+  document.getElementById('exportCsvBtn').disabled = none;
+  document.getElementById('printTripsBtn').disabled = none;
+  document.getElementById('exportWhoNote').style.display = none ? '' : 'none';
+  document.getElementById('exportPerPersonRow').hidden = !(multi && exportSelectedIds.size > 1);
+  document.getElementById('exportPerPersonToggle').checked = exportOnePerFile;
+  if(!multi) return;
+  renderPersonChips(document.getElementById('exportWhoChips'), exportSelectedIds, { resetTo: activePersonId, onChange: renderExportChips });
 }
+document.getElementById('exportPerPersonToggle').addEventListener('change', (e)=>{ exportOnePerFile = e.target.checked; });
 document.getElementById('tripScopePersonBtn').addEventListener('click', ()=>{ tripListScope = 'person'; renderTripScopeToggle(); renderTripRows(); });
 document.getElementById('tripScopeEveryoneBtn').addEventListener('click', ()=>{ tripListScope = 'everyone'; renderTripScopeToggle(); renderTripRows(); });
-document.getElementById('exportScopePersonBtn').addEventListener('click', ()=>{ exportScope = 'person'; renderExportScopeToggle(); });
-document.getElementById('exportScopeEveryoneBtn').addEventListener('click', ()=>{ exportScope = 'everyone'; renderExportScopeToggle(); });
 
 function renderResetButtons(){
   const person = activePerson();
@@ -1176,36 +1196,45 @@ function renderWhoForChips(){
   const owner = editingOwnerId();
   if(owner) selectedPersonIds.add(owner);
   field.hidden = false;
-  const chips = document.getElementById('whoForChips');
-  chips.innerHTML = '';
+  renderPersonChips(document.getElementById('whoForChips'), selectedPersonIds, {
+    lockedId: owner,
+    resetTo: owner || activePersonId,
+    onChange: ()=>{ renderWhoForChips(); updateEditStayCompliance(); }
+  });
+}
+
+// One chip per person (plus "Everyone" at 3+), toggling ids in `selected` in place.
+// `lockedId` stays selected and ignores taps; clearing "Everyone" falls back to `resetTo`.
+function renderPersonChips(container, selected, { lockedId = null, resetTo = null, onChange }){
+  container.innerHTML = '';
   const chip = (label, pressed, onClick, person) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'who-chip';
     b.setAttribute('aria-pressed', String(pressed));
-    if(person && person.id === owner){
+    if(person && person.id === lockedId){
       b.setAttribute('aria-disabled', 'true');
       b.setAttribute('aria-label', i18n('ownerChipAria', { name: person.name }));
     }
     b.innerHTML = `<span class="who-chip-tick" aria-hidden="true">${pressed ? '✓' : ''}</span>${person ? personDotHtml(person) : ''}<span class="who-chip-name">${escapeHtml(label)}</span>`;
     b.addEventListener('click', onClick);
-    chips.appendChild(b);
+    container.appendChild(b);
   };
   if(people.length >= 3){
-    const allSelected = people.every(p => selectedPersonIds.has(p.id));
+    const allSelected = people.every(p => selected.has(p.id));
     chip(i18n('everyone'), allSelected, ()=>{
-      selectedPersonIds = allSelected ? new Set([owner || activePersonId]) : new Set(people.map(p => p.id));
-      renderWhoForChips();
-      updateEditStayCompliance();
+      selected.clear();
+      if(allSelected){ if(resetTo) selected.add(resetTo); }
+      else people.forEach(p => selected.add(p.id));
+      onChange();
     });
   }
   for(const p of people){
-    chip(p.name, selectedPersonIds.has(p.id), ()=>{
-      if(p.id === owner) return;
-      if(selectedPersonIds.has(p.id)) selectedPersonIds.delete(p.id);
-      else selectedPersonIds.add(p.id);
-      renderWhoForChips();
-      updateEditStayCompliance();
+    chip(p.name, selected.has(p.id), ()=>{
+      if(p.id === lockedId) return;
+      if(selected.has(p.id)) selected.delete(p.id);
+      else selected.add(p.id);
+      onChange();
     }, p);
   }
 }
@@ -2627,14 +2656,22 @@ function csvEscape(val){
   return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
 
-// Trips for the CSV/print export — the active person's, or everyone's — oldest first.
-function sortedTrips(){
-  const list = (exportScope === 'everyone' && people.length > 1) ? allTrips : trips;
-  return [...list].sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
+// The people the CSV/print export covers (in People order): whoever is picked on the
+// Export card, or simply the one person when there's only one.
+function exportPeople(){
+  if(people.length < 2) return people.slice(0, 1);
+  return people.filter(p => exportSelectedIds.has(p.id));
+}
+function sortedTripsFor(personId){
+  return tripsFor(personId).sort((a,b)=> a.start < b.start ? -1 : a.start > b.start ? 1 : 0);
 }
 function personName(personId){
   const p = personById(personId);
   return p ? p.name : '';
+}
+// Filename-safe form of a name: "Anna Lee" → "anna-lee" (letters in any script are kept).
+function fileSlug(name){
+  return String(name).toLocaleLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'person';
 }
 
 function excludedDayCount(trip){
@@ -2642,34 +2679,79 @@ function excludedDayCount(trip){
   for(const r of (trip.excludedRanges || [])) n += Math.round((toDate(r.end) - toDate(r.start))/86400000) + 1;
   return n;
 }
+function sideTripsText(trip, format){
+  return (trip.excludedRanges || []).map(r => `${format(r.start)} – ${format(r.end)}`).join('; ');
+}
 
-document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
-  const header = [i18n('csvPerson'),'Country','Entry date','Exit date','Days','Excluded days','Status'];
-  const rows = [header];
-  for(const t of sortedTrips()){
-    const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
-    rows.push([personName(t.personId), t.label || '', t.start, t.end, String(days), String(excludedDayCount(t)), classifyTrip(t)]);
+// CSV rows for the given people; a Person column only when the file covers more than one.
+function csvRows(list){
+  const withPerson = list.length > 1;
+  const header = ['Country','Entry date','Exit date','Days','Excluded days',i18n('csvSideTrips'),'Status'];
+  const rows = [withPerson ? [i18n('csvPerson')].concat(header) : header];
+  for(const p of list){
+    for(const t of sortedTripsFor(p.id)){
+      const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
+      const row = [t.label || '', t.start, t.end, String(days), String(excludedDayCount(t)), sideTripsText(t, iso => iso), classifyTrip(t)];
+      rows.push(withPerson ? [p.name].concat(row) : row);
+    }
   }
+  return rows;
+}
+function downloadCsv(filename, rows){
   const csv = rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `schengen-guard-trips-${todayISO()}.csv`;
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(()=> URL.revokeObjectURL(url), 1000);
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', async ()=>{
+  const chosen = exportPeople();
+  if(!chosen.length) return;
+  const date = todayISO();
+  if(chosen.length === 1 || exportOnePerFile){
+    for(let i = 0; i < chosen.length; i++){
+      // A short gap between files — browsers drop rapid back-to-back downloads.
+      if(i) await new Promise(r => setTimeout(r, 400));
+      downloadCsv(`schengen-trips-${fileSlug(chosen[i].name)}-${date}.csv`, csvRows([chosen[i]]));
+    }
+    return;
+  }
+  const who = chosen.length === people.length ? 'everyone' : chosen.map(p => fileSlug(p.name)).join('-');
+  downloadCsv(`schengen-trips-${who}-${date}.csv`, csvRows(chosen));
 });
 
+// One section per person, each starting on a new printed page: name, days used and
+// remaining as of today, then their stays with side trips marked.
 document.getElementById('printTripsBtn').addEventListener('click', ()=>{
-  let html = `<h1>Schengen Guard — trip history</h1><p>Generated ${fmt(todayISO())}</p>`;
-  html += `<table><thead><tr><th>${escapeHtml(i18n('csvPerson'))}</th><th>Country</th><th>Entry</th><th>Exit</th><th>Days</th><th>Excluded days</th><th>Status</th></tr></thead><tbody>`;
-  for(const t of sortedTrips()){
-    const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
-    html += `<tr><td>${escapeHtml(personName(t.personId))}</td><td>${escapeHtml(t.label || '')}</td><td>${fmt(t.start)}</td><td>${fmt(t.end)}</td><td>${days}</td><td>${excludedDayCount(t)}</td><td>${classifyTrip(t)}</td></tr>`;
-  }
-  html += '</tbody></table>';
+  const chosen = exportPeople();
+  if(!chosen.length) return;
+  const today = todayISO();
+  let html = '';
+  chosen.forEach((p, i)=>{
+    const used = usedDaysInWindow(tripsFor(p.id), today);
+    const standing = used > 90
+      ? i18n('printOver', { used, date: fmt(today), over: dayCount(used - 90) })
+      : i18n('printUsed', { used, date: fmt(today), remaining: dayCount(90 - used) });
+    html += `<section class="print-person${i ? ' print-new-page' : ''}">`;
+    html += `<h1>Schengen Guard — trip history</h1><h2>${escapeHtml(p.name)}</h2><p>Generated ${fmt(today)} · ${escapeHtml(standing)}</p>`;
+    const list = sortedTripsFor(p.id);
+    if(!list.length){
+      html += `<p>${escapeHtml(i18n('printNoStays'))}</p></section>`;
+      return;
+    }
+    html += `<table><thead><tr><th>Country</th><th>Entry</th><th>Exit</th><th>Days</th><th>Excluded days</th><th>${escapeHtml(i18n('csvSideTrips'))}</th><th>Status</th></tr></thead><tbody>`;
+    for(const t of list){
+      const days = Math.round((toDate(t.end) - toDate(t.start))/86400000) + 1;
+      html += `<tr><td>${escapeHtml(t.label || '')}</td><td>${fmt(t.start)}</td><td>${fmt(t.end)}</td><td>${days}</td><td>${excludedDayCount(t)}</td><td>${sideTripsText(t, fmt) || '—'}</td><td>${classifyTrip(t)}</td></tr>`;
+    }
+    html += '</tbody></table></section>';
+  });
   document.getElementById('printArea').innerHTML = html;
   window.print();
 });

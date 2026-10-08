@@ -671,6 +671,7 @@ details[open] > summary.qc-title-row::after{content:'−';}
   #printArea{position:absolute;top:0;left:0;width:100%;display:block;color:#000;background:#fff;}
   #printArea table{border-collapse:collapse;width:100%;}
   #printArea th,#printArea td{border:1px solid #999;padding:6px 8px;text-align:left;font-size:12px;}
+  #printArea .print-new-page{break-before:page;page-break-before:always;}
 }
 .legend{display:flex;flex-wrap:wrap;row-gap:6px;column-gap:14px;margin-top:14px;font-size:11px;color:var(--color-neutral-700);}
 .legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
@@ -970,7 +971,8 @@ details[open] > summary.qc-title-row::after{content:'−';}
 }
 .seg-btn[aria-pressed="true"]{background:var(--color-accent);color:#fff;font-weight:700;}
 .seg-btn:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px;}
-#exportCard .seg-toggle{margin:4px 0 6px;align-self:flex-start;}
+#exportCard .who-for{margin:2px 0 6px;}
+#exportPerPersonRow[hidden]{display:none;}
 
 /* Settings: People card */
 .people-list{display:flex;flex-direction:column;}
