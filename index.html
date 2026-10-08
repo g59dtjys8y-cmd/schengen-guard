@@ -531,9 +531,11 @@
           <span class="qc-title-rule"></span>
         </div>
         <p class="card-body">For handing to a border official or visa office — a human-readable copy, not for re-importing (use Backup for that).</p>
-        <div class="seg-toggle" id="exportScopeToggle" role="group" aria-label="Whose trips to export" hidden>
-          <button type="button" class="seg-btn" id="exportScopePersonBtn" aria-pressed="true"></button>
-          <button type="button" class="seg-btn" id="exportScopeEveryoneBtn" aria-pressed="false" data-i18n="everyone">Everyone</button>
+        <div class="field who-for" id="exportWhoField" hidden>
+          <span class="who-for-label" id="exportWhoLabel" data-i18n="whoFor">Who is it for?</span>
+          <div class="chip-row" id="exportWhoChips" role="group" aria-labelledby="exportWhoLabel"></div>
+          <p class="note" id="exportWhoNote" style="display:none;" data-i18n="selectSomeone">Pick at least one person.</p>
+          <label class="radio" id="exportPerPersonRow" hidden><input type="checkbox" id="exportPerPersonToggle"><span class="dot"></span><span data-i18n="exportOnePerFile">One file per person</span></label>
         </div>
         <button type="button" class="btn btn-secondary btn-block" id="exportCsvBtn">Export as CSV</button>
         <button type="button" class="btn btn-secondary btn-block" id="printTripsBtn">Print / save as PDF</button>

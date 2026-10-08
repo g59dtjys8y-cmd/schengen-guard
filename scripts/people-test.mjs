@@ -173,9 +173,10 @@ async function main() {
           strip: document.getElementById('peopleOverview').hidden,
           chips: document.getElementById('whoForField').hidden,
           toggle: document.getElementById('tripScopeToggle').hidden,
+          exportChips: document.getElementById('exportWhoField').hidden,
           deleteDisabled: document.querySelector('#peopleList [data-action="delete"]').disabled
         }));
-        assert(s.strip && s.chips && s.toggle && s.deleteDisabled, JSON.stringify(s));
+        assert(s.strip && s.chips && s.toggle && s.exportChips && s.deleteDisabled, JSON.stringify(s));
       });
       await check('1e', 'no console errors', async () => assert(page.__errors.length === 0, page.__errors.join(' | ')));
       await page.context().close();
@@ -374,6 +375,67 @@ async function main() {
           return { badge: window.__badges[0], each: people.map(p => realDaysLeft(p.id)) };
         });
         assert(s.badge === Math.min(...s.each), JSON.stringify(s));
+      });
+
+      console.log('\n12 — Export and print by person');
+      // Captures downloads (name + text) instead of saving them, and stubs printing.
+      await page.evaluate(() => {
+        window.__files = [];
+        const blobs = new Map();
+        const create = URL.createObjectURL.bind(URL);
+        URL.createObjectURL = (b) => { const u = create(b); blobs.set(u, b); return u; };
+        HTMLAnchorElement.prototype.click = function () {
+          if (this.download) window.__files.push({ name: this.download, blob: blobs.get(this.href) });
+        };
+        window.print = () => {};
+      });
+      const exportWith = async (names, onePerFile) => {
+        await page.evaluate(({ names, onePerFile }) => {
+          window.__files.length = 0;
+          exportSelectedIds = new Set(people.filter(p => names.includes(p.name)).map(p => p.id));
+          exportOnePerFile = onePerFile;
+          renderExportChips();
+        }, { names, onePerFile });
+        await page.click('[data-tab="settings"]');
+        await page.click('#exportCsvBtn');
+        await page.waitForTimeout(onePerFile ? 900 : 300);
+        return page.evaluate(async () => Promise.all(window.__files.map(async f => ({ name: f.name, text: await f.blob.text() }))));
+      };
+      await check('12a', 'CSV for Tom only: just his trips, no Person column, his name in the filename', async () => {
+        const files = await exportWith(['Tom'], false);
+        const tomCount = await page.evaluate(() => tripsFor(people.find(p => p.name === 'Tom').id).length);
+        assert(files.length === 1 && /^schengen-trips-tom-\d{4}-\d{2}-\d{2}\.csv$/.test(files[0].name), JSON.stringify(files.map(f => f.name)));
+        const lines = files[0].text.split('\r\n');
+        assert(lines[0].startsWith('Country,') && !/Person/.test(lines[0]), lines[0]);
+        assert(lines.length === tomCount + 1 && !files[0].text.includes('France'), files[0].text);
+      });
+      await check('12b', 'CSV for both: one file with a Person column first', async () => {
+        const files = await exportWith(['Anna', 'Tom'], false);
+        const lines = files[0].text.split('\r\n');
+        assert(files.length === 1 && lines[0].startsWith('Person,Country,'), JSON.stringify([files.map(f => f.name), lines[0]]));
+        assert(lines.some(l => l.startsWith('Anna,')) && lines.some(l => l.startsWith('Tom,')), files[0].text);
+      });
+      await check('12c', '"One file per person" downloads a separate file each', async () => {
+        const files = await exportWith(['Anna', 'Tom'], true);
+        const names = files.map(f => f.name);
+        assert(files.length === 2 && /trips-anna-/.test(names[0]) && /trips-tom-/.test(names[1]) && files.every(f => f.text.startsWith('Country,')), JSON.stringify(names));
+        await page.evaluate(() => { exportOnePerFile = false; renderExportChips(); });
+      });
+      await check('12d', 'print for both: each person starts on a new page with their days used and remaining', async () => {
+        await page.evaluate(() => { exportSelectedIds = new Set(people.map(p => p.id)); renderExportChips(); });
+        await page.click('#printTripsBtn');
+        await page.emulateMedia({ media: 'print' });
+        const s = await page.$$eval('#printArea .print-person', els => els.map(e => ({ name: e.querySelector('h2').textContent, brk: getComputedStyle(e).breakBefore, standing: e.querySelector('p').textContent })));
+        await page.emulateMedia({ media: 'screen' });
+        assert(s.length === 2 && s[0].name === 'Anna' && s[1].name === 'Tom', JSON.stringify(s));
+        assert(s[0].brk !== 'page' && s[1].brk === 'page', JSON.stringify(s));
+        assert(s.every(x => /of 90 days used/.test(x.standing) && /(remaining|over the limit)/.test(x.standing)), JSON.stringify(s));
+      });
+      await check('12e', 'nobody picked: CSV and print are disabled', async () => {
+        await page.evaluate(() => { exportSelectedIds = new Set(); renderExportChips(); });
+        const s = await page.evaluate(() => [document.getElementById('exportCsvBtn').disabled, document.getElementById('printTripsBtn').disabled, getComputedStyle(document.getElementById('exportWhoNote')).display]);
+        assert(s[0] && s[1] && s[2] !== 'none', JSON.stringify(s));
+        await page.evaluate(() => { exportSelectedIds = new Set([activePersonId]); renderExportChips(); });
       });
 
       console.log('\n9 — Backup round trip');
